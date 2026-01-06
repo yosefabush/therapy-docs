@@ -1,26 +1,33 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header, QuickActionButton } from '@/components/layout/Header';
 import { Card, Button, Input, Select, Tabs, Modal, Badge } from '@/components/ui';
 import { PatientList } from '@/components/patients/PatientList';
-import { mockUsers, mockPatients, therapistRoleLabels } from '@/lib/mock-data';
+import { mockUsers, mockPatients, therapistRoleLabels, addPatient, CreatePatientData } from '@/lib/mock-data';
+import { Patient } from '@/types';
 
 export default function PatientsPage() {
   const currentUser = mockUsers[0];
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showNewPatient, setShowNewPatient] = useState(false);
+  const [patients, setPatients] = useState<Patient[]>(mockPatients);
+
+  const handlePatientAdded = useCallback((newPatient: Patient) => {
+    setPatients(prev => [...prev, newPatient]);
+    setShowNewPatient(false);
+  }, []);
 
   const tabs = [
-    { id: 'all', label: 'כל המטופלים', count: mockPatients.length },
-    { id: 'active', label: 'פעילים', count: mockPatients.filter(p => p.status === 'active').length },
-    { id: 'mine', label: 'המטופלים שלי', count: mockPatients.filter(p => p.assignedTherapists.includes(currentUser.id)).length },
-    { id: 'discharged', label: 'שוחררו', count: mockPatients.filter(p => p.status === 'discharged').length },
+    { id: 'all', label: 'כל המטופלים', count: patients.length },
+    { id: 'active', label: 'פעילים', count: patients.filter(p => p.status === 'active').length },
+    { id: 'mine', label: 'המטופלים שלי', count: patients.filter(p => p.assignedTherapists.includes(currentUser.id)).length },
+    { id: 'discharged', label: 'שוחררו', count: patients.filter(p => p.status === 'discharged').length },
   ];
 
-  const filteredPatients = mockPatients.filter(patient => {
+  const filteredPatients = patients.filter(patient => {
     const matchesSearch = patient.patientCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
       patient.primaryDiagnosis?.toLowerCase().includes(searchQuery.toLowerCase());
     
@@ -44,7 +51,7 @@ export default function PatientsPage() {
       <main className="mr-64">
         <Header
           title="מטופלים"
-          subtitle={`${mockPatients.length} מטופלים בסה"כ`}
+          subtitle={`${patients.length} מטופלים בסה"כ`}
           actions={
             <QuickActionButton
               label="מטופל חדש"
@@ -110,13 +117,23 @@ export default function PatientsPage() {
 
       {/* New Patient Modal */}
       <Modal isOpen={showNewPatient} onClose={() => setShowNewPatient(false)} title="הוספת מטופל חדש" size="lg">
-        <NewPatientForm onClose={() => setShowNewPatient(false)} />
+        <NewPatientForm
+          onClose={() => setShowNewPatient(false)}
+          onPatientAdded={handlePatientAdded}
+          currentUserId={currentUser.id}
+        />
       </Modal>
     </div>
   );
 }
 
-function NewPatientForm({ onClose }: { onClose: () => void }) {
+interface NewPatientFormProps {
+  onClose: () => void;
+  onPatientAdded: (patient: Patient) => void;
+  currentUserId: string;
+}
+
+function NewPatientForm({ onClose, onPatientAdded, currentUserId }: NewPatientFormProps) {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -126,11 +143,58 @@ function NewPatientForm({ onClose }: { onClose: () => void }) {
     referralSource: '',
     insurance: '',
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = 'שם פרטי הוא שדה חובה';
+    }
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = 'שם משפחה הוא שדה חובה';
+    }
+    if (!formData.dateOfBirth) {
+      newErrors.dateOfBirth = 'תאריך לידה הוא שדה חובה';
+    }
+    if (!formData.gender) {
+      newErrors.gender = 'מגדר הוא שדה חובה';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
-    onClose();
+
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const patientData: CreatePatientData = {
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        dateOfBirth: formData.dateOfBirth,
+        gender: formData.gender as 'male' | 'female' | 'other' | 'prefer_not_to_say',
+        diagnosis: formData.diagnosis.trim() || undefined,
+        referralSource: formData.referralSource.trim() || undefined,
+        insurance: formData.insurance.trim() || undefined,
+        assignedTherapistId: currentUserId,
+      };
+
+      const newPatient = addPatient(patientData);
+      onPatientAdded(newPatient);
+    } catch (error) {
+      console.error('Error creating patient:', error);
+      setErrors({ submit: 'שגיאה ביצירת המטופל. נסה שוב.' });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -147,17 +211,25 @@ function NewPatientForm({ onClose }: { onClose: () => void }) {
         </div>
       </div>
 
+      {errors.submit && (
+        <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm text-red-700">{errors.submit}</p>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 gap-4">
         <Input
           label="שם פרטי"
           value={formData.firstName}
           onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
+          error={errors.firstName}
           required
         />
         <Input
           label="שם משפחה"
           value={formData.lastName}
           onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
+          error={errors.lastName}
           required
         />
       </div>
@@ -169,22 +241,30 @@ function NewPatientForm({ onClose }: { onClose: () => void }) {
             type="date"
             value={formData.dateOfBirth}
             onChange={(e) => setFormData(prev => ({ ...prev, dateOfBirth: e.target.value }))}
-            className="w-full px-4 py-2.5 rounded-lg border border-sage-200 bg-white"
+            className={`w-full px-4 py-2.5 rounded-lg border bg-white ${
+              errors.dateOfBirth ? 'border-red-400 focus:ring-red-500' : 'border-sage-200 focus:ring-sage-500'
+            } focus:outline-none focus:ring-2`}
             required
           />
+          {errors.dateOfBirth && (
+            <p className="mt-1 text-sm text-red-600">{errors.dateOfBirth}</p>
+          )}
         </div>
-        <Select
-          label="מגדר"
-          value={formData.gender}
-          onChange={(e) => setFormData(prev => ({ ...prev, gender: e.target.value }))}
-          options={[
-            { value: '', label: 'בחר...' },
-            { value: 'male', label: 'זכר' },
-            { value: 'female', label: 'נקבה' },
-            { value: 'other', label: 'אחר' },
-            { value: 'prefer_not_to_say', label: 'מעדיף לא לציין' },
-          ]}
-        />
+        <div>
+          <Select
+            label="מגדר"
+            value={formData.gender}
+            onChange={(e) => setFormData(prev => ({ ...prev, gender: e.target.value }))}
+            options={[
+              { value: '', label: 'בחר...' },
+              { value: 'male', label: 'זכר' },
+              { value: 'female', label: 'נקבה' },
+              { value: 'other', label: 'אחר' },
+              { value: 'prefer_not_to_say', label: 'מעדיף לא לציין' },
+            ]}
+            error={errors.gender}
+          />
+        </div>
       </div>
 
       <Input
@@ -210,8 +290,12 @@ function NewPatientForm({ onClose }: { onClose: () => void }) {
       </div>
 
       <div className="flex justify-end gap-3 pt-4 border-t border-sage-100">
-        <Button type="button" variant="ghost" onClick={onClose}>ביטול</Button>
-        <Button type="submit" variant="primary">צור מטופל</Button>
+        <Button type="button" variant="ghost" onClick={onClose} disabled={isSubmitting}>
+          ביטול
+        </Button>
+        <Button type="submit" variant="primary" loading={isSubmitting}>
+          {isSubmitting ? 'יוצר מטופל...' : 'צור מטופל'}
+        </Button>
       </div>
     </form>
   );

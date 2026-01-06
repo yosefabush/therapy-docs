@@ -1,16 +1,29 @@
 // Mock database for demonstration
 // In production, replace with PostgreSQL, MongoDB, or other HIPAA-compliant database
 
-import { 
-  User, 
-  Patient, 
-  Session, 
-  TreatmentPlan, 
-  Report, 
+import {
+  User,
+  Patient,
+  Session,
+  TreatmentPlan,
+  Report,
   TherapistRole,
   SessionType,
   TreatmentGoal
 } from '@/types';
+
+// Helper to generate unique IDs
+function generateId(): string {
+  return `patient-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
+
+// Helper to generate patient code from name
+function generatePatientCode(firstName: string, lastName: string): string {
+  const firstInitial = firstName.charAt(0);
+  const lastInitial = lastName.charAt(0);
+  const randomNum = Math.floor(Math.random() * 900) + 100;
+  return `מט-${firstInitial}${lastInitial}${randomNum}`;
+}
 
 // Mock Users (Therapists)
 export const mockUsers: User[] = [
@@ -456,6 +469,44 @@ export function getGoalsByPatient(patientId: string): TreatmentGoal[] {
 
 export function getReportsByPatient(patientId: string): Report[] {
   return mockReports.filter(r => r.patientId === patientId);
+}
+
+// Patient creation interface
+export interface CreatePatientData {
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string;
+  gender: 'male' | 'female' | 'other' | 'prefer_not_to_say';
+  diagnosis?: string;
+  referralSource?: string;
+  insurance?: string;
+  assignedTherapistId: string;
+}
+
+// Add new patient to the mock database
+export function addPatient(data: CreatePatientData): Patient {
+  const newPatient: Patient = {
+    id: generateId(),
+    encryptedData: `encrypted-${data.firstName}-${data.lastName}`, // Simulated encryption
+    patientCode: generatePatientCode(data.firstName, data.lastName),
+    dateOfBirth: data.dateOfBirth,
+    gender: data.gender,
+    primaryDiagnosis: data.diagnosis || undefined,
+    referralSource: data.referralSource || undefined,
+    insuranceProvider: data.insurance || undefined,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    assignedTherapists: [data.assignedTherapistId],
+    status: 'active',
+  };
+
+  mockPatients.push(newPatient);
+  return newPatient;
+}
+
+// Get all patients (for reactive updates)
+export function getPatients(): Patient[] {
+  return mockPatients;
 }
 
 // Therapist role display names
