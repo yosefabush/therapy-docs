@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build:*)",
+      "Bash(npm run lint)",
+      "Bash(npx claude-code-templates@latest --skill=creative-design/frontend-design --yes)",
+      "Bash(cd:*)",
+      "Bash(git init:*)"
+    ]
+  },
+  "enabledPlugins": {
+    "github@claude-plugins-official": true,
+    "playwright@claude-plugins-official": true,
+    "context7@claude-plugins-official": true
+  }
+}
