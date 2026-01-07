@@ -1,34 +1,42 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Sidebar } from '@/components/layout/Sidebar';
-import { Header } from '@/components/layout/Header';
 import { Card, Button, Badge, ProgressBar, Tabs, Avatar, Modal } from '@/components/ui';
 import { SessionList } from '@/components/sessions/SessionList';
 import { ReportGenerator, ReportCard } from '@/components/reports/ReportGenerator';
-import { 
-  mockUsers, mockPatients, mockSessions, mockTreatmentGoals, mockReports,
-  therapistRoleLabels, getSessionsByPatient, getGoalsByPatient, getReportsByPatient
-} from '@/lib/mock-data';
+import { therapistRoleLabels } from '@/lib/mock-data';
+import { useCurrentUser, usePatient, useSessions, useTreatmentGoals, useReports, useUsers } from '@/lib/hooks';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { ErrorMessage } from '@/components/ui/ErrorMessage';
 
 export default function PatientDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const patientId = params.id as string;
-  const currentUser = mockUsers[0];
-  
+  const router = useRouter();
+
   const [activeTab, setActiveTab] = useState('overview');
   const [showNewSession, setShowNewSession] = useState(false);
+  const [showEditPatient, setShowEditPatient] = useState(false);
 
-  const patient = mockPatients.find(p => p.id === patientId);
-  const sessions = getSessionsByPatient(patientId);
-  const goals = getGoalsByPatient(patientId);
-  const reports = getReportsByPatient(patientId);
-  const assignedTherapists = mockUsers.filter(u => patient?.assignedTherapists.includes(u.id));
+  const { user: currentUser, loading: userLoading } = useCurrentUser();
+  const { patient, loading: patientLoading, error: patientError } = usePatient(patientId);
+  const { sessions, loading: sessionsLoading } = useSessions({ patientId });
+  const { goals, loading: goalsLoading } = useTreatmentGoals(patientId);
+  const { reports, loading: reportsLoading } = useReports(patientId);
+  const { users, loading: usersLoading } = useUsers();
 
-  if (!patient) {
+  if (userLoading || patientLoading || sessionsLoading || goalsLoading || reportsLoading || usersLoading) {
+    return <LoadingSpinner className="h-screen" />;
+  }
+
+  if (!currentUser) {
+    return <ErrorMessage message="Failed to load user data" />;
+  }
+
+  if (patientError || !patient) {
     return (
       <div className="min-h-screen bg-warm-50 flex items-center justify-center">
         <Card className="text-center p-8">
@@ -42,6 +50,8 @@ export default function PatientDetailPage() {
     );
   }
 
+  const assignedTherapists = users.filter(u => patient.assignedTherapists.includes(u.id));
+
   const tabs = [
     { id: 'overview', label: 'סקירה כללית' },
     { id: 'sessions', label: 'מפגשים', count: sessions.length },
@@ -52,8 +62,8 @@ export default function PatientDetailPage() {
 
   const completedSessions = sessions.filter(s => s.status === 'completed');
   const upcomingSessions = sessions.filter(s => s.status === 'scheduled' && new Date(s.scheduledAt) > new Date());
-  const avgProgress = goals.length > 0 
-    ? Math.round(goals.reduce((sum, g) => sum + g.progress, 0) / goals.length) 
+  const avgProgress = goals.length > 0
+    ? Math.round(goals.reduce((sum, g) => sum + g.progress, 0) / goals.length)
     : 0;
 
   return (
@@ -93,7 +103,7 @@ export default function PatientDetailPage() {
               </div>
 
               <div className="flex items-center gap-3">
-                <Button variant="secondary">
+                <Button variant="secondary" onClick={() => setShowEditPatient(true)}>
                   <svg className="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
@@ -145,9 +155,9 @@ export default function PatientDetailPage() {
                       הצג הכל
                     </Button>
                   </div>
-                  <SessionList 
-                    sessions={sessions.slice(0, 3)} 
-                    therapists={mockUsers}
+                  <SessionList
+                    sessions={sessions.slice(0, 3)}
+                    therapists={users}
                     showPatient={false}
                   />
                 </Card>
@@ -247,9 +257,9 @@ export default function PatientDetailPage() {
 
           {activeTab === 'sessions' && (
             <div className="max-w-4xl">
-              <SessionList 
+              <SessionList
                 sessions={sessions}
-                therapists={mockUsers}
+                therapists={users}
                 showPatient={false}
               />
             </div>
@@ -293,7 +303,7 @@ export default function PatientDetailPage() {
                 goals={goals}
                 onGenerate={(report) => console.log('Generated:', report)}
               />
-              
+
               {reports.length > 0 && (
                 <div>
                   <h3 className="text-lg font-semibold text-clinical-900 mb-4">דוחות קודמים</h3>
@@ -335,6 +345,169 @@ export default function PatientDetailPage() {
           טופס תזמון מפגש יופיע כאן...
         </div>
       </Modal>
+
+      {/* Edit Patient Modal */}
+      <Modal isOpen={showEditPatient} onClose={() => setShowEditPatient(false)} title="עריכת פרטי מטופל" size="lg">
+        <EditPatientForm
+          patient={patient}
+          onClose={() => setShowEditPatient(false)}
+          onSaved={() => {
+            setShowEditPatient(false);
+            router.refresh();
+          }}
+        />
+      </Modal>
     </div>
+  );
+}
+
+interface EditPatientFormProps {
+  patient: {
+    id: string;
+    patientCode: string;
+    dateOfBirth: string;
+    gender: string;
+    primaryDiagnosis?: string;
+    referralSource?: string;
+    insuranceProvider?: string;
+    status: string;
+  };
+  onClose: () => void;
+  onSaved: () => void;
+}
+
+function EditPatientForm({ patient, onClose, onSaved }: EditPatientFormProps) {
+  const [formData, setFormData] = useState({
+    dateOfBirth: patient.dateOfBirth || '',
+    gender: patient.gender || '',
+    primaryDiagnosis: patient.primaryDiagnosis || '',
+    referralSource: patient.referralSource || '',
+    insuranceProvider: patient.insuranceProvider || '',
+    status: patient.status || 'active',
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/patients/${patient.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update patient');
+      }
+
+      onSaved();
+    } catch (err) {
+      setError('שגיאה בעדכון פרטי המטופל');
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm text-red-700">{error}</p>
+        </div>
+      )}
+
+      <div>
+        <label className="block text-sm font-medium text-clinical-700 mb-1.5">קוד מטופל</label>
+        <input
+          type="text"
+          value={patient.patientCode}
+          disabled
+          className="w-full px-4 py-2.5 rounded-lg border border-sage-200 bg-clinical-50 text-clinical-500"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-clinical-700 mb-1.5">תאריך לידה</label>
+          <input
+            type="date"
+            value={formData.dateOfBirth}
+            onChange={(e) => setFormData(prev => ({ ...prev, dateOfBirth: e.target.value }))}
+            className="w-full px-4 py-2.5 rounded-lg border border-sage-200 bg-white focus:outline-none focus:ring-2 focus:ring-sage-500"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-clinical-700 mb-1.5">מגדר</label>
+          <select
+            value={formData.gender}
+            onChange={(e) => setFormData(prev => ({ ...prev, gender: e.target.value }))}
+            className="w-full px-4 py-2.5 rounded-lg border border-sage-200 bg-white focus:outline-none focus:ring-2 focus:ring-sage-500"
+          >
+            <option value="male">זכר</option>
+            <option value="female">נקבה</option>
+            <option value="other">אחר</option>
+            <option value="prefer_not_to_say">מעדיף לא לציין</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-clinical-700 mb-1.5">אבחנה ראשית</label>
+        <input
+          type="text"
+          value={formData.primaryDiagnosis}
+          onChange={(e) => setFormData(prev => ({ ...prev, primaryDiagnosis: e.target.value }))}
+          className="w-full px-4 py-2.5 rounded-lg border border-sage-200 bg-white focus:outline-none focus:ring-2 focus:ring-sage-500"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-clinical-700 mb-1.5">מקור הפניה</label>
+          <input
+            type="text"
+            value={formData.referralSource}
+            onChange={(e) => setFormData(prev => ({ ...prev, referralSource: e.target.value }))}
+            className="w-full px-4 py-2.5 rounded-lg border border-sage-200 bg-white focus:outline-none focus:ring-2 focus:ring-sage-500"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-clinical-700 mb-1.5">קופת חולים</label>
+          <input
+            type="text"
+            value={formData.insuranceProvider}
+            onChange={(e) => setFormData(prev => ({ ...prev, insuranceProvider: e.target.value }))}
+            className="w-full px-4 py-2.5 rounded-lg border border-sage-200 bg-white focus:outline-none focus:ring-2 focus:ring-sage-500"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-clinical-700 mb-1.5">סטטוס</label>
+        <select
+          value={formData.status}
+          onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
+          className="w-full px-4 py-2.5 rounded-lg border border-sage-200 bg-white focus:outline-none focus:ring-2 focus:ring-sage-500"
+        >
+          <option value="active">פעיל</option>
+          <option value="inactive">לא פעיל</option>
+          <option value="discharged">שוחרר</option>
+        </select>
+      </div>
+
+      <div className="flex justify-end gap-3 pt-4 border-t border-sage-100">
+        <Button type="button" variant="ghost" onClick={onClose} disabled={isSubmitting}>
+          ביטול
+        </Button>
+        <Button type="submit" variant="primary" loading={isSubmitting}>
+          {isSubmitting ? 'שומר...' : 'שמור שינויים'}
+        </Button>
+      </div>
+    </form>
   );
 }

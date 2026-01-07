@@ -1,24 +1,42 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header, QuickActionButton } from '@/components/layout/Header';
-import { Card, Button, Input, Select, Tabs, Modal, Badge } from '@/components/ui';
+import { Card, Button, Select, Tabs, Modal } from '@/components/ui';
 import { PatientList } from '@/components/patients/PatientList';
-import { mockUsers, mockPatients, therapistRoleLabels, addPatient, CreatePatientData } from '@/lib/mock-data';
+import { therapistRoleLabels } from '@/lib/mock-data';
 import { Patient } from '@/types';
+import { useCurrentUser, usePatients, useUsers } from '@/lib/hooks';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { ErrorMessage } from '@/components/ui/ErrorMessage';
+import { apiClient } from '@/lib/api/client';
 
 export default function PatientsPage() {
-  const currentUser = mockUsers[0];
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showNewPatient, setShowNewPatient] = useState(false);
-  const [patients, setPatients] = useState<Patient[]>(mockPatients);
 
-  const handlePatientAdded = useCallback((newPatient: Patient) => {
-    setPatients(prev => [...prev, newPatient]);
+  const { user: currentUser, loading: userLoading, error: userError } = useCurrentUser();
+  const { patients, loading: patientsLoading, error: patientsError, refetch } = usePatients();
+  const { users, loading: usersLoading } = useUsers();
+
+  if (userLoading || patientsLoading || usersLoading) {
+    return <LoadingSpinner className="h-screen" />;
+  }
+
+  if (userError || !currentUser) {
+    return <ErrorMessage message="Failed to load user data" />;
+  }
+
+  if (patientsError) {
+    return <ErrorMessage message={patientsError} onRetry={refetch} />;
+  }
+
+  const handlePatientAdded = () => {
+    refetch();
     setShowNewPatient(false);
-  }, []);
+  };
 
   const tabs = [
     { id: 'all', label: 'כל המטופלים', count: patients.length },
@@ -30,13 +48,13 @@ export default function PatientsPage() {
   const filteredPatients = patients.filter(patient => {
     const matchesSearch = patient.patientCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
       patient.primaryDiagnosis?.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesTab = 
+
+    const matchesTab =
       activeTab === 'all' ? true :
       activeTab === 'active' ? patient.status === 'active' :
       activeTab === 'mine' ? patient.assignedTherapists.includes(currentUser.id) :
       activeTab === 'discharged' ? patient.status === 'discharged' : true;
-    
+
     return matchesSearch && matchesTab;
   });
 
@@ -99,7 +117,7 @@ export default function PatientsPage() {
 
           {/* Patient List */}
           {filteredPatients.length > 0 ? (
-            <PatientList patients={filteredPatients} therapists={mockUsers} />
+            <PatientList patients={filteredPatients} therapists={users} />
           ) : (
             <Card className="text-center py-12">
               <svg className="w-12 h-12 mx-auto text-clinical-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -129,7 +147,7 @@ export default function PatientsPage() {
 
 interface NewPatientFormProps {
   onClose: () => void;
-  onPatientAdded: (patient: Patient) => void;
+  onPatientAdded: () => void;
   currentUserId: string;
 }
 
@@ -145,6 +163,7 @@ function NewPatientForm({ onClose, onPatientAdded, currentUserId }: NewPatientFo
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submittedRef = React.useRef(false);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -166,32 +185,50 @@ function NewPatientForm({ onClose, onPatientAdded, currentUserId }: NewPatientFo
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const generatePatientCode = (firstName: string, lastName: string): string => {
+    const firstInitial = firstName.charAt(0);
+    const lastInitial = lastName.charAt(0);
+    const randomNum = Math.floor(Math.random() * 900) + 100;
+    return `מט-${firstInitial}${lastInitial}${randomNum}`;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Prevent double submission
+    if (submittedRef.current || isSubmitting) {
+      return;
+    }
 
     if (!validateForm()) {
       return;
     }
 
+    submittedRef.current = true;
     setIsSubmitting(true);
 
     try {
-      const patientData: CreatePatientData = {
-        firstName: formData.firstName.trim(),
-        lastName: formData.lastName.trim(),
+      const patientData = {
+        encryptedData: `encrypted-${formData.firstName}-${formData.lastName}`,
+        patientCode: generatePatientCode(formData.firstName, formData.lastName),
         dateOfBirth: formData.dateOfBirth,
         gender: formData.gender as 'male' | 'female' | 'other' | 'prefer_not_to_say',
-        diagnosis: formData.diagnosis.trim() || undefined,
+        primaryDiagnosis: formData.diagnosis.trim() || undefined,
         referralSource: formData.referralSource.trim() || undefined,
-        insurance: formData.insurance.trim() || undefined,
-        assignedTherapistId: currentUserId,
+        insuranceProvider: formData.insurance.trim() || undefined,
+        assignedTherapists: [currentUserId],
+        status: 'active' as const,
       };
 
-      const newPatient = addPatient(patientData);
-      onPatientAdded(newPatient);
+      const response = await apiClient.post<Patient>('/patients', patientData);
+      if (response.error) {
+        throw new Error(response.error);
+      }
+      onPatientAdded();
     } catch (error) {
       console.error('Error creating patient:', error);
       setErrors({ submit: 'שגיאה ביצירת המטופל. נסה שוב.' });
+      submittedRef.current = false; // Allow retry on error
     } finally {
       setIsSubmitting(false);
     }
@@ -218,20 +255,36 @@ function NewPatientForm({ onClose, onPatientAdded, currentUserId }: NewPatientFo
       )}
 
       <div className="grid grid-cols-2 gap-4">
-        <Input
-          label="שם פרטי"
-          value={formData.firstName}
-          onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
-          error={errors.firstName}
-          required
-        />
-        <Input
-          label="שם משפחה"
-          value={formData.lastName}
-          onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
-          error={errors.lastName}
-          required
-        />
+        <div>
+          <label className="block text-sm font-medium text-clinical-700 mb-1.5">שם פרטי</label>
+          <input
+            type="text"
+            value={formData.firstName}
+            onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
+            className={`w-full px-4 py-2.5 rounded-lg border bg-white ${
+              errors.firstName ? 'border-red-400 focus:ring-red-500' : 'border-sage-200 focus:ring-sage-500'
+            } focus:outline-none focus:ring-2`}
+            required
+          />
+          {errors.firstName && (
+            <p className="mt-1 text-sm text-red-600">{errors.firstName}</p>
+          )}
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-clinical-700 mb-1.5">שם משפחה</label>
+          <input
+            type="text"
+            value={formData.lastName}
+            onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
+            className={`w-full px-4 py-2.5 rounded-lg border bg-white ${
+              errors.lastName ? 'border-red-400 focus:ring-red-500' : 'border-sage-200 focus:ring-sage-500'
+            } focus:outline-none focus:ring-2`}
+            required
+          />
+          {errors.lastName && (
+            <p className="mt-1 text-sm text-red-600">{errors.lastName}</p>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -251,42 +304,58 @@ function NewPatientForm({ onClose, onPatientAdded, currentUserId }: NewPatientFo
           )}
         </div>
         <div>
-          <Select
-            label="מגדר"
+          <label className="block text-sm font-medium text-clinical-700 mb-1.5">מגדר</label>
+          <select
             value={formData.gender}
             onChange={(e) => setFormData(prev => ({ ...prev, gender: e.target.value }))}
-            options={[
-              { value: '', label: 'בחר...' },
-              { value: 'male', label: 'זכר' },
-              { value: 'female', label: 'נקבה' },
-              { value: 'other', label: 'אחר' },
-              { value: 'prefer_not_to_say', label: 'מעדיף לא לציין' },
-            ]}
-            error={errors.gender}
-          />
+            className={`w-full px-4 py-2.5 rounded-lg border bg-white ${
+              errors.gender ? 'border-red-400 focus:ring-red-500' : 'border-sage-200 focus:ring-sage-500'
+            } focus:outline-none focus:ring-2`}
+          >
+            <option value="">בחר...</option>
+            <option value="male">זכר</option>
+            <option value="female">נקבה</option>
+            <option value="other">אחר</option>
+            <option value="prefer_not_to_say">מעדיף לא לציין</option>
+          </select>
+          {errors.gender && (
+            <p className="mt-1 text-sm text-red-600">{errors.gender}</p>
+          )}
         </div>
       </div>
 
-      <Input
-        label="אבחנה ראשית"
-        value={formData.diagnosis}
-        onChange={(e) => setFormData(prev => ({ ...prev, diagnosis: e.target.value }))}
-        placeholder="לדוגמה: הפרעת דיכאון מז'ורי"
-      />
+      <div>
+        <label className="block text-sm font-medium text-clinical-700 mb-1.5">אבחנה ראשית</label>
+        <input
+          type="text"
+          value={formData.diagnosis}
+          onChange={(e) => setFormData(prev => ({ ...prev, diagnosis: e.target.value }))}
+          placeholder="לדוגמה: הפרעת דיכאון מז'ורי"
+          className="w-full px-4 py-2.5 rounded-lg border border-sage-200 bg-white focus:outline-none focus:ring-2 focus:ring-sage-500"
+        />
+      </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <Input
-          label="מקור הפניה"
-          value={formData.referralSource}
-          onChange={(e) => setFormData(prev => ({ ...prev, referralSource: e.target.value }))}
-          placeholder="לדוגמה: רופא משפחה"
-        />
-        <Input
-          label="קופת חולים"
-          value={formData.insurance}
-          onChange={(e) => setFormData(prev => ({ ...prev, insurance: e.target.value }))}
-          placeholder="לדוגמה: מכבי"
-        />
+        <div>
+          <label className="block text-sm font-medium text-clinical-700 mb-1.5">מקור הפניה</label>
+          <input
+            type="text"
+            value={formData.referralSource}
+            onChange={(e) => setFormData(prev => ({ ...prev, referralSource: e.target.value }))}
+            placeholder="לדוגמה: רופא משפחה"
+            className="w-full px-4 py-2.5 rounded-lg border border-sage-200 bg-white focus:outline-none focus:ring-2 focus:ring-sage-500"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-clinical-700 mb-1.5">קופת חולים</label>
+          <input
+            type="text"
+            value={formData.insurance}
+            onChange={(e) => setFormData(prev => ({ ...prev, insurance: e.target.value }))}
+            placeholder="לדוגמה: מכבי"
+            className="w-full px-4 py-2.5 rounded-lg border border-sage-200 bg-white focus:outline-none focus:ring-2 focus:ring-sage-500"
+          />
+        </div>
       </div>
 
       <div className="flex justify-end gap-3 pt-4 border-t border-sage-100">

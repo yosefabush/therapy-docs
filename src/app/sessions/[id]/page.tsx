@@ -56,7 +56,7 @@ export default function SessionDetailPage() {
     return (
       <div className="min-h-screen bg-warm-50">
         <Sidebar user={{ name: currentUser.name, role: therapistRoleLabels[currentUser.therapistRole!], organization: currentUser.organization }} />
-        <main className="ml-64 p-8">
+        <main className="mr-64 p-8">
           <div className="max-w-4xl mx-auto">
             <div className="flex items-center justify-between mb-6">
               <h1 className="text-2xl font-semibold text-clinical-900">Edit Session Notes</h1>
@@ -78,7 +78,7 @@ export default function SessionDetailPage() {
     <div className="min-h-screen bg-warm-50">
       <Sidebar user={{ name: currentUser.name, role: therapistRoleLabels[currentUser.therapistRole!], organization: currentUser.organization }} />
 
-      <main className="ml-64">
+      <main className="mr-64">
         <div className="sticky top-0 z-40 bg-white border-b border-sage-100 px-8 py-4">
           <div className="flex items-center gap-2 text-sm text-clinical-500 mb-2">
             <Link href="/sessions" className="hover:text-sage-600">Sessions</Link>

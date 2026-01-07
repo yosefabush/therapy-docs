@@ -43,3 +43,6 @@ Thumbs.db
 # Testing
 coverage/
 .nyc_output/
+
+# Local data files
+/data

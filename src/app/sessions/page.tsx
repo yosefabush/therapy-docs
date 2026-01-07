@@ -6,21 +6,40 @@ import { Header, QuickActionButton } from '@/components/layout/Header';
 import { Card, Button, Select, Tabs, Modal } from '@/components/ui';
 import { SessionList } from '@/components/sessions/SessionList';
 import { SessionForm } from '@/components/sessions/SessionForm';
-import { mockUsers, mockPatients, mockSessions, therapistRoleLabels } from '@/lib/mock-data';
+import { therapistRoleLabels } from '@/lib/mock-data';
+import { useCurrentUser, usePatients, useSessions, useUsers } from '@/lib/hooks';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { ErrorMessage } from '@/components/ui/ErrorMessage';
 
 export default function SessionsPage() {
-  const currentUser = mockUsers[0];
   const [activeTab, setActiveTab] = useState('upcoming');
   const [showNewSession, setShowNewSession] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>('');
 
+  const { user: currentUser, loading: userLoading, error: userError } = useCurrentUser();
+  const { patients, loading: patientsLoading } = usePatients();
+  const { sessions, loading: sessionsLoading, error: sessionsError, refetch } = useSessions();
+  const { users, loading: usersLoading } = useUsers();
+
+  if (userLoading || patientsLoading || sessionsLoading || usersLoading) {
+    return <LoadingSpinner className="h-screen" />;
+  }
+
+  if (userError || !currentUser) {
+    return <ErrorMessage message="Failed to load user data" />;
+  }
+
+  if (sessionsError) {
+    return <ErrorMessage message={sessionsError} onRetry={refetch} />;
+  }
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const mySessions = mockSessions.filter(s => s.therapistId === currentUser.id);
-  
-  const upcomingSessions = mySessions.filter(s => 
-    (s.status === 'scheduled' || s.status === 'in_progress') && 
+  const mySessions = sessions.filter(s => s.therapistId === currentUser.id);
+
+  const upcomingSessions = mySessions.filter(s =>
+    (s.status === 'scheduled' || s.status === 'in_progress') &&
     new Date(s.scheduledAt) >= today
   ).sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime());
 
@@ -37,37 +56,37 @@ export default function SessionsPage() {
   ];
 
   const getFilteredSessions = () => {
-    let sessions = mySessions;
-    
+    let filteredSessions = mySessions;
+
     switch (activeTab) {
       case 'upcoming':
-        sessions = upcomingSessions;
+        filteredSessions = upcomingSessions;
         break;
       case 'completed':
-        sessions = completedSessions;
+        filteredSessions = completedSessions;
         break;
       case 'pending':
-        sessions = pendingSignature;
+        filteredSessions = pendingSignature;
         break;
       default:
-        sessions = mySessions.sort((a, b) => 
+        filteredSessions = mySessions.sort((a, b) =>
           new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime()
         );
     }
 
     if (selectedDate) {
       const filterDate = new Date(selectedDate);
-      sessions = sessions.filter(s => {
+      filteredSessions = filteredSessions.filter(s => {
         const sessionDate = new Date(s.scheduledAt);
         return sessionDate.toDateString() === filterDate.toDateString();
       });
     }
 
-    return sessions;
+    return filteredSessions;
   };
 
   const patientCodes: Record<string, string> = {};
-  mockPatients.forEach(p => { patientCodes[p.id] = p.patientCode; });
+  patients.forEach(p => { patientCodes[p.id] = p.patientCode; });
 
   return (
     <div className="min-h-screen bg-warm-50">
@@ -185,9 +204,9 @@ export default function SessionsPage() {
 
           {/* Sessions List */}
           {getFilteredSessions().length > 0 ? (
-            <SessionList 
-              sessions={getFilteredSessions()} 
-              therapists={mockUsers}
+            <SessionList
+              sessions={getFilteredSessions()}
+              therapists={users}
               patientCodes={patientCodes}
             />
           ) : (
