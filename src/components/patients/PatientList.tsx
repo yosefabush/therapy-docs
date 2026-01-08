@@ -124,10 +124,10 @@ export function PatientCardCompact({ patient, lastSession, nextSession, progress
 
   return (
     <Link href={`/patients/${patient.id}`}>
-      <Card hover padding="sm" className="h-full">
-        <div className="flex items-start justify-between mb-3">
+      <Card hover padding="sm" className="h-full text-center">
+        <div className="flex flex-col items-center mb-3">
           <Avatar name={patient.patientCode} size="sm" />
-          <Badge variant={patient.status === 'active' ? 'success' : 'sage'} className="text-[10px]">
+          <Badge variant={patient.status === 'active' ? 'success' : 'sage'} className="text-[10px] mt-2">
             {statusLabels[patient.status]}
           </Badge>
         </div>
@@ -137,7 +137,7 @@ export function PatientCardCompact({ patient, lastSession, nextSession, progress
 
         {progress !== undefined && (
           <div className="mb-3">
-            <div className="flex justify-between text-xs text-clinical-500 mb-1">
+            <div className="flex justify-center gap-2 text-xs text-clinical-500 mb-1">
               <span>התקדמות בטיפול</span>
               <span>{progress}%</span>
             </div>
@@ -145,7 +145,7 @@ export function PatientCardCompact({ patient, lastSession, nextSession, progress
           </div>
         )}
 
-        <div className="flex items-center justify-between text-xs text-clinical-400">
+        <div className="flex flex-col items-center gap-1 text-xs text-clinical-400">
           {lastSession && (
             <span>אחרון: {formatDate(lastSession)}</span>
           )}

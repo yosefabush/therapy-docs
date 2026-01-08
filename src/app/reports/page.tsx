@@ -91,64 +91,56 @@ export default function ReportsPage() {
         <div className="p-8">
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <Card>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-clinical-500">סה&quot;כ דוחות</p>
-                  <p className="text-2xl font-semibold text-clinical-900">{reports.length}</p>
-                </div>
-                <div className="w-10 h-10 rounded-lg bg-sage-100 flex items-center justify-center">
+            <Card className="text-center">
+              <div className="flex flex-col items-center">
+                <div className="w-10 h-10 rounded-lg bg-sage-100 flex items-center justify-center mb-3">
                   <svg className="w-5 h-5 text-sage-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                 </div>
+                <p className="text-sm text-clinical-500">סה&quot;כ דוחות</p>
+                <p className="text-2xl font-semibold text-clinical-900">{reports.length}</p>
               </div>
             </Card>
-            <Card>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-clinical-500">טיוטות</p>
-                  <p className="text-2xl font-semibold text-clinical-900">
-                    {reports.filter(r => r.status === 'draft').length}
-                  </p>
-                </div>
-                <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
+            <Card className="text-center">
+              <div className="flex flex-col items-center">
+                <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center mb-3">
                   <svg className="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
                 </div>
+                <p className="text-sm text-clinical-500">טיוטות</p>
+                <p className="text-2xl font-semibold text-clinical-900">
+                  {reports.filter(r => r.status === 'draft').length}
+                </p>
               </div>
             </Card>
-            <Card>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-clinical-500">הושלמו החודש</p>
-                  <p className="text-2xl font-semibold text-clinical-900">
-                    {reports.filter(r => {
-                      const date = new Date(r.generatedAt);
-                      const now = new Date();
-                      return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
-                    }).length}
-                  </p>
-                </div>
-                <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+            <Card className="text-center">
+              <div className="flex flex-col items-center">
+                <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center mb-3">
                   <svg className="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
+                <p className="text-sm text-clinical-500">הושלמו החודש</p>
+                <p className="text-2xl font-semibold text-clinical-900">
+                  {reports.filter(r => {
+                    const date = new Date(r.generatedAt);
+                    const now = new Date();
+                    return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+                  }).length}
+                </p>
               </div>
             </Card>
-            <Card>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-clinical-500">ממתינים לאישור</p>
-                  <p className="text-2xl font-semibold text-clinical-900">0</p>
-                </div>
-                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+            <Card className="text-center">
+              <div className="flex flex-col items-center">
+                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center mb-3">
                   <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
+                <p className="text-sm text-clinical-500">ממתינים לאישור</p>
+                <p className="text-2xl font-semibold text-clinical-900">0</p>
               </div>
             </Card>
           </div>

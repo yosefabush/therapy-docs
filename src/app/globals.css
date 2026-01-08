@@ -4,8 +4,89 @@
 
 @layer base {
   :root {
-    --background: 250 250 248;
-    --foreground: 24 28 24;
+    /* Base colors - Medical warm theme */
+    --background: 39 33% 98%; /* warm-50 */
+    --foreground: 222 47% 11%; /* clinical-900 */
+
+    /* Card surfaces */
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    /* Popover/Dialog surfaces */
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    /* Primary (Sage) */
+    --primary: 120 8% 33%; /* sage-600 */
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary (Warm) */
+    --secondary: 36 27% 93%; /* warm-100 */
+    --secondary-foreground: 215 25% 27%; /* clinical-700 */
+
+    /* Muted backgrounds */
+    --muted: 210 40% 96%; /* clinical-100 */
+    --muted-foreground: 215 16% 47%; /* clinical-500 */
+
+    /* Accent (Sage light) */
+    --accent: 120 8% 89%; /* sage-100 */
+    --accent-foreground: 120 5% 19%; /* sage-900 */
+
+    /* Destructive (Danger) */
+    --destructive: 0 72% 51%; /* red-600 */
+    --destructive-foreground: 0 0% 100%;
+
+    /* Borders */
+    --border: 120 8% 89%; /* sage-100 */
+    --input: 120 7% 79%; /* sage-200 */
+    --ring: 120 7% 41%; /* sage-500 */
+
+    /* Radius */
+    --radius: 0.75rem;
+
+    /* Sidebar specific */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 215 19% 35%; /* clinical-600 */
+    --sidebar-primary: 120 8% 33%; /* sage-600 */
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 120 8% 89%; /* sage-100 */
+    --sidebar-accent-foreground: 120 6% 27%; /* sage-700 */
+    --sidebar-border: 120 8% 89%; /* sage-100 */
+    --sidebar-ring: 120 7% 41%; /* sage-500 */
+  }
+
+  /* Dark mode (optional) */
+  .dark {
+    --background: 120 8% 10%; /* sage-950 */
+    --foreground: 120 5% 97%; /* sage-50 */
+
+    --card: 120 5% 19%; /* sage-900 */
+    --card-foreground: 120 5% 97%;
+
+    --popover: 120 5% 19%;
+    --popover-foreground: 120 5% 97%;
+
+    --primary: 120 6% 66%; /* sage-300 */
+    --primary-foreground: 120 8% 10%;
+
+    --secondary: 120 4% 22%; /* sage-800 */
+    --secondary-foreground: 120 8% 89%;
+
+    --muted: 120 4% 22%;
+    --muted-foreground: 120 6% 66%;
+
+    --accent: 120 6% 27%; /* sage-700 */
+    --accent-foreground: 120 8% 89%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 120 6% 27%;
+    --input: 120 6% 27%;
+    --ring: 120 6% 66%;
+
+    --sidebar-background: 120 5% 19%;
+    --sidebar-foreground: 120 7% 79%;
   }
 
   * {
@@ -42,6 +123,25 @@
     letter-spacing: 0;
   }
 
+  /* RTL Sidebar positioning */
+  html[dir="rtl"] [data-sidebar="sidebar"] {
+    left: auto;
+    right: 0;
+    border-left: 1px solid hsl(var(--sidebar-border));
+    border-right: none;
+  }
+
+  /* RTL Dialog positioning */
+  html[dir="rtl"] [role="dialog"] {
+    direction: rtl;
+  }
+
+  /* RTL Select dropdown arrow */
+  html[dir="rtl"] [data-radix-select-trigger] svg {
+    margin-left: 0;
+    margin-right: auto;
+  }
+
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -65,6 +165,7 @@
 }
 
 @layer components {
+  /* Legacy component classes for backward compatibility */
   .card {
     @apply bg-white rounded-xl border border-sage-100 shadow-soft;
   }
