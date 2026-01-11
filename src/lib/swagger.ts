@@ -54,8 +54,10 @@ export const getApiDocs = () => {
             type: 'object',
             properties: {
               id: { type: 'string' },
-              encryptedData: { type: 'string' },
-              patientCode: { type: 'string' },
+              idNumber: { type: 'string', description: 'Israeli ID number (תעודת זהות) - 9 digits', minLength: 9, maxLength: 9 },
+              encryptedData: { type: 'string', description: 'HIPAA-compliant encrypted PII blob' },
+              firstName: { type: 'string', description: 'Decrypted first name for display' },
+              lastName: { type: 'string', description: 'Decrypted last name for display' },
               dateOfBirth: { type: 'string' },
               gender: { type: 'string', enum: ['male', 'female', 'other', 'prefer_not_to_say'] },
               primaryDiagnosis: { type: 'string' },
@@ -69,10 +71,12 @@ export const getApiDocs = () => {
           },
           PatientCreate: {
             type: 'object',
-            required: ['encryptedData', 'patientCode', 'dateOfBirth', 'gender', 'assignedTherapists'],
+            required: ['idNumber', 'encryptedData', 'firstName', 'lastName', 'dateOfBirth', 'gender', 'assignedTherapists'],
             properties: {
+              idNumber: { type: 'string', minLength: 9, maxLength: 9, description: 'Israeli ID number (תעודת זהות)' },
               encryptedData: { type: 'string' },
-              patientCode: { type: 'string' },
+              firstName: { type: 'string', minLength: 1 },
+              lastName: { type: 'string', minLength: 1 },
               dateOfBirth: { type: 'string' },
               gender: { type: 'string', enum: ['male', 'female', 'other', 'prefer_not_to_say'] },
               primaryDiagnosis: { type: 'string' },

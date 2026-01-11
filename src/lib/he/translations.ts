@@ -43,7 +43,7 @@ export const dashboard = {
 
 // Patient-related
 export const patients = {
-  patientCode: 'קוד מטופל',
+  idNumber: 'תעודת זהות',
   diagnosis: 'אבחנה',
   noDiagnosis: 'אין אבחנה רשומה',
   insuranceProvider: 'ספק ביטוח',

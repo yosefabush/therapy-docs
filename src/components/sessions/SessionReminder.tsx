@@ -130,7 +130,7 @@ export function SessionReminder({
           <div className="flex items-center justify-between">
             <span className="text-clinical-500 text-sm">מטופל:</span>
             <span className="font-medium text-clinical-900">
-              {patient?.patientCode || 'טוען...'}
+              {patient ? `${patient.firstName} ${patient.lastName}` : 'טוען...'}
             </span>
           </div>
 

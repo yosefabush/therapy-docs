@@ -4,8 +4,10 @@ import { seedIfEmpty } from '@/lib/data/seed';
 import { z } from 'zod';
 
 const createPatientSchema = z.object({
+  idNumber: z.string().length(9, 'תעודת זהות חייבת להכיל 9 ספרות'),
   encryptedData: z.string(),
-  patientCode: z.string(),
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
   dateOfBirth: z.string(),
   gender: z.enum(['male', 'female', 'other', 'prefer_not_to_say']),
   primaryDiagnosis: z.string().optional(),

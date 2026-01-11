@@ -8,7 +8,6 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { mockSignup } from '@/lib/mock-auth';
 
 interface FormErrors {
   name?: string;
@@ -77,19 +76,26 @@ export default function SignupPage() {
 
     setIsLoading(true);
 
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password }),
+      });
 
-    const result = mockSignup({ name, email, password, confirmPassword });
+      const result = await response.json();
 
-    if (result.success) {
-      setSuccess(true);
-      // Redirect to login after 2 seconds
-      setTimeout(() => {
-        router.push('/login');
-      }, 2000);
-    } else {
-      setAuthError(result.error || 'אירעה שגיאה בהרשמה');
+      if (result.success) {
+        setSuccess(true);
+        // Redirect to login after 2 seconds
+        setTimeout(() => {
+          router.push('/login');
+        }, 2000);
+      } else {
+        setAuthError(result.error || 'אירעה שגיאה בהרשמה');
+      }
+    } catch {
+      setAuthError('אירעה שגיאה בהרשמה. אנא נסה שוב.');
     }
 
     setIsLoading(false);

@@ -45,9 +45,9 @@ export function PatientList({ patients, therapists }: PatientListProps) {
             <div className="p-4 flex items-center gap-4">
               {/* Patient Avatar */}
               <div className="relative">
-                <Avatar name={patient.patientCode} size="lg" />
+                <Avatar name={`${patient.firstName} ${patient.lastName}`} size="lg" />
                 <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${
-                  patient.status === 'active' ? 'bg-green-500' : 
+                  patient.status === 'active' ? 'bg-green-500' :
                   patient.status === 'inactive' ? 'bg-amber-500' : 'bg-clinical-400'
                 }`} />
               </div>
@@ -55,7 +55,7 @@ export function PatientList({ patients, therapists }: PatientListProps) {
               {/* Patient Info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-medium text-clinical-900">{patient.patientCode}</h3>
+                  <h3 className="font-medium text-clinical-900">{patient.firstName} {patient.lastName}</h3>
                   {getStatusBadge(patient.status)}
                 </div>
                 <p className="text-sm text-clinical-600 truncate">
@@ -126,13 +126,13 @@ export function PatientCardCompact({ patient, lastSession, nextSession, progress
     <Link href={`/patients/${patient.id}`}>
       <Card hover padding="sm" className="h-full text-center">
         <div className="flex flex-col items-center mb-3">
-          <Avatar name={patient.patientCode} size="sm" />
+          <Avatar name={`${patient.firstName} ${patient.lastName}`} size="sm" />
           <Badge variant={patient.status === 'active' ? 'success' : 'sage'} className="text-[10px] mt-2">
             {statusLabels[patient.status]}
           </Badge>
         </div>
 
-        <h4 className="font-medium text-clinical-900 text-sm mb-1">{patient.patientCode}</h4>
+        <h4 className="font-medium text-clinical-900 text-sm mb-1">{patient.firstName} {patient.lastName}</h4>
         <p className="text-xs text-clinical-500 line-clamp-1 mb-3">{patient.primaryDiagnosis}</p>
 
         {progress !== undefined && (

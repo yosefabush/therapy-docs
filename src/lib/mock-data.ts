@@ -17,14 +17,6 @@ function generateId(): string {
   return `patient-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
-// Helper to generate patient code from name
-function generatePatientCode(firstName: string, lastName: string): string {
-  const firstInitial = firstName.charAt(0);
-  const lastInitial = lastName.charAt(0);
-  const randomNum = Math.floor(Math.random() * 900) + 100;
-  return `מט-${firstInitial}${lastInitial}${randomNum}`;
-}
-
 // Mock Users (Therapists)
 export const mockUsers: User[] = [
   {
@@ -86,8 +78,10 @@ export const mockUsers: User[] = [
 export const mockPatients: Patient[] = [
   {
     id: 'patient-1',
+    idNumber: '012345678',
     encryptedData: 'encrypted-patient-data-1',
-    patientCode: 'מט-אב123',
+    firstName: 'אביגיל',
+    lastName: 'ברקוביץ',
     dateOfBirth: '1985-03-15',
     gender: 'female',
     primaryDiagnosis: 'הפרעת דיכאון מז\'ורי, חוזרת',
@@ -100,8 +94,10 @@ export const mockPatients: Patient[] = [
   },
   {
     id: 'patient-2',
+    idNumber: '023456789',
     encryptedData: 'encrypted-patient-data-2',
-    patientCode: 'מט-גד456',
+    firstName: 'גל',
+    lastName: 'דוידוב',
     dateOfBirth: '1992-07-22',
     gender: 'male',
     primaryDiagnosis: 'הפרעת חרדה כללית',
@@ -114,8 +110,10 @@ export const mockPatients: Patient[] = [
   },
   {
     id: 'patient-3',
+    idNumber: '034567890',
     encryptedData: 'encrypted-patient-data-3',
-    patientCode: 'מט-וז789',
+    firstName: 'ורד',
+    lastName: 'זהבי',
     dateOfBirth: '1978-11-30',
     gender: 'female',
     primaryDiagnosis: 'הפרעת דחק פוסט-טראומטית (PTSD)',
@@ -128,8 +126,10 @@ export const mockPatients: Patient[] = [
   },
   {
     id: 'patient-4',
+    idNumber: '045678901',
     encryptedData: 'encrypted-patient-data-4',
-    patientCode: 'מט-חט012',
+    firstName: 'חיים',
+    lastName: 'טל',
     dateOfBirth: '2010-05-18',
     gender: 'male',
     primaryDiagnosis: 'הפרעת קשב וריכוז (ADHD), סוג משולב',
@@ -142,8 +142,10 @@ export const mockPatients: Patient[] = [
   },
   {
     id: 'patient-5',
+    idNumber: '056789012',
     encryptedData: 'encrypted-patient-data-5',
-    patientCode: 'מט-יכ345',
+    firstName: 'יוסי',
+    lastName: 'כהן',
     dateOfBirth: '1965-09-08',
     gender: 'male',
     primaryDiagnosis: 'הפרעה דו-קוטבית סוג II',
@@ -473,6 +475,7 @@ export function getReportsByPatient(patientId: string): Report[] {
 
 // Patient creation interface
 export interface CreatePatientData {
+  idNumber: string; // Israeli ID number (תעודת זהות)
   firstName: string;
   lastName: string;
   dateOfBirth: string;
@@ -487,8 +490,10 @@ export interface CreatePatientData {
 export function addPatient(data: CreatePatientData): Patient {
   const newPatient: Patient = {
     id: generateId(),
+    idNumber: data.idNumber,
     encryptedData: `encrypted-${data.firstName}-${data.lastName}`, // Simulated encryption
-    patientCode: generatePatientCode(data.firstName, data.lastName),
+    firstName: data.firstName,
+    lastName: data.lastName,
     dateOfBirth: data.dateOfBirth,
     gender: data.gender,
     primaryDiagnosis: data.diagnosis || undefined,

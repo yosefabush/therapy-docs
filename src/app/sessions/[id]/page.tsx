@@ -255,9 +255,9 @@ export default function SessionDetailPage() {
               <Card>
                 <h3 className="text-lg font-semibold text-clinical-900 mb-4">Patient</h3>
                 <Link href={`/patients/${patient.id}`} className="flex items-center gap-3 p-3 rounded-lg hover:bg-sage-50 -mx-3">
-                  <Avatar name={patient.patientCode} />
+                  <Avatar name={`${patient.firstName} ${patient.lastName}`} />
                   <div>
-                    <p className="font-medium text-clinical-900">{patient.patientCode}</p>
+                    <p className="font-medium text-clinical-900">{patient.firstName} {patient.lastName}</p>
                     <p className="text-sm text-clinical-500">{patient.primaryDiagnosis}</p>
                   </div>
                 </Link>

@@ -86,16 +86,16 @@ export default function PatientDetailPage() {
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
               </svg>
-              <span className="text-clinical-700">{patient.patientCode}</span>
+              <span className="text-clinical-700">{patient.firstName} {patient.lastName}</span>
             </div>
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <Avatar name={patient.patientCode} size="lg" />
+                <Avatar name={`${patient.firstName} ${patient.lastName}`} size="lg" />
                 <div>
                   <div className="flex items-center gap-2">
                     <h1 className="text-2xl font-semibold text-clinical-900" style={{ fontFamily: '"Crimson Pro", Georgia, serif' }}>
-                      {patient.patientCode}
+                      {patient.firstName} {patient.lastName}
                     </h1>
                     <Badge variant={patient.status === 'active' ? 'success' : 'sage'}>
                       {patient.status}
@@ -205,6 +205,14 @@ export default function PatientDetailPage() {
                   </h3>
                   <dl className="space-y-3 text-sm">
                     <div>
+                      <dt className="text-clinical-500">תעודת זהות</dt>
+                      <dd className="text-clinical-900 font-medium">{patient.idNumber}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-clinical-500">שם מלא</dt>
+                      <dd className="text-clinical-900 font-medium">{patient.firstName} {patient.lastName}</dd>
+                    </div>
+                    <div>
                       <dt className="text-clinical-500">תאריך לידה</dt>
                       <dd className="text-clinical-900 font-medium">{patient.dateOfBirth}</dd>
                     </div>
@@ -311,7 +319,7 @@ export default function PatientDetailPage() {
             <div className="space-y-6">
               <ReportGenerator
                 patientId={patientId}
-                patientCode={patient.patientCode}
+                patientName={`${patient.firstName} ${patient.lastName}`}
                 sessions={sessions}
                 goals={goals}
                 onGenerate={(report) => console.log('Generated:', report)}
@@ -377,7 +385,7 @@ export default function PatientDetailPage() {
 interface EditPatientFormProps {
   patient: {
     id: string;
-    patientCode: string;
+    idNumber: string;
     dateOfBirth: string;
     gender: string;
     primaryDiagnosis?: string;
@@ -435,10 +443,10 @@ function EditPatientForm({ patient, onClose, onSaved }: EditPatientFormProps) {
       )}
 
       <div>
-        <label className="block text-sm font-medium text-clinical-700 mb-1.5">קוד מטופל</label>
+        <label className="block text-sm font-medium text-clinical-700 mb-1.5">תעודת זהות</label>
         <input
           type="text"
-          value={patient.patientCode}
+          value={patient.idNumber}
           disabled
           className="w-full px-4 py-2.5 rounded-lg border border-sage-200 bg-clinical-50 text-clinical-500"
         />

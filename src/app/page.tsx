@@ -1,95 +1,77 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { Card, Badge, Button, ProgressBar, Modal } from '@/components/ui';
 import { PatientCardCompact } from '@/components/patients/PatientList';
 import { TodaySchedule } from '@/components/sessions/SessionList';
 import { therapistRoleLabels } from '@/lib/mock-data';
-import { useCurrentUser, usePatients, useSessions, useTreatmentGoals } from '@/lib/hooks';
+import { useAuthRedirect, useMyPatients, useMySessions, useMyTreatmentGoals } from '@/lib/hooks';
 import { apiClient } from '@/lib/api/client';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { ErrorMessage } from '@/components/ui/ErrorMessage';
 
 export default function Dashboard() {
   const [showNewSession, setShowNewSession] = useState(false);
 
-  const { user: currentUser, loading: userLoading, error: userError } = useCurrentUser();
-  const { patients, loading: patientsLoading } = usePatients();
-  const { sessions, loading: sessionsLoading, refetch: refetchSessions } = useSessions();
-  const { goals, loading: goalsLoading } = useTreatmentGoals();
+  const { user: currentUser, loading: userLoading } = useAuthRedirect();
+
+  // Use user-specific hooks - only fetch data for current user
+  const { patients: myPatients, loading: patientsLoading } = useMyPatients(currentUser?.id);
+  const { sessions, loading: sessionsLoading, refetch: refetchSessions } = useMySessions(currentUser?.id);
+
+  // Get patient IDs for treatment goals filtering
+  const patientIds = useMemo(() => myPatients.map(p => p.id), [myPatients]);
+  const { goals, loading: goalsLoading } = useMyTreatmentGoals(currentUser?.id, patientIds);
 
   if (userLoading || patientsLoading || sessionsLoading || goalsLoading) {
     return <LoadingSpinner className="h-screen" />;
   }
 
-  if (userError || !currentUser) {
-    return <ErrorMessage message="Failed to load user data" />;
+  if (!currentUser) {
+    // Will redirect to login
+    return <LoadingSpinner className="h-screen" />;
   }
 
   // Get today's sessions for current user
   const today = new Date();
   const todaysSessions = sessions.filter(session => {
     const sessionDate = new Date(session.scheduledAt);
-    return sessionDate.toDateString() === today.toDateString() &&
-           session.therapistId === currentUser.id;
+    return sessionDate.toDateString() === today.toDateString();
   });
-
-  // Get patients assigned to current user
-  const myPatients = patients.filter(p =>
-    p.assignedTherapists.includes(currentUser.id)
-  );
 
   // Calculate stats
   const completedToday = todaysSessions.filter(s => s.status === 'completed').length;
   const pendingDocumentation = sessions.filter(
-    s => s.status === 'completed' && !s.signedAt && s.therapistId === currentUser.id
+    s => s.status === 'completed' && !s.signedAt
   ).length;
 
-  // Mock AI insights for demo
-  const allInsights = [
+  // Only show AI insights if user has patients
+  const allInsights: Array<{
+    id: string;
+    patientId: string;
+    type: 'progress_trend' | 'pattern' | 'risk_indicator';
+    content: string;
+    confidence: number;
+    generatedAt: Date;
+  }> = myPatients.length > 0 ? [
     {
       id: 'mock-insight-1',
       patientId: '',
-      type: 'progress_trend' as const,
-      content: 'התקדמות חיובית: 3 מטופלים הראו שיפור משמעותי במדדי חרדה בחודש האחרון.',
+      type: 'progress_trend',
+      content: 'התקדמות חיובית: מטופלים הראו שיפור במדדי חרדה.',
       confidence: 0.85,
       generatedAt: new Date(),
     },
     {
       id: 'mock-insight-2',
       patientId: '',
-      type: 'pattern' as const,
-      content: 'תבנית מזוהה: מטופלים מגיבים טוב יותר למפגשים בשעות הבוקר (9:00-11:00).',
+      type: 'pattern',
+      content: 'תבנית מזוהה: מטופלים מגיבים טוב יותר למפגשים בשעות הבוקר.',
       confidence: 0.72,
       generatedAt: new Date(),
     },
-    {
-      id: 'mock-insight-3',
-      patientId: '',
-      type: 'risk_indicator' as const,
-      content: 'תשומת לב נדרשת: מטופל אחד לא הגיע ל-2 מפגשים אחרונים. מומלץ ליצור קשר.',
-      confidence: 0.9,
-      generatedAt: new Date(),
-    },
-    {
-      id: 'mock-insight-4',
-      patientId: '',
-      type: 'pattern' as const,
-      content: 'המלצה: שילוב טכניקות CBT הראה יעילות גבוהה ב-4 מקרים דומים.',
-      confidence: 0.78,
-      generatedAt: new Date(),
-    },
-    {
-      id: 'mock-insight-5',
-      patientId: '',
-      type: 'progress_trend' as const,
-      content: 'מעקב התקדמות יציב. המשך ניטור לזיהוי שינויים.',
-      confidence: 0.7,
-      generatedAt: new Date(),
-    },
-  ];
+  ] : [];
 
   const criticalInsights = allInsights.filter(i => i.type === 'risk_indicator');
 
@@ -203,34 +185,38 @@ export default function Dashboard() {
                   פעילות אחרונה
                 </h2>
                 <div className="space-y-3">
-                  {sessions
-                    .filter(s => s.status === 'completed')
-                    .slice(0, 5)
-                    .map(session => {
-                      const patient = patients.find(p => p.id === session.patientId);
-                      return (
-                        <div key={session.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-sage-50 transition-colors">
-                          <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                            <svg className="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
+                  {sessions.length === 0 ? (
+                    <p className="text-sm text-clinical-500 text-center py-4">אין פעילות אחרונה</p>
+                  ) : (
+                    sessions
+                      .filter(s => s.status === 'completed')
+                      .slice(0, 5)
+                      .map(session => {
+                        const patient = myPatients.find(p => p.id === session.patientId);
+                        return (
+                          <div key={session.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-sage-50 transition-colors">
+                            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                              <svg className="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-clinical-900">
+                                מפגש הושלם עם {patient ? `${patient.firstName} ${patient.lastName}` : 'מטופל'}
+                              </p>
+                              <p className="text-xs text-clinical-500">
+                                {new Intl.DateTimeFormat('he-IL', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(session.scheduledAt))}
+                              </p>
+                            </div>
+                            {session.signedAt ? (
+                              <Badge variant="success">חתום</Badge>
+                            ) : (
+                              <Badge variant="warning">ממתין</Badge>
+                            )}
                           </div>
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-clinical-900">
-                              מפגש הושלם עם {patient?.patientCode}
-                            </p>
-                            <p className="text-xs text-clinical-500">
-                              {new Intl.DateTimeFormat('he-IL', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(session.scheduledAt))}
-                            </p>
-                          </div>
-                          {session.signedAt ? (
-                            <Badge variant="success">חתום</Badge>
-                          ) : (
-                            <Badge variant="warning">ממתין</Badge>
-                          )}
-                        </div>
-                      );
-                    })}
+                        );
+                      })
+                  )}
                 </div>
               </Card>
 
@@ -281,31 +267,43 @@ export default function Dashboard() {
                   </h2>
                   <a href="/patients"><Button variant="ghost" size="sm">הצג הכל</Button></a>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  {myPatients.slice(0, 4).map(patient => {
-                    const patientGoals = goals.filter(g => g.patientId === patient.id);
-                    const avgProgress = patientGoals.length > 0
-                      ? Math.round(patientGoals.reduce((sum, g) => sum + g.progress, 0) / patientGoals.length)
-                      : 0;
-                    const patientSessions = sessions.filter(s => s.patientId === patient.id);
-                    const lastSession = patientSessions.filter(s => s.status === 'completed').sort(
-                      (a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime()
-                    )[0];
-                    const nextSession = patientSessions.filter(s => s.status === 'scheduled').sort(
-                      (a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()
-                    )[0];
+                {myPatients.length === 0 ? (
+                  <div className="text-center py-8">
+                    <svg className="w-12 h-12 text-clinical-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <p className="text-sm text-clinical-500">אין מטופלים משויכים</p>
+                    <a href="/patients">
+                      <Button variant="primary" size="sm" className="mt-3">הוסף מטופל</Button>
+                    </a>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    {myPatients.slice(0, 4).map(patient => {
+                      const patientGoals = goals.filter(g => g.patientId === patient.id);
+                      const avgProgress = patientGoals.length > 0
+                        ? Math.round(patientGoals.reduce((sum, g) => sum + g.progress, 0) / patientGoals.length)
+                        : 0;
+                      const patientSessions = sessions.filter(s => s.patientId === patient.id);
+                      const lastSession = patientSessions.filter(s => s.status === 'completed').sort(
+                        (a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime()
+                      )[0];
+                      const nextSession = patientSessions.filter(s => s.status === 'scheduled').sort(
+                        (a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()
+                      )[0];
 
-                    return (
-                      <PatientCardCompact
-                        key={patient.id}
-                        patient={patient}
-                        progress={avgProgress}
-                        lastSession={lastSession?.scheduledAt}
-                        nextSession={nextSession?.scheduledAt}
-                      />
-                    );
-                  })}
-                </div>
+                      return (
+                        <PatientCardCompact
+                          key={patient.id}
+                          patient={patient}
+                          progress={avgProgress}
+                          lastSession={lastSession?.scheduledAt}
+                          nextSession={nextSession?.scheduledAt}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
               </Card>
 
               {/* AI Insights - Sidebar */}
@@ -360,7 +358,7 @@ export default function Dashboard() {
 }
 
 interface NewSessionFormProps {
-  patients: { id: string; patientCode: string }[];
+  patients: { id: string; firstName: string; lastName: string }[];
   currentUserId: string;
   therapistRole: string;
   onClose: () => void;
@@ -434,7 +432,7 @@ function NewSessionForm({ patients, currentUserId, therapistRole, onClose, onSes
         >
           <option value="">בחר מטופל...</option>
           {patients.map(p => (
-            <option key={p.id} value={p.id}>{p.patientCode}</option>
+            <option key={p.id} value={p.id}>{p.firstName} {p.lastName}</option>
           ))}
         </select>
       </div>

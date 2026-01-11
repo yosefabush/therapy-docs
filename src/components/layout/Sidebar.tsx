@@ -2,9 +2,10 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { clsx } from 'clsx';
 import { Avatar } from '@/components/ui';
+import { clearAuthUser } from '@/lib/hooks';
 
 interface SidebarProps {
   user: {
@@ -12,10 +13,20 @@ interface SidebarProps {
     role: string;
     organization: string;
   };
+  onLogout?: () => void;
 }
 
-export function Sidebar({ user }: SidebarProps) {
+export function Sidebar({ user, onLogout }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    clearAuthUser();
+    if (onLogout) {
+      onLogout();
+    }
+    router.push('/login');
+  };
 
   const navigation = [
     {
@@ -162,7 +173,11 @@ export function Sidebar({ user }: SidebarProps) {
             <p className="text-sm font-medium text-clinical-900 truncate">{user.name}</p>
             <p className="text-xs text-clinical-500 truncate">{user.role}</p>
           </div>
-          <button className="text-clinical-400 hover:text-clinical-600">
+          <button
+            onClick={handleLogout}
+            className="text-clinical-400 hover:text-clinical-600"
+            title="התנתק"
+          >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>

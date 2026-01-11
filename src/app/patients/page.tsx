@@ -7,7 +7,7 @@ import { Card, Button, Select, Tabs, Modal } from '@/components/ui';
 import { PatientList } from '@/components/patients/PatientList';
 import { therapistRoleLabels } from '@/lib/mock-data';
 import { Patient } from '@/types';
-import { useCurrentUser, usePatients, useUsers } from '@/lib/hooks';
+import { useAuthRedirect, useMyPatients, useUsers } from '@/lib/hooks';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
 import { apiClient } from '@/lib/api/client';
@@ -17,16 +17,16 @@ export default function PatientsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showNewPatient, setShowNewPatient] = useState(false);
 
-  const { user: currentUser, loading: userLoading, error: userError } = useCurrentUser();
-  const { patients, loading: patientsLoading, error: patientsError, refetch } = usePatients();
+  const { user: currentUser, loading: userLoading } = useAuthRedirect();
+  const { patients, loading: patientsLoading, error: patientsError, refetch } = useMyPatients(currentUser?.id);
   const { users, loading: usersLoading } = useUsers();
 
   if (userLoading || patientsLoading || usersLoading) {
     return <LoadingSpinner className="h-screen" />;
   }
 
-  if (userError || !currentUser) {
-    return <ErrorMessage message="Failed to load user data" />;
+  if (!currentUser) {
+    return <LoadingSpinner className="h-screen" />;
   }
 
   if (patientsError) {
@@ -41,18 +41,20 @@ export default function PatientsPage() {
   const tabs = [
     { id: 'all', label: 'כל המטופלים', count: patients.length },
     { id: 'active', label: 'פעילים', count: patients.filter(p => p.status === 'active').length },
-    { id: 'mine', label: 'המטופלים שלי', count: patients.filter(p => p.assignedTherapists.includes(currentUser.id)).length },
     { id: 'discharged', label: 'שוחררו', count: patients.filter(p => p.status === 'discharged').length },
   ];
 
   const filteredPatients = patients.filter(patient => {
-    const matchesSearch = patient.patientCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      patient.primaryDiagnosis?.toLowerCase().includes(searchQuery.toLowerCase());
+    const searchLower = searchQuery.toLowerCase();
+    const fullName = `${patient.firstName} ${patient.lastName}`.toLowerCase();
+    const matchesSearch =
+      fullName.includes(searchLower) ||
+      patient.idNumber?.includes(searchQuery) ||
+      patient.primaryDiagnosis?.toLowerCase().includes(searchLower);
 
     const matchesTab =
       activeTab === 'all' ? true :
       activeTab === 'active' ? patient.status === 'active' :
-      activeTab === 'mine' ? patient.assignedTherapists.includes(currentUser.id) :
       activeTab === 'discharged' ? patient.status === 'discharged' : true;
 
     return matchesSearch && matchesTab;
@@ -94,7 +96,7 @@ export default function PatientsPage() {
                   </svg>
                   <input
                     type="search"
-                    placeholder="חפש לפי קוד מטופל או אבחנה..."
+                    placeholder="חפש לפי שם, ת.ז. או אבחנה..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pr-10 pl-4 py-2.5 rounded-lg border border-sage-200 bg-white text-clinical-900 placeholder:text-clinical-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent"
@@ -104,7 +106,7 @@ export default function PatientsPage() {
               <Select
                 options={[
                   { value: 'recent', label: 'עודכן לאחרונה' },
-                  { value: 'name', label: 'קוד מטופל' },
+                  { value: 'name', label: 'שם מטופל' },
                   { value: 'sessions', label: 'הכי הרבה מפגשים' },
                 ]}
                 className="w-48"
@@ -153,6 +155,7 @@ interface NewPatientFormProps {
 
 function NewPatientForm({ onClose, onPatientAdded, currentUserId }: NewPatientFormProps) {
   const [formData, setFormData] = useState({
+    idNumber: '',
     firstName: '',
     lastName: '',
     dateOfBirth: '',
@@ -168,6 +171,11 @@ function NewPatientForm({ onClose, onPatientAdded, currentUserId }: NewPatientFo
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
+    if (!formData.idNumber.trim()) {
+      newErrors.idNumber = 'תעודת זהות היא שדה חובה';
+    } else if (!/^\d{9}$/.test(formData.idNumber.trim())) {
+      newErrors.idNumber = 'תעודת זהות חייבת להכיל 9 ספרות';
+    }
     if (!formData.firstName.trim()) {
       newErrors.firstName = 'שם פרטי הוא שדה חובה';
     }
@@ -183,13 +191,6 @@ function NewPatientForm({ onClose, onPatientAdded, currentUserId }: NewPatientFo
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
-
-  const generatePatientCode = (firstName: string, lastName: string): string => {
-    const firstInitial = firstName.charAt(0);
-    const lastInitial = lastName.charAt(0);
-    const randomNum = Math.floor(Math.random() * 900) + 100;
-    return `מט-${firstInitial}${lastInitial}${randomNum}`;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -209,8 +210,10 @@ function NewPatientForm({ onClose, onPatientAdded, currentUserId }: NewPatientFo
 
     try {
       const patientData = {
+        idNumber: formData.idNumber.trim(),
         encryptedData: `encrypted-${formData.firstName}-${formData.lastName}`,
-        patientCode: generatePatientCode(formData.firstName, formData.lastName),
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
         dateOfBirth: formData.dateOfBirth,
         gender: formData.gender as 'male' | 'female' | 'other' | 'prefer_not_to_say',
         primaryDiagnosis: formData.diagnosis.trim() || undefined,
@@ -253,6 +256,24 @@ function NewPatientForm({ onClose, onPatientAdded, currentUserId }: NewPatientFo
           <p className="text-sm text-red-700">{errors.submit}</p>
         </div>
       )}
+
+      <div>
+        <label className="block text-sm font-medium text-clinical-700 mb-1.5">תעודת זהות</label>
+        <input
+          type="text"
+          value={formData.idNumber}
+          onChange={(e) => setFormData(prev => ({ ...prev, idNumber: e.target.value.replace(/\D/g, '').slice(0, 9) }))}
+          placeholder="123456789"
+          maxLength={9}
+          className={`w-full px-4 py-2.5 rounded-lg border bg-white ${
+            errors.idNumber ? 'border-red-400 focus:ring-red-500' : 'border-sage-200 focus:ring-sage-500'
+          } focus:outline-none focus:ring-2`}
+          required
+        />
+        {errors.idNumber && (
+          <p className="mt-1 text-sm text-red-600">{errors.idNumber}</p>
+        )}
+      </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>

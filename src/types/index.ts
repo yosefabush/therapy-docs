@@ -26,11 +26,14 @@ export interface User {
 
 export interface Patient {
   id: string;
-  // Encrypted personal information
+  // Israeli ID number (תעודת זהות) - 9 digits
+  idNumber: string;
+  // Encrypted personal information (for HIPAA compliance - contains full PII blob)
   encryptedData: string;
-  // Searchable metadata (hashed)
-  patientCode: string;
-  dateOfBirth: string; // Encrypted
+  // Decrypted display fields (populated after decryption for authorized users)
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string;
   gender: 'male' | 'female' | 'other' | 'prefer_not_to_say';
   primaryDiagnosis?: string;
   referralSource?: string;
@@ -198,6 +201,25 @@ export interface GoalProgress {
   currentStatus: string;
   progressPercentage: number;
   notes: string;
+}
+
+// Notifications
+export type NotificationType =
+  | 'session_reminder'
+  | 'session_overdue'
+  | 'unsigned_session'
+  | 'patient_update'
+  | 'system_alert';
+
+export interface Notification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  relatedId?: string; // Patient ID, Session ID, etc.
+  relatedType?: 'patient' | 'session' | 'report';
+  isRead: boolean;
+  createdAt: Date;
 }
 
 // AI-Enhanced Features

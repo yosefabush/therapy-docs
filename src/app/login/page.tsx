@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { mockLogin } from '@/lib/mock-auth';
+import { storeAuthUser } from '@/lib/hooks';
 
 interface FormErrors {
   email?: string;
@@ -57,16 +57,24 @@ export default function LoginPage() {
 
     setIsLoading(true);
 
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, rememberMe }),
+      });
 
-    const result = mockLogin({ email, password, rememberMe });
+      const result = await response.json();
 
-    if (result.success) {
-      // In a real app, you would set the auth token/session here
-      router.push('/');
-    } else {
-      setAuthError(result.error || 'אירעה שגיאה בהתחברות');
+      if (result.success && result.user) {
+        // Store auth user in localStorage or sessionStorage based on rememberMe
+        storeAuthUser(result.user.id, rememberMe);
+        router.push('/');
+      } else {
+        setAuthError(result.error || 'אירעה שגיאה בהתחברות');
+      }
+    } catch {
+      setAuthError('אירעה שגיאה בהתחברות. אנא נסה שוב.');
     }
 
     setIsLoading(false);
@@ -214,7 +222,7 @@ export default function LoginPage() {
         {/* Demo credentials hint */}
         <div className="mt-6 text-center">
           <p className="text-xs text-clinical-400">
-            לצורך הדגמה: sarah@therapydocs.com / password123
+            לצורך הדגמה: dr.sarah.cohen@clinic.co.il / password123
           </p>
         </div>
       </div>

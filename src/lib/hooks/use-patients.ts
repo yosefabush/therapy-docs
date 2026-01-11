@@ -5,8 +5,10 @@ import { Patient } from '@/types';
 import { apiClient } from '@/lib/api/client';
 
 interface CreatePatientData {
+  idNumber: string;
   encryptedData: string;
-  patientCode: string;
+  firstName: string;
+  lastName: string;
   dateOfBirth: string;
   gender: 'male' | 'female' | 'other' | 'prefer_not_to_say';
   primaryDiagnosis?: string;

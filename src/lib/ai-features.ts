@@ -196,7 +196,7 @@ function extractKeyPoints(text: string): string {
 export function generateMultidisciplinaryReport(
   sessions: Session[],
   goals: TreatmentGoal[],
-  patientCode: string,
+  patientName: string,
   dateRange: { start: Date; end: Date }
 ): string {
   const sessionsInRange = sessions.filter(s => 
@@ -217,7 +217,7 @@ export function generateMultidisciplinaryReport(
   
   // Header
   reportSections.push(`MULTIDISCIPLINARY TREATMENT SUMMARY`);
-  reportSections.push(`Patient: ${patientCode}`);
+  reportSections.push(`Patient: ${patientName}`);
   reportSections.push(`Period: ${formatDate(dateRange.start)} - ${formatDate(dateRange.end)}`);
   reportSections.push(`Total Sessions: ${sessionsInRange.length}`);
   reportSections.push('');

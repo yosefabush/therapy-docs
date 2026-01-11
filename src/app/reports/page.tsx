@@ -5,24 +5,23 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { Header, QuickActionButton } from '@/components/layout/Header';
 import { Card, Button, Badge, Tabs, Modal } from '@/components/ui';
 import { therapistRoleLabels } from '@/lib/mock-data';
-import { useCurrentUser, usePatients, useReports } from '@/lib/hooks';
+import { useAuthRedirect, useMyPatients, useMyReports } from '@/lib/hooks';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { ErrorMessage } from '@/components/ui/ErrorMessage';
 
 export default function ReportsPage() {
   const [activeTab, setActiveTab] = useState('all');
   const [showNewReport, setShowNewReport] = useState(false);
 
-  const { user: currentUser, loading: userLoading, error: userError } = useCurrentUser();
-  const { patients, loading: patientsLoading } = usePatients();
-  const { reports, loading: reportsLoading } = useReports();
+  const { user: currentUser, loading: userLoading } = useAuthRedirect();
+  const { patients, loading: patientsLoading } = useMyPatients(currentUser?.id);
+  const { reports, loading: reportsLoading } = useMyReports(currentUser?.id);
 
   if (userLoading || patientsLoading || reportsLoading) {
     return <LoadingSpinner className="h-screen" />;
   }
 
-  if (userError || !currentUser) {
-    return <ErrorMessage message="Failed to load user data" />;
+  if (!currentUser) {
+    return <LoadingSpinner className="h-screen" />;
   }
 
   const tabs = [
@@ -168,7 +167,7 @@ export default function ReportsPage() {
                             {getStatusBadge(report.status)}
                           </div>
                           <p className="text-sm text-clinical-500">
-                            {patient?.patientCode} • {new Intl.DateTimeFormat('he-IL', { dateStyle: 'medium' }).format(new Date(report.dateRange.start))} - {new Intl.DateTimeFormat('he-IL', { dateStyle: 'medium' }).format(new Date(report.dateRange.end))}
+                            {patient ? `${patient.firstName} ${patient.lastName}` : 'מטופל'} • {new Intl.DateTimeFormat('he-IL', { dateStyle: 'medium' }).format(new Date(report.dateRange.start))} - {new Intl.DateTimeFormat('he-IL', { dateStyle: 'medium' }).format(new Date(report.dateRange.end))}
                           </p>
                           <p className="text-xs text-clinical-400 mt-1">
                             נוצר: {new Intl.DateTimeFormat('he-IL', { dateStyle: 'medium' }).format(new Date(report.generatedAt))}
@@ -226,7 +225,7 @@ export default function ReportsPage() {
             <select className="w-full px-4 py-2.5 rounded-lg border border-sage-200 bg-white focus:outline-none focus:ring-2 focus:ring-sage-500">
               <option value="">בחר מטופל...</option>
               {patients.map(patient => (
-                <option key={patient.id} value={patient.id}>{patient.patientCode}</option>
+                <option key={patient.id} value={patient.id}>{patient.firstName} {patient.lastName}</option>
               ))}
             </select>
           </div>

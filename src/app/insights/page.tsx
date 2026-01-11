@@ -6,29 +6,23 @@ import { Header } from '@/components/layout/Header';
 import { Card, Badge, Tabs } from '@/components/ui';
 import { therapistRoleLabels } from '@/lib/mock-data';
 import { analyzePatternsTrends } from '@/lib/ai-features';
-import { useCurrentUser, usePatients, useSessions } from '@/lib/hooks';
+import { useAuthRedirect, useMyPatients, useMySessions } from '@/lib/hooks';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { ErrorMessage } from '@/components/ui/ErrorMessage';
 
 export default function InsightsPage() {
   const [activeTab, setActiveTab] = useState('all');
 
-  const { user: currentUser, loading: userLoading, error: userError } = useCurrentUser();
-  const { patients, loading: patientsLoading } = usePatients();
-  const { sessions, loading: sessionsLoading } = useSessions();
+  const { user: currentUser, loading: userLoading } = useAuthRedirect();
+  const { patients: myPatients, loading: patientsLoading } = useMyPatients(currentUser?.id);
+  const { sessions, loading: sessionsLoading } = useMySessions(currentUser?.id);
 
   if (userLoading || patientsLoading || sessionsLoading) {
     return <LoadingSpinner className="h-screen" />;
   }
 
-  if (userError || !currentUser) {
-    return <ErrorMessage message="Failed to load user data" />;
+  if (!currentUser) {
+    return <LoadingSpinner className="h-screen" />;
   }
-
-  // Get patients assigned to current user
-  const myPatients = patients.filter(p =>
-    p.assignedTherapists.includes(currentUser.id)
-  );
 
   // Generate insights for all patients
   const allInsights = myPatients.flatMap(patient => {
@@ -36,7 +30,7 @@ export default function InsightsPage() {
     return analyzePatternsTrends(patientSessions).map(insight => ({
       ...insight,
       patientId: patient.id,
-      patientCode: patient.patientCode,
+      patientName: `${patient.firstName} ${patient.lastName}`,
     }));
   });
 
@@ -171,7 +165,7 @@ export default function InsightsPage() {
                     {getInsightIcon(insight.type)}
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium text-clinical-900">{insight.patientCode}</span>
+                        <span className="font-medium text-clinical-900">{insight.patientName}</span>
                         {getInsightBadge(insight.type)}
                       </div>
                       <p className="text-sm text-clinical-600">{insight.content}</p>

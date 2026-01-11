@@ -9,11 +9,11 @@ import { therapistRoleLabels, sessionTypeLabels } from '@/lib/mock-data';
 interface SessionListProps {
   sessions: Session[];
   therapists: User[];
-  patientCodes?: Record<string, string>;
+  patientNames?: Record<string, string>;
   showPatient?: boolean;
 }
 
-export function SessionList({ sessions, therapists, patientCodes, showPatient = true }: SessionListProps) {
+export function SessionList({ sessions, therapists, patientNames, showPatient = true }: SessionListProps) {
   const getTherapist = (id: string) => therapists.find(t => t.id === id);
 
   const getStatusConfig = (status: Session['status']) => {
@@ -82,9 +82,9 @@ export function SessionList({ sessions, therapists, patientCodes, showPatient = 
                       <Badge variant={statusConfig.variant}>{statusConfig.label}</Badge>
                     </div>
 
-                    {showPatient && patientCodes && (
+                    {showPatient && patientNames && (
                       <p className="text-sm text-sage-700 font-medium mb-1">
-                        מטופל: {patientCodes[session.patientId] || session.patientId}
+                        מטופל: {patientNames[session.patientId] || session.patientId}
                       </p>
                     )}
 

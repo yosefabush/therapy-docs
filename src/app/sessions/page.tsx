@@ -7,7 +7,7 @@ import { Card, Button, Select, Tabs, Modal } from '@/components/ui';
 import { SessionList } from '@/components/sessions/SessionList';
 import { SessionForm } from '@/components/sessions/SessionForm';
 import { therapistRoleLabels } from '@/lib/mock-data';
-import { useCurrentUser, usePatients, useSessions, useUsers } from '@/lib/hooks';
+import { useAuthRedirect, useMyPatients, useMySessions, useUsers } from '@/lib/hooks';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
 
@@ -16,17 +16,17 @@ export default function SessionsPage() {
   const [showNewSession, setShowNewSession] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>('');
 
-  const { user: currentUser, loading: userLoading, error: userError } = useCurrentUser();
-  const { patients, loading: patientsLoading } = usePatients();
-  const { sessions, loading: sessionsLoading, error: sessionsError, refetch } = useSessions();
+  const { user: currentUser, loading: userLoading } = useAuthRedirect();
+  const { patients, loading: patientsLoading } = useMyPatients(currentUser?.id);
+  const { sessions: mySessions, loading: sessionsLoading, error: sessionsError, refetch } = useMySessions(currentUser?.id);
   const { users, loading: usersLoading } = useUsers();
 
   if (userLoading || patientsLoading || sessionsLoading || usersLoading) {
     return <LoadingSpinner className="h-screen" />;
   }
 
-  if (userError || !currentUser) {
-    return <ErrorMessage message="Failed to load user data" />;
+  if (!currentUser) {
+    return <LoadingSpinner className="h-screen" />;
   }
 
   if (sessionsError) {
@@ -35,8 +35,6 @@ export default function SessionsPage() {
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-
-  const mySessions = sessions.filter(s => s.therapistId === currentUser.id);
 
   const upcomingSessions = mySessions.filter(s =>
     (s.status === 'scheduled' || s.status === 'in_progress') &&
@@ -85,8 +83,8 @@ export default function SessionsPage() {
     return filteredSessions;
   };
 
-  const patientCodes: Record<string, string> = {};
-  patients.forEach(p => { patientCodes[p.id] = p.patientCode; });
+  const patientNames: Record<string, string> = {};
+  patients.forEach(p => { patientNames[p.id] = `${p.firstName} ${p.lastName}`; });
 
   return (
     <div className="min-h-screen bg-warm-50">
@@ -199,7 +197,7 @@ export default function SessionsPage() {
             <SessionList
               sessions={getFilteredSessions()}
               therapists={users}
-              patientCodes={patientCodes}
+              patientNames={patientNames}
             />
           ) : (
             <Card className="text-center py-12">

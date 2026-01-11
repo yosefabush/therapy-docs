@@ -8,13 +8,13 @@ import { therapistRoleLabels, sessionTypeLabels } from '@/lib/mock-data';
 
 interface ReportGeneratorProps {
   patientId: string;
-  patientCode: string;
+  patientName: string;
   sessions: Session[];
   goals: TreatmentGoal[];
   onGenerate: (report: Partial<Report>) => void;
 }
 
-export function ReportGenerator({ patientId, patientCode, sessions, goals, onGenerate }: ReportGeneratorProps) {
+export function ReportGenerator({ patientId, patientName, sessions, goals, onGenerate }: ReportGeneratorProps) {
   const [reportType, setReportType] = useState<ReportType>('progress_summary');
   const [dateRange, setDateRange] = useState({
     start: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -37,7 +37,7 @@ export function ReportGenerator({ patientId, patientCode, sessions, goals, onGen
     await new Promise(resolve => setTimeout(resolve, 1500));
     
     const content = generateMultidisciplinaryReport(
-      sessions, goals, patientCode,
+      sessions, goals, patientName,
       { start: new Date(dateRange.start), end: new Date(dateRange.end) }
     );
     
