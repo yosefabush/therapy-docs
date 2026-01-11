@@ -22,6 +22,7 @@ export async function seedIfEmpty(): Promise<boolean> {
   await writeJsonFile('sessions.json', mockSessions);
   await writeJsonFile('treatment-goals.json', mockTreatmentGoals);
   await writeJsonFile('reports.json', mockReports);
+  await writeJsonFile('voice-recordings.json', []);
 
   console.log('Database seeded with mock data');
   return true;
@@ -33,5 +34,6 @@ export async function resetData(): Promise<void> {
   await writeJsonFile('sessions.json', mockSessions);
   await writeJsonFile('treatment-goals.json', mockTreatmentGoals);
   await writeJsonFile('reports.json', mockReports);
+  await writeJsonFile('voice-recordings.json', []);
   console.log('Database reset to mock data');
 }

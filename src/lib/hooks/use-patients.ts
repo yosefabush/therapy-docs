@@ -85,6 +85,12 @@ export function usePatient(id: string) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!id) {
+      setLoading(false);
+      setPatient(null);
+      return;
+    }
+
     async function fetchPatient() {
       setLoading(true);
       try {

@@ -215,8 +215,9 @@ export interface AIInsight {
 export interface VoiceRecording {
   id: string;
   sessionId: string;
+  patientId: string;  // For easier patient-level queries
   duration: number;
-  encryptedAudioUrl: string;
+  encryptedAudioUrl: string;  // Stores base64 audio data
   transcriptionStatus: 'pending' | 'processing' | 'completed' | 'failed';
   encryptedTranscript?: string;
   consentObtained: boolean;

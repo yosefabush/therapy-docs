@@ -6,26 +6,42 @@ import Link from 'next/link';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Card, Button, Badge, Avatar, Modal } from '@/components/ui';
 import { SessionForm } from '@/components/sessions/SessionForm';
-import { 
-  mockUsers, mockPatients, mockSessions, 
-  therapistRoleLabels, sessionTypeLabels 
-} from '@/lib/mock-data';
+import { therapistRoleLabels, sessionTypeLabels } from '@/lib/mock-data';
 import { generateSessionSummary } from '@/lib/ai-features';
+import { useSession, useCurrentUser, usePatient, useUsers } from '@/lib/hooks';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 export default function SessionDetailPage() {
   const params = useParams();
   const router = useRouter();
   const sessionId = params.id as string;
-  const currentUser = mockUsers[0];
-  
+
   const [isEditing, setIsEditing] = useState(false);
   const [showSignModal, setShowSignModal] = useState(false);
 
-  const session = mockSessions.find(s => s.id === sessionId);
-  const patient = session ? mockPatients.find(p => p.id === session.patientId) : null;
-  const therapist = session ? mockUsers.find(u => u.id === session.therapistId) : null;
+  const { user: currentUser, loading: userLoading } = useCurrentUser();
+  const { session, loading: sessionLoading } = useSession(sessionId);
+  const { patient, loading: patientLoading } = usePatient(session?.patientId || '');
+  const { users, loading: usersLoading } = useUsers();
 
-  if (!session || !patient) {
+  const therapist = session ? users.find(u => u.id === session.therapistId) : null;
+
+  // Show loading while fetching session or user
+  if (userLoading || sessionLoading) {
+    return <LoadingSpinner className="h-screen" />;
+  }
+
+  // Show loading while fetching patient (only if we have a session)
+  if (session && patientLoading) {
+    return <LoadingSpinner className="h-screen" />;
+  }
+
+  // Show loading while fetching users
+  if (usersLoading) {
+    return <LoadingSpinner className="h-screen" />;
+  }
+
+  if (!session || !patient || !currentUser) {
     return (
       <div className="min-h-screen bg-warm-50 flex items-center justify-center">
         <Card className="text-center p-8">
@@ -64,6 +80,8 @@ export default function SessionDetailPage() {
             </div>
             <SessionForm
               session={session}
+              sessionId={session.id}
+              patientId={session.patientId}
               therapistRole={session.therapistRole}
               onSubmit={(notes, status) => { console.log('Saved:', notes); setIsEditing(false); }}
               onSaveDraft={(notes) => console.log('Draft:', notes)}

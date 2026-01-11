@@ -76,6 +76,12 @@ export function useSession(id: string) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!id) {
+      setLoading(false);
+      setSession(null);
+      return;
+    }
+
     async function fetchSession() {
       setLoading(true);
       try {

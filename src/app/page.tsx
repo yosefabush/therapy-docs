@@ -2,24 +2,21 @@
 
 import React, { useState } from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
-import { Header, QuickActionButton } from '@/components/layout/Header';
+import { Header } from '@/components/layout/Header';
 import { Card, Badge, Button, ProgressBar, Modal } from '@/components/ui';
 import { PatientCardCompact } from '@/components/patients/PatientList';
 import { TodaySchedule } from '@/components/sessions/SessionList';
 import { therapistRoleLabels } from '@/lib/mock-data';
-import { analyzePatternsTrends } from '@/lib/ai-features';
 import { useCurrentUser, usePatients, useSessions, useTreatmentGoals } from '@/lib/hooks';
 import { apiClient } from '@/lib/api/client';
-import { Patient } from '@/types';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
 
 export default function Dashboard() {
   const [showNewSession, setShowNewSession] = useState(false);
-  const [showNewPatient, setShowNewPatient] = useState(false);
 
   const { user: currentUser, loading: userLoading, error: userError } = useCurrentUser();
-  const { patients, loading: patientsLoading, refetch: refetchPatients } = usePatients();
+  const { patients, loading: patientsLoading } = usePatients();
   const { sessions, loading: sessionsLoading, refetch: refetchSessions } = useSessions();
   const { goals, loading: goalsLoading } = useTreatmentGoals();
 
@@ -50,11 +47,49 @@ export default function Dashboard() {
     s => s.status === 'completed' && !s.signedAt && s.therapistId === currentUser.id
   ).length;
 
-  // Get AI insights for all patients
-  const allInsights = myPatients.flatMap(patient => {
-    const patientSessions = sessions.filter(s => s.patientId === patient.id);
-    return analyzePatternsTrends(patientSessions);
-  });
+  // Mock AI insights for demo
+  const allInsights = [
+    {
+      id: 'mock-insight-1',
+      patientId: '',
+      type: 'progress_trend' as const,
+      content: 'התקדמות חיובית: 3 מטופלים הראו שיפור משמעותי במדדי חרדה בחודש האחרון.',
+      confidence: 0.85,
+      generatedAt: new Date(),
+    },
+    {
+      id: 'mock-insight-2',
+      patientId: '',
+      type: 'pattern' as const,
+      content: 'תבנית מזוהה: מטופלים מגיבים טוב יותר למפגשים בשעות הבוקר (9:00-11:00).',
+      confidence: 0.72,
+      generatedAt: new Date(),
+    },
+    {
+      id: 'mock-insight-3',
+      patientId: '',
+      type: 'risk_indicator' as const,
+      content: 'תשומת לב נדרשת: מטופל אחד לא הגיע ל-2 מפגשים אחרונים. מומלץ ליצור קשר.',
+      confidence: 0.9,
+      generatedAt: new Date(),
+    },
+    {
+      id: 'mock-insight-4',
+      patientId: '',
+      type: 'pattern' as const,
+      content: 'המלצה: שילוב טכניקות CBT הראה יעילות גבוהה ב-4 מקרים דומים.',
+      confidence: 0.78,
+      generatedAt: new Date(),
+    },
+    {
+      id: 'mock-insight-5',
+      patientId: '',
+      type: 'progress_trend' as const,
+      content: 'מעקב התקדמות יציב. המשך ניטור לזיהוי שינויים.',
+      confidence: 0.7,
+      generatedAt: new Date(),
+    },
+  ];
 
   const criticalInsights = allInsights.filter(i => i.type === 'risk_indicator');
 
@@ -70,17 +105,6 @@ export default function Dashboard() {
         <Header
           title="לוח בקרה"
           subtitle={`ברוך שובך, ${currentUser.name.split(' ')[0]}`}
-          actions={
-            <QuickActionButton
-              label="מטופל חדש"
-              onClick={() => setShowNewPatient(true)}
-              icon={
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                </svg>
-              }
-            />
-          }
         />
 
         <div className="p-8">
@@ -209,10 +233,46 @@ export default function Dashboard() {
                     })}
                 </div>
               </Card>
+
+              {/* Quick Links */}
+              <Card className="mt-6">
+                <h2 className="text-lg font-semibold text-clinical-900 mb-4" style={{ fontFamily: '"David Libre", Georgia, serif' }}>
+                  פעולות מהירות
+                </h2>
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => setShowNewSession(true)}
+                    className="flex-1 flex items-center gap-3 p-4 rounded-lg hover:bg-sage-50 transition-colors border border-sage-100"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-sage-100 flex items-center justify-center">
+                      <svg className="w-5 h-5 text-sage-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <span className="text-sm font-medium text-clinical-900">תזמן מפגש חדש</span>
+                  </button>
+                  <a href="/reports" className="flex-1 flex items-center gap-3 p-4 rounded-lg hover:bg-sage-50 transition-colors border border-sage-100">
+                    <div className="w-10 h-10 rounded-lg bg-warm-100 flex items-center justify-center">
+                      <svg className="w-5 h-5 text-warm-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <span className="text-sm font-medium text-clinical-900">צור דוח</span>
+                  </a>
+                  <a href="/help" className="flex-1 flex items-center gap-3 p-4 rounded-lg hover:bg-sage-50 transition-colors border border-sage-100">
+                    <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                      <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                      </svg>
+                    </div>
+                    <span className="text-sm font-medium text-clinical-900">משאבי טיפול</span>
+                  </a>
+                </div>
+              </Card>
             </div>
 
             {/* Right Sidebar */}
-            <div className="space-y-6">
+            <div className="space-y-6 flex flex-col">
               {/* My Patients */}
               <Card>
                 <div className="flex items-center justify-between mb-4">
@@ -248,9 +308,9 @@ export default function Dashboard() {
                 </div>
               </Card>
 
-              {/* AI Insights */}
+              {/* AI Insights - Sidebar */}
               {allInsights.length > 0 && (
-                <Card>
+                <Card className="flex-1 flex flex-col">
                   <div className="flex items-center gap-2 mb-4">
                     <svg className="w-5 h-5 text-sage-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
@@ -259,8 +319,8 @@ export default function Dashboard() {
                       תובנות AI
                     </h2>
                   </div>
-                  <div className="space-y-3">
-                    {allInsights.slice(0, 3).map(insight => (
+                  <div className="space-y-3 flex-1">
+                    {allInsights.slice(0, 5).map(insight => (
                       <div
                         key={insight.id}
                         className={`p-3 rounded-lg text-sm ${
@@ -275,44 +335,9 @@ export default function Dashboard() {
                   </div>
                 </Card>
               )}
-
-              {/* Quick Links */}
-              <Card>
-                <h2 className="text-lg font-semibold text-clinical-900 mb-4" style={{ fontFamily: '"David Libre", Georgia, serif' }}>
-                  פעולות מהירות
-                </h2>
-                <div className="space-y-2">
-                  <button
-                    onClick={() => setShowNewSession(true)}
-                    className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-sage-50 transition-colors text-right"
-                  >
-                    <div className="w-10 h-10 rounded-lg bg-sage-100 flex items-center justify-center">
-                      <svg className="w-5 h-5 text-sage-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <span className="text-sm font-medium text-clinical-900">תזמן מפגש חדש</span>
-                  </button>
-                  <a href="/reports" className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-sage-50 transition-colors text-right">
-                    <div className="w-10 h-10 rounded-lg bg-warm-100 flex items-center justify-center">
-                      <svg className="w-5 h-5 text-warm-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                    </div>
-                    <span className="text-sm font-medium text-clinical-900">צור דוח</span>
-                  </a>
-                  <a href="/help" className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-sage-50 transition-colors text-right">
-                    <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                      <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                      </svg>
-                    </div>
-                    <span className="text-sm font-medium text-clinical-900">משאבי טיפול</span>
-                  </a>
-                </div>
-              </Card>
             </div>
           </div>
+
         </div>
       </main>
 
@@ -330,17 +355,6 @@ export default function Dashboard() {
         />
       </Modal>
 
-      {/* New Patient Modal */}
-      <Modal isOpen={showNewPatient} onClose={() => setShowNewPatient(false)} title="הוספת מטופל חדש" size="lg">
-        <NewPatientForm
-          currentUserId={currentUser.id}
-          onClose={() => setShowNewPatient(false)}
-          onPatientAdded={() => {
-            refetchPatients();
-            setShowNewPatient(false);
-          }}
-        />
-      </Modal>
     </div>
   );
 }
@@ -502,184 +516,3 @@ function NewSessionForm({ patients, currentUserId, therapistRole, onClose, onSes
   );
 }
 
-interface NewPatientFormProps {
-  currentUserId: string;
-  onClose: () => void;
-  onPatientAdded: () => void;
-}
-
-function NewPatientForm({ currentUserId, onClose, onPatientAdded }: NewPatientFormProps) {
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    dateOfBirth: '',
-    gender: '',
-    diagnosis: '',
-    referralSource: '',
-    insurance: '',
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const submittedRef = React.useRef(false);
-
-  const generatePatientCode = (firstName: string, lastName: string): string => {
-    const firstInitial = firstName.charAt(0);
-    const lastInitial = lastName.charAt(0);
-    const randomNum = Math.floor(Math.random() * 900) + 100;
-    return `מט-${firstInitial}${lastInitial}${randomNum}`;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (submittedRef.current || isSubmitting) return;
-
-    if (!formData.firstName || !formData.lastName || !formData.dateOfBirth || !formData.gender) {
-      setError('נא למלא את כל השדות הנדרשים');
-      return;
-    }
-
-    submittedRef.current = true;
-    setIsSubmitting(true);
-    setError(null);
-
-    try {
-      const patientData = {
-        encryptedData: `encrypted-${formData.firstName}-${formData.lastName}`,
-        patientCode: generatePatientCode(formData.firstName, formData.lastName),
-        dateOfBirth: formData.dateOfBirth,
-        gender: formData.gender as 'male' | 'female' | 'other' | 'prefer_not_to_say',
-        primaryDiagnosis: formData.diagnosis || undefined,
-        referralSource: formData.referralSource || undefined,
-        insuranceProvider: formData.insurance || undefined,
-        assignedTherapists: [currentUserId],
-        status: 'active' as const,
-      };
-
-      const response = await apiClient.post<Patient>('/patients', patientData);
-      if (response.error) {
-        throw new Error(response.error);
-      }
-      onPatientAdded();
-    } catch (err) {
-      setError('שגיאה ביצירת המטופל');
-      submittedRef.current = false;
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-        <div className="flex items-start gap-2">
-          <svg className="w-5 h-5 text-amber-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-          </svg>
-          <div>
-            <p className="text-sm font-medium text-amber-800">מידע בריאותי מוגן</p>
-            <p className="text-xs text-amber-700">כל נתוני המטופל מוצפנים ותואמים לתקן HIPAA</p>
-          </div>
-        </div>
-      </div>
-
-      {error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-700">{error}</p>
-        </div>
-      )}
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-clinical-700 mb-1.5">שם פרטי *</label>
-          <input
-            type="text"
-            value={formData.firstName}
-            onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
-            className="w-full px-4 py-2.5 rounded-lg border border-sage-200 bg-white focus:outline-none focus:ring-2 focus:ring-sage-500"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-clinical-700 mb-1.5">שם משפחה *</label>
-          <input
-            type="text"
-            value={formData.lastName}
-            onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
-            className="w-full px-4 py-2.5 rounded-lg border border-sage-200 bg-white focus:outline-none focus:ring-2 focus:ring-sage-500"
-            required
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-clinical-700 mb-1.5">תאריך לידה *</label>
-          <input
-            type="date"
-            value={formData.dateOfBirth}
-            onChange={(e) => setFormData(prev => ({ ...prev, dateOfBirth: e.target.value }))}
-            className="w-full px-4 py-2.5 rounded-lg border border-sage-200 bg-white focus:outline-none focus:ring-2 focus:ring-sage-500"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-clinical-700 mb-1.5">מגדר *</label>
-          <select
-            value={formData.gender}
-            onChange={(e) => setFormData(prev => ({ ...prev, gender: e.target.value }))}
-            className="w-full px-4 py-2.5 rounded-lg border border-sage-200 bg-white focus:outline-none focus:ring-2 focus:ring-sage-500"
-            required
-          >
-            <option value="">בחר...</option>
-            <option value="male">זכר</option>
-            <option value="female">נקבה</option>
-            <option value="other">אחר</option>
-            <option value="prefer_not_to_say">מעדיף לא לציין</option>
-          </select>
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-clinical-700 mb-1.5">אבחנה ראשית</label>
-        <input
-          type="text"
-          value={formData.diagnosis}
-          onChange={(e) => setFormData(prev => ({ ...prev, diagnosis: e.target.value }))}
-          placeholder="לדוגמה: הפרעת דיכאון מז'ורי"
-          className="w-full px-4 py-2.5 rounded-lg border border-sage-200 bg-white focus:outline-none focus:ring-2 focus:ring-sage-500"
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-clinical-700 mb-1.5">מקור הפניה</label>
-          <input
-            type="text"
-            value={formData.referralSource}
-            onChange={(e) => setFormData(prev => ({ ...prev, referralSource: e.target.value }))}
-            placeholder="לדוגמה: רופא משפחה"
-            className="w-full px-4 py-2.5 rounded-lg border border-sage-200 bg-white focus:outline-none focus:ring-2 focus:ring-sage-500"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-clinical-700 mb-1.5">קופת חולים</label>
-          <input
-            type="text"
-            value={formData.insurance}
-            onChange={(e) => setFormData(prev => ({ ...prev, insurance: e.target.value }))}
-            placeholder="לדוגמה: מכבי"
-            className="w-full px-4 py-2.5 rounded-lg border border-sage-200 bg-white focus:outline-none focus:ring-2 focus:ring-sage-500"
-          />
-        </div>
-      </div>
-
-      <div className="flex justify-end gap-3 pt-4 border-t border-sage-100">
-        <Button type="button" variant="ghost" onClick={onClose} disabled={isSubmitting}>ביטול</Button>
-        <Button type="submit" variant="primary" loading={isSubmitting}>
-          {isSubmitting ? 'יוצר מטופל...' : 'צור מטופל'}
-        </Button>
-      </div>
-    </form>
-  );
-}

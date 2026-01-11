@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { ClientProviders } from '@/lib/contexts/ClientProviders';
 
 export const metadata: Metadata = {
   title: 'TherapyDocs | מערכת תיעוד קליני',
@@ -22,7 +23,9 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body" style={{ fontFamily: '"Heebo", system-ui, sans-serif' }}>
-        {children}
+        <ClientProviders>
+          {children}
+        </ClientProviders>
       </body>
     </html>
   );

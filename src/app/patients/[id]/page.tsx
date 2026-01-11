@@ -8,7 +8,8 @@ import { Card, Button, Badge, ProgressBar, Tabs, Avatar, Modal } from '@/compone
 import { SessionList } from '@/components/sessions/SessionList';
 import { ReportGenerator, ReportCard } from '@/components/reports/ReportGenerator';
 import { therapistRoleLabels } from '@/lib/mock-data';
-import { useCurrentUser, usePatient, useSessions, useTreatmentGoals, useReports, useUsers } from '@/lib/hooks';
+import { useCurrentUser, usePatient, useSessions, useTreatmentGoals, useReports, useUsers, useVoiceRecordings } from '@/lib/hooks';
+import { RecordingsList } from '@/components/recordings';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
 
@@ -27,8 +28,9 @@ export default function PatientDetailPage() {
   const { goals, loading: goalsLoading } = useTreatmentGoals(patientId);
   const { reports, loading: reportsLoading } = useReports(patientId);
   const { users, loading: usersLoading } = useUsers();
+  const { recordings, loading: recordingsLoading, deleteRecording } = useVoiceRecordings({ patientId });
 
-  if (userLoading || patientLoading || sessionsLoading || goalsLoading || reportsLoading || usersLoading) {
+  if (userLoading || patientLoading || sessionsLoading || goalsLoading || reportsLoading || usersLoading || recordingsLoading) {
     return <LoadingSpinner className="h-screen" />;
   }
 
@@ -55,6 +57,7 @@ export default function PatientDetailPage() {
   const tabs = [
     { id: 'overview', label: 'סקירה כללית' },
     { id: 'sessions', label: 'מפגשים', count: sessions.length },
+    { id: 'recordings', label: 'הקלטות', count: recordings.length },
     { id: 'goals', label: 'מטרות', count: goals.length },
     { id: 'reports', label: 'דוחות', count: reports.length },
     { id: 'documents', label: 'מסמכים' },
@@ -261,6 +264,16 @@ export default function PatientDetailPage() {
                 sessions={sessions}
                 therapists={users}
                 showPatient={false}
+              />
+            </div>
+          )}
+
+          {activeTab === 'recordings' && (
+            <div className="max-w-4xl">
+              <RecordingsList
+                recordings={recordings}
+                sessions={sessions}
+                onDelete={deleteRecording}
               />
             </div>
           )}
