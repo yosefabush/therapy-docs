@@ -176,7 +176,13 @@ export default function Dashboard() {
                     {new Intl.DateTimeFormat('he-IL', { weekday: 'long', month: 'long', day: 'numeric' }).format(today)}
                   </span>
                 </div>
-                <TodaySchedule sessions={todaysSessions} therapists={[]} />
+                <TodaySchedule 
+                  sessions={todaysSessions} 
+                  therapists={[]} 
+                  patientNames={Object.fromEntries(
+                    myPatients.map(p => [p.id, `${p.firstName} ${p.lastName}`])
+                  )}
+                />
               </Card>
 
               {/* Recent Activity */}

@@ -154,10 +154,22 @@ export function SessionList({ sessions, therapists, patientNames, showPatient = 
 interface TodayScheduleProps {
   sessions: Session[];
   therapists: User[];
+  patientNames?: Record<string, string>;
 }
 
-export function TodaySchedule({ sessions, therapists }: TodayScheduleProps) {
+export function TodaySchedule({ sessions, therapists, patientNames }: TodayScheduleProps) {
   const getTherapist = (id: string) => therapists.find(t => t.id === id);
+  
+  const getStatusConfig = (status: Session['status']) => {
+    const configs: Record<Session['status'], { variant: 'success' | 'warning' | 'danger' | 'info' | 'sage'; label: string }> = {
+      scheduled: { variant: 'info', label: 'מתוכנן' },
+      in_progress: { variant: 'warning', label: 'בתהליך' },
+      completed: { variant: 'success', label: 'הושלם' },
+      cancelled: { variant: 'sage', label: 'בוטל' },
+      no_show: { variant: 'danger', label: 'לא הגיע' },
+    };
+    return configs[status];
+  };
   
   const now = new Date();
   const sortedSessions = [...sessions].sort(
@@ -179,6 +191,7 @@ export function TodaySchedule({ sessions, therapists }: TodayScheduleProps) {
     <div className="space-y-2">
       {sortedSessions.map(session => {
         const therapist = getTherapist(session.therapistId);
+        const statusConfig = getStatusConfig(session.status);
         const sessionTime = new Date(session.scheduledAt);
         const isPast = sessionTime < now;
         const isNext = !isPast && sortedSessions.findIndex(s => new Date(s.scheduledAt) > now) === sortedSessions.indexOf(session);
@@ -202,9 +215,17 @@ export function TodaySchedule({ sessions, therapists }: TodayScheduleProps) {
               }`} />
               
               <div className="flex-1 min-w-0">
-                <p className={`text-sm font-medium ${isNext ? 'text-sage-900' : 'text-clinical-900'}`}>
-                  {sessionTypeLabels[session.sessionType]}
-                </p>
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                  <p className={`text-sm font-semibold ${isNext ? 'text-sage-900' : 'text-clinical-900'}`}>
+                    {sessionTypeLabels[session.sessionType]}
+                  </p>
+                  <Badge variant={statusConfig.variant}>{statusConfig.label}</Badge>
+                  {patientNames && (
+                    <span className="text-xs font-bold text-sage-700 bg-sage-50 px-2 py-1 rounded border border-sage-200">
+                      {patientNames[session.patientId] || session.patientId}
+                    </span>
+                  )}
+                </div>
                 {therapist && (
                   <p className="text-xs text-clinical-500">
                     {therapistRoleLabels[session.therapistRole]}

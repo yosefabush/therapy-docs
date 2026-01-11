@@ -5,12 +5,35 @@
       "Bash(npm run lint)",
       "Bash(npx claude-code-templates@latest --skill=creative-design/frontend-design --yes)",
       "Bash(cd:*)",
-      "Bash(git init:*)"
+      "Bash(git init:*)",
+      "mcp__github__list_issues",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "mcp__github__update_issue",
+      "Bash(gh issue close:*)",
+      "Bash(npm run dev:*)",
+      "mcp__plugin_playwright_playwright__browser_navigate",
+      "mcp__plugin_playwright_playwright__browser_click",
+      "mcp__plugin_playwright_playwright__browser_snapshot",
+      "mcp__plugin_playwright_playwright__browser_fill_form",
+      "mcp__plugin_playwright_playwright__browser_select_option",
+      "Bash(npm install:*)",
+      "Bash(npx playwright install chromium)",
+      "Bash(npx playwright test --reporter=list)",
+      "mcp__plugin_playwright_playwright__browser_close",
+      "Bash(timeout /t 8 /nobreak)",
+      "Bash(powershell -Command \"Start-Sleep -Seconds 5\")",
+      "mcp__plugin_playwright_playwright__browser_wait_for",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(powershell:*)"
     ]
   },
   "enabledPlugins": {
     "github@claude-plugins-official": true,
     "playwright@claude-plugins-official": true,
-    "context7@claude-plugins-official": true
+    "context7@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": true
   }
 }

@@ -272,12 +272,15 @@ export function generateMultidisciplinaryReport(
 export function analyzePatternsTrends(sessions: Session[]): AIInsight[] {
   const insights: AIInsight[] = [];
   const now = new Date();
+  const timestamp = Date.now();
+  const random = Math.random().toString(36).substr(2, 9);
+  let insightIndex = 0;
   
   // Analyze mood trends
   const moodIndicators = analyzeMoodTrends(sessions);
   if (moodIndicators) {
     insights.push({
-      id: `insight-mood-${Date.now()}`,
+      id: `insight-mood-${timestamp}-${random}-${insightIndex++}`,
       patientId: sessions[0]?.patientId || '',
       type: 'progress_trend',
       content: moodIndicators,
@@ -290,7 +293,7 @@ export function analyzePatternsTrends(sessions: Session[]): AIInsight[] {
   const riskIndicators = checkRiskPatterns(sessions);
   if (riskIndicators) {
     insights.push({
-      id: `insight-risk-${Date.now()}`,
+      id: `insight-risk-${timestamp}-${random}-${insightIndex++}`,
       patientId: sessions[0]?.patientId || '',
       type: 'risk_indicator',
       content: riskIndicators,
@@ -303,7 +306,7 @@ export function analyzePatternsTrends(sessions: Session[]): AIInsight[] {
   const engagementPattern = analyzeEngagement(sessions);
   if (engagementPattern) {
     insights.push({
-      id: `insight-engagement-${Date.now()}`,
+      id: `insight-engagement-${timestamp}-${random}-${insightIndex++}`,
       patientId: sessions[0]?.patientId || '',
       type: 'pattern',
       content: engagementPattern,
@@ -341,12 +344,12 @@ function analyzeMoodTrends(sessions: Session[]): string | null {
   }
   
   if (positiveCount > negativeCount + 2) {
-    return 'Positive trend detected: Recent sessions indicate improvement in patient symptoms and functioning.';
+    return 'זוהה מגמה חיובית: מפגשים אחרונים מצביעים על שיפור בסימפטומים ובתפקוד של המטופל.';
   } else if (negativeCount > positiveCount + 2) {
-    return 'Attention needed: Recent sessions suggest possible decline in patient status. Consider treatment plan review.';
+    return 'נדרשת תשומת לב: מפגשים אחרונים מצביעים על ירידה אפשרית במצב המטופל. יש לשקול סקירה של תכנית הטיפול.';
   }
   
-  return 'Treatment progress appears stable. Continue monitoring for changes.';
+  return 'התקדמות הטיפול נראית יציבה. יש להמשיך לנטר שינויים.';
 }
 
 function checkRiskPatterns(sessions: Session[]): string | null {
@@ -361,7 +364,7 @@ function checkRiskPatterns(sessions: Session[]): string | null {
   if (latestRisk.suicidalIdeation !== 'none' || 
       latestRisk.homicidalIdeation !== 'none' ||
       latestRisk.selfHarm === 'current') {
-    return 'ELEVATED RISK: Recent assessment indicates active risk factors. Ensure safety planning is current and consider increased monitoring.';
+    return 'סיכון מוגבר: הערכה אחרונה מצביעה על גורמי סיכון פעילים. יש לוודא שתכנית הבטיחות עדכנית ולשקול ניטור מוגבר.';
   }
   
   // Check for escalation pattern
@@ -379,7 +382,7 @@ function checkRiskPatterns(sessions: Session[]): string | null {
     riskLevels[riskLevels.length - 1] > riskLevels[riskLevels.length - 2];
   
   if (isEscalating) {
-    return 'Risk escalation pattern detected: Consider coordinated team response and safety plan review.';
+    return 'זוהה תבנית הסלמה של סיכון: יש לשקול תגובה מתואמת של הצוות וסקירה של תכנית הבטיחות.';
   }
   
   return null;
@@ -394,11 +397,11 @@ function analyzeEngagement(sessions: Session[]): string | null {
   const missedRate = (cancelled + noShow) / recentSessions.length;
   
   if (missedRate > 0.3) {
-    return 'Engagement concern: Higher than expected rate of missed sessions. Consider outreach and barriers assessment.';
+    return 'דאגה לגבי מעורבות: שיעור גבוה מהצפוי של מפגשים שהוחמצו. יש לשקול יצירת קשר והערכת מחסומים.';
   }
   
   if (missedRate === 0 && recentSessions.length >= 5) {
-    return 'Strong engagement: Patient demonstrating consistent attendance and participation.';
+    return 'מעורבות חזקה: המטופל מפגין נוכחות והשתתפות עקבית.';
   }
   
   return null;

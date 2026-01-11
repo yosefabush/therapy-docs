@@ -1,20 +1,92 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { VoiceRecording, Session } from '@/types';
 import { Card, Badge, Modal, Button } from '@/components/ui';
 import { AudioPlayer } from './AudioPlayer';
+
+// Dynamically import AudioTranscription (client-only)
+const AudioTranscription = dynamic(
+  () => import('./AudioTranscription').then((mod) => mod.AudioTranscription),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center py-4">
+        <p className="text-sm text-clinical-400">טוען תמלול...</p>
+      </div>
+    ),
+  }
+);
 
 interface RecordingsListProps {
   recordings: VoiceRecording[];
   sessions?: Session[];
   onDelete?: (id: string) => void;
+  onUpdateTranscript?: (id: string, transcript: string) => void;
   loading?: boolean;
 }
 
-export function RecordingsList({ recordings, sessions = [], onDelete, loading }: RecordingsListProps) {
+export function RecordingsList({ recordings, sessions = [], onDelete, onUpdateTranscript, loading }: RecordingsListProps) {
   const [expandedTranscript, setExpandedTranscript] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [transcribingId, setTranscribingId] = useState<string | null>(null);
+  const [audioBlobs, setAudioBlobs] = useState<Record<string, Blob>>({});
+  const [pendingTranscripts, setPendingTranscripts] = useState<Record<string, string>>({});
+  const [loadingBlob, setLoadingBlob] = useState<string | null>(null);
+
+  // Fetch audio from URL and convert to Blob
+  const fetchAudioBlob = useCallback(async (recordingId: string, audioUrl: string) => {
+    if (audioBlobs[recordingId]) return; // Already fetched
+
+    setLoadingBlob(recordingId);
+    try {
+      // If it's a base64 data URL, convert directly
+      if (audioUrl.startsWith('data:')) {
+        const response = await fetch(audioUrl);
+        const blob = await response.blob();
+        setAudioBlobs(prev => ({ ...prev, [recordingId]: blob }));
+      } else {
+        // Fetch from URL
+        const response = await fetch(audioUrl);
+        const blob = await response.blob();
+        setAudioBlobs(prev => ({ ...prev, [recordingId]: blob }));
+      }
+    } catch (err) {
+      console.error('Error fetching audio blob:', err);
+    } finally {
+      setLoadingBlob(null);
+    }
+  }, [audioBlobs]);
+
+  // Handle starting transcription - fetch blob first
+  const handleStartTranscription = useCallback(async (recording: VoiceRecording) => {
+    setTranscribingId(recording.id);
+    await fetchAudioBlob(recording.id, recording.encryptedAudioUrl);
+  }, [fetchAudioBlob]);
+
+  // Handle transcript generated from AudioTranscription
+  const handleTranscriptGenerated = useCallback((recordingId: string, transcript: string) => {
+    setPendingTranscripts(prev => ({ ...prev, [recordingId]: transcript }));
+  }, []);
+
+  const handleSaveTranscript = useCallback((recordingId: string) => {
+    const transcript = pendingTranscripts[recordingId];
+    if (transcript && onUpdateTranscript) {
+      onUpdateTranscript(recordingId, transcript);
+      setPendingTranscripts(prev => {
+        const updated = { ...prev };
+        delete updated[recordingId];
+        return updated;
+      });
+      setAudioBlobs(prev => {
+        const updated = { ...prev };
+        delete updated[recordingId];
+        return updated;
+      });
+      setTranscribingId(null);
+    }
+  }, [pendingTranscripts, onUpdateTranscript]);
 
   if (loading) {
     return (
@@ -130,7 +202,72 @@ export function RecordingsList({ recordings, sessions = [], onDelete, loading }:
                     showDelete={!!onDelete}
                   />
 
-                  {/* Transcript */}
+                  {/* Generate Transcript Button - Show when no transcript exists */}
+                  {recording.transcriptionStatus !== 'completed' && !recording.encryptedTranscript && (
+                    <div className="mt-3">
+                      {transcribingId === recording.id ? (
+                        <div className="p-4 bg-sage-50 border border-sage-200 rounded-lg">
+                          <div className="flex items-center justify-between mb-3">
+                            <h5 className="font-medium text-clinical-900 flex items-center gap-2">
+                              <svg className="w-4 h-4 text-sage-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                              תמלול הקלטה
+                            </h5>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setTranscribingId(null)}
+                            >
+                              סגור
+                            </Button>
+                          </div>
+
+                          {loadingBlob === recording.id ? (
+                            <div className="flex items-center justify-center py-4">
+                              <div className="w-6 h-6 border-2 border-sage-600 border-t-transparent rounded-full animate-spin" />
+                              <span className="mr-2 text-sm text-clinical-500">טוען הקלטה...</span>
+                            </div>
+                          ) : (
+                            <AudioTranscription
+                              audioBlob={audioBlobs[recording.id] || null}
+                              onTranscriptGenerated={(text) => handleTranscriptGenerated(recording.id, text)}
+                              savedTranscript={pendingTranscripts[recording.id]}
+                            />
+                          )}
+
+                          {pendingTranscripts[recording.id] && (
+                            <div className="mt-3 flex justify-end">
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                onClick={() => handleSaveTranscript(recording.id)}
+                              >
+                                <svg className="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                                שמור תמלול
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => handleStartTranscription(recording)}
+                          disabled={loadingBlob === recording.id}
+                        >
+                          <svg className="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          צור תמלול
+                        </Button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Existing Transcript */}
                   {recording.encryptedTranscript && recording.transcriptionStatus === 'completed' && (
                     <div className="mt-2">
                       <button

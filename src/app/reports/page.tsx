@@ -11,6 +11,7 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 export default function ReportsPage() {
   const [activeTab, setActiveTab] = useState('all');
   const [showNewReport, setShowNewReport] = useState(false);
+  const [viewingReport, setViewingReport] = useState<string | null>(null);
 
   const { user: currentUser, loading: userLoading } = useAuthRedirect();
   const { patients, loading: patientsLoading } = useMyPatients(currentUser?.id);
@@ -36,6 +37,127 @@ export default function ReportsPage() {
   );
 
   const getPatient = (patientId: string) => patients.find(p => p.id === patientId);
+
+  const selectedReport = viewingReport ? reports.find(r => r.id === viewingReport) : null;
+  const selectedPatient = selectedReport ? getPatient(selectedReport.patientId) : null;
+
+  const downloadReportAsPDF = async (report?: any, patient?: any) => {
+    const reportToDownload = report || selectedReport;
+    const patientToDownload = patient || selectedPatient;
+    if (!reportToDownload || !patientToDownload) return;
+
+    // Dynamic import html2pdf.js to avoid SSR issues
+    const html2pdfModule = await import('html2pdf.js');
+    const html2pdf = html2pdfModule.default;
+
+    // Create formatted HTML element
+    const element = document.createElement('div');
+    element.dir = 'rtl';
+    element.lang = 'he';
+    element.innerHTML = `
+      <div style="font-family: Arial, sans-serif; direction: rtl; text-align: right; padding: 40px; max-width: 800px; margin: 0 auto; color: #1f2937; line-height: 1.6;">
+        <div style="margin-bottom: 30px; border-bottom: 1px solid #e5e7eb; padding-bottom: 20px;">
+          <h1 style="font-size: 24px; margin-bottom: 10px; color: #374151; border-bottom: 2px solid #6b7280; padding-bottom: 10px;">
+            ${getReportTypeLabel(reportToDownload.reportType)}
+          </h1>
+          <div style="font-size: 14px; color: #6b7280; margin-bottom: 8px;">
+            <strong>מטופל/ת:</strong> ${patientToDownload.firstName} ${patientToDownload.lastName}
+          </div>
+          <div style="font-size: 14px; color: #6b7280; margin-bottom: 8px;">
+            <strong>תאריך:</strong> ${new Intl.DateTimeFormat('he-IL', { dateStyle: 'long' }).format(new Date(reportToDownload.dateRange.start))} - ${new Intl.DateTimeFormat('he-IL', { dateStyle: 'long' }).format(new Date(reportToDownload.dateRange.end))}
+          </div>
+          ${(reportToDownload as any).title ? `<div style="font-size: 14px; color: #6b7280; margin-bottom: 8px;"><strong>כותרת:</strong> ${(reportToDownload as any).title}</div>` : ''}
+        </div>
+
+        ${reportToDownload.content.summary ? `
+          <div style="margin-bottom: 25px; padding: 15px; background-color: #f9fafb; border-radius: 8px;">
+            <h2 style="font-size: 18px; margin-top: 0; color: #4b5563; margin-bottom: 12px;">סיכום</h2>
+            <p>${reportToDownload.content.summary}</p>
+          </div>
+        ` : ''}
+
+        ${reportToDownload.content.sessionsSummary && reportToDownload.content.sessionsSummary.length > 0 ? `
+          <div style="margin-bottom: 25px; padding: 15px; background-color: #f9fafb; border-radius: 8px;">
+            <h2 style="font-size: 18px; margin-top: 0; color: #4b5563; margin-bottom: 12px;">סיכום מפגשים</h2>
+            ${reportToDownload.content.sessionsSummary.map((session: any) => `
+              <div style="background-color: #fff; padding: 12px; margin-bottom: 10px; border: 1px solid #e5e7eb; border-radius: 6px;">
+                <div style="font-size: 14px; color: #6b7280; margin-bottom: 8px;">
+                  ${new Intl.DateTimeFormat('he-IL', { dateStyle: 'medium' }).format(new Date(session.date))} - ${therapistRoleLabels[session.therapistRole as keyof typeof therapistRoleLabels]}
+                </div>
+                <p style="margin: 8px 0;"><strong>נקודות מפתח:</strong> ${session.keyPoints}</p>
+                ${session.progress ? `<p style="margin: 8px 0;"><strong>התקדמות:</strong> ${session.progress}</p>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+
+        ${reportToDownload.content.goalsProgress && reportToDownload.content.goalsProgress.length > 0 ? `
+          <div style="margin-bottom: 25px; padding: 15px; background-color: #f9fafb; border-radius: 8px;">
+            <h2 style="font-size: 18px; margin-top: 0; color: #4b5563; margin-bottom: 12px;">התקדמות יעדים</h2>
+            ${reportToDownload.content.goalsProgress.map((goal: any) => `
+              <div style="background-color: #fff; padding: 12px; margin-bottom: 10px; border: 1px solid #e5e7eb; border-radius: 6px;">
+                <h3 style="font-size: 16px; margin-top: 0; margin-bottom: 10px; color: #6b7280;">${goal.goalDescription}</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 10px 0;">
+                  <div>
+                    <div style="font-weight: bold; color: #374151; margin-bottom: 4px;">מצב התחלתי</div>
+                    <div>${goal.initialStatus}</div>
+                  </div>
+                  <div>
+                    <div style="font-weight: bold; color: #374151; margin-bottom: 4px;">מצב נוכחי</div>
+                    <div>${goal.currentStatus}</div>
+                  </div>
+                </div>
+                ${goal.progressPercentage !== undefined ? `
+                  <div style="margin-top: 10px;">
+                    <div style="font-weight: bold; color: #374151; margin-bottom: 4px;">התקדמות: ${goal.progressPercentage}%</div>
+                    <div style="height: 8px; background-color: #e5e7eb; border-radius: 4px; overflow: hidden;">
+                      <div style="height: 100%; background-color: #10b981; width: ${goal.progressPercentage}%;"></div>
+                    </div>
+                  </div>
+                ` : ''}
+                ${goal.notes ? `<p style="font-size: 14px; color: #6b7280; margin-top: 8px;">${goal.notes}</p>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+
+        ${reportToDownload.content.recommendations ? `
+          <div style="margin-bottom: 25px; padding: 15px; background-color: #f9fafb; border-radius: 8px;">
+            <h2 style="font-size: 18px; margin-top: 0; color: #4b5563; margin-bottom: 12px;">המלצות</h2>
+            <p>${reportToDownload.content.recommendations}</p>
+          </div>
+        ` : ''}
+
+        ${reportToDownload.content.clinicalImpressions ? `
+          <div style="margin-bottom: 25px; padding: 15px; background-color: #f9fafb; border-radius: 8px;">
+            <h2 style="font-size: 18px; margin-top: 0; color: #4b5563; margin-bottom: 12px;">רושם קליני</h2>
+            <p>${reportToDownload.content.clinicalImpressions}</p>
+          </div>
+        ` : ''}
+
+        <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280;">
+          <p><strong>נוצר על ידי:</strong> ${currentUser.name}</p>
+          <p><strong>תאריך יצירה:</strong> ${new Intl.DateTimeFormat('he-IL', { dateStyle: 'long', timeStyle: 'short' }).format(new Date(reportToDownload.generatedAt))}</p>
+          ${reportToDownload.signedAt ? `<p><strong>נחתם בתאריך:</strong> ${new Intl.DateTimeFormat('he-IL', { dateStyle: 'long', timeStyle: 'short' }).format(new Date(reportToDownload.signedAt))}</p>` : ''}
+        </div>
+      </div>
+    `;
+
+    // Generate filename
+    const fileName = `${getReportTypeLabel(reportToDownload.reportType)}_${patientToDownload.firstName}_${patientToDownload.lastName}_${new Date().toISOString().split('T')[0]}`;
+
+    // PDF options
+    const options = {
+      margin: 10,
+      filename: `${fileName}.pdf`,
+      image: { type: 'jpeg' as 'jpeg' | 'png' | 'webp', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { orientation: 'portrait' as 'portrait' | 'landscape', unit: 'mm', format: 'a4' },
+    };
+
+    // Generate PDF
+    html2pdf().set(options).from(element).save();
+  };
 
   const getReportTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
@@ -175,13 +297,13 @@ export default function ReportsPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" onClick={() => setViewingReport(report.id)}>
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                           </svg>
                         </Button>
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" onClick={() => downloadReportAsPDF(report, patient)}>
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                           </svg>
@@ -242,6 +364,156 @@ export default function ReportsPage() {
             <Button variant="primary">צור דוח</Button>
           </div>
         </div>
+      </Modal>
+
+      {/* View Report Modal */}
+      <Modal 
+        isOpen={!!viewingReport} 
+        onClose={() => setViewingReport(null)} 
+        title={selectedReport ? getReportTypeLabel(selectedReport.reportType) : 'דוח'}
+        size="xl"
+      >
+        {selectedReport && selectedPatient && (
+          <div className="space-y-6">
+            {/* Report Header */}
+            <div className="border-b border-sage-100 pb-4">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h3 className="text-lg font-semibold text-clinical-900">
+                    {selectedPatient.firstName} {selectedPatient.lastName}
+                  </h3>
+                  <p className="text-sm text-clinical-500">
+                    {new Intl.DateTimeFormat('he-IL', { dateStyle: 'long' }).format(new Date(selectedReport.dateRange.start))} - {new Intl.DateTimeFormat('he-IL', { dateStyle: 'long' }).format(new Date(selectedReport.dateRange.end))}
+                  </p>
+                </div>
+                {getStatusBadge(selectedReport.status)}
+              </div>
+              {selectedReport.content.summary && (
+                <h4 className="text-md font-medium text-clinical-700">{selectedReport.content.summary}</h4>
+              )}
+            </div>
+
+            {/* Report Content */}
+            <div className="space-y-6">
+              {/* Summary */}
+              {selectedReport.content.summary && (
+                <div>
+                  <h3 className="text-md font-semibold text-clinical-900 mb-2">סיכום</h3>
+                  <div className="bg-sage-50 rounded-lg p-4 text-clinical-800 leading-relaxed">
+                    {selectedReport.content.summary}
+                  </div>
+                </div>
+              )}
+
+              {/* Sessions Summary */}
+              {selectedReport.content.sessionsSummary && selectedReport.content.sessionsSummary.length > 0 && (
+                <div>
+                  <h3 className="text-md font-semibold text-clinical-900 mb-2">סיכום מפגשים</h3>
+                  <div className="space-y-3">
+                    {selectedReport.content.sessionsSummary.map((session: any, index: number) => (
+                      <div key={index} className="bg-warm-50 rounded-lg p-4 border border-warm-100">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-clinical-900">
+                            {new Intl.DateTimeFormat('he-IL', { dateStyle: 'medium' }).format(new Date(session.date))}
+                          </span>
+                          <Badge variant="sage">{therapistRoleLabels[session.therapistRole as keyof typeof therapistRoleLabels]}</Badge>
+                        </div>
+                        <p className="text-sm text-clinical-700 mb-1"><strong>נקודות מפתח:</strong> {session.keyPoints}</p>
+                        {session.progress && (
+                          <p className="text-sm text-clinical-600"><strong>התקדמות:</strong> {session.progress}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Goals Progress */}
+              {selectedReport.content.goalsProgress && selectedReport.content.goalsProgress.length > 0 && (
+                <div>
+                  <h3 className="text-md font-semibold text-clinical-900 mb-2">התקדמות יעדים</h3>
+                  <div className="space-y-3">
+                    {selectedReport.content.goalsProgress.map((goal: any, index: number) => (
+                      <div key={index} className="bg-blue-50 rounded-lg p-4 border border-blue-100">
+                        <h4 className="text-sm font-semibold text-clinical-900 mb-2">{goal.goalDescription}</h4>
+                        <div className="grid grid-cols-2 gap-3 text-sm mb-2">
+                          <div>
+                            <p className="text-clinical-500 text-xs mb-1">מצב התחלתי</p>
+                            <p className="text-clinical-700">{goal.initialStatus}</p>
+                          </div>
+                          <div>
+                            <p className="text-clinical-500 text-xs mb-1">מצב נוכחי</p>
+                            <p className="text-clinical-700">{goal.currentStatus}</p>
+                          </div>
+                        </div>
+                        {goal.progressPercentage !== undefined && (
+                          <div className="mb-2">
+                            <div className="flex items-center justify-between text-xs text-clinical-600 mb-1">
+                              <span>התקדמות</span>
+                              <span>{goal.progressPercentage}%</span>
+                            </div>
+                            <div className="w-full bg-clinical-200 rounded-full h-2">
+                              <div 
+                                className="bg-sage-500 h-2 rounded-full transition-all"
+                                style={{ width: `${goal.progressPercentage}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
+                        {goal.notes && (
+                          <p className="text-xs text-clinical-600 mt-2">{goal.notes}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Recommendations */}
+              {selectedReport.content.recommendations && (
+                <div>
+                  <h3 className="text-md font-semibold text-clinical-900 mb-2">המלצות</h3>
+                  <div className="bg-amber-50 rounded-lg p-4 border border-amber-100 text-clinical-800">
+                    {selectedReport.content.recommendations}
+                  </div>
+                </div>
+              )}
+
+              {/* Clinical Impressions */}
+              {selectedReport.content.clinicalImpressions && (
+                <div>
+                  <h3 className="text-md font-semibold text-clinical-900 mb-2">רושם קליני</h3>
+                  <div className="bg-sage-50 rounded-lg p-4 text-clinical-800">
+                    {selectedReport.content.clinicalImpressions}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Report Metadata */}
+            <div className="border-t border-sage-100 pt-4 space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-clinical-500">נוצר על ידי:</span>
+                <span className="text-clinical-900 font-medium">{currentUser.name}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-clinical-500">תאריך יצירה:</span>
+                <span className="text-clinical-900">{new Intl.DateTimeFormat('he-IL', { dateStyle: 'long', timeStyle: 'short' }).format(new Date(selectedReport.generatedAt))}</span>
+              </div>
+              {selectedReport.signedAt && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-clinical-500">נחתם בתאריך:</span>
+                  <span className="text-clinical-900">{new Intl.DateTimeFormat('he-IL', { dateStyle: 'long', timeStyle: 'short' }).format(new Date(selectedReport.signedAt))}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-center gap-3 pt-4 border-t border-sage-100">
+              <Button variant="primary" onClick={() => setViewingReport(null)}>סגור</Button>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );
