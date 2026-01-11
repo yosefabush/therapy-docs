@@ -277,15 +277,16 @@ export function SessionForm({
           <VoiceRecorder
             sessionId={sessionId}
             patientId={patientId}
-            onRecordingComplete={async (audioData, duration, transcript) => {
+            onRecordingComplete={async (audioData, duration, transcript, diarizedTranscript) => {
               try {
                 await createRecording({
                   sessionId,
                   patientId,
                   duration,
                   encryptedAudioUrl: audioData,
-                  transcriptionStatus: transcript ? 'completed' : 'pending',
+                  transcriptionStatus: diarizedTranscript ? 'completed' : (transcript ? 'completed' : 'pending'),
                   encryptedTranscript: transcript,
+                  diarizedTranscript: diarizedTranscript,
                   consentObtained: true,
                 });
                 setShowVoiceRecorder(false);

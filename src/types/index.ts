@@ -234,6 +234,24 @@ export interface AIInsight {
   acknowledgedAt?: Date;
 }
 
+// Speaker utterance from diarization
+export interface SpeakerUtterance {
+  speaker: number;
+  speakerLabel?: string;  // e.g., "מטפל" (Therapist), "מטופל" (Patient)
+  transcript: string;
+  start: number;
+  end: number;
+  confidence: number;
+}
+
+// Diarized transcript with speaker identification
+export interface DiarizedTranscript {
+  utterances: SpeakerUtterance[];
+  speakerCount: number;
+  speakerLabels?: Record<number, string>;  // Map speaker numbers to labels
+  rawTranscript: string;  // Full transcript without speaker labels
+}
+
 export interface VoiceRecording {
   id: string;
   sessionId: string;
@@ -241,7 +259,8 @@ export interface VoiceRecording {
   duration: number;
   encryptedAudioUrl: string;  // Stores base64 audio data
   transcriptionStatus: 'pending' | 'processing' | 'completed' | 'failed';
-  encryptedTranscript?: string;
+  encryptedTranscript?: string;  // Live transcript from Web Speech API
+  diarizedTranscript?: DiarizedTranscript;  // Deepgram transcript with speakers
   consentObtained: boolean;
   createdAt: Date;
 }

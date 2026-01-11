@@ -3,6 +3,22 @@ import { voiceRecordingRepository } from '@/lib/data/repositories';
 import { seedIfEmpty } from '@/lib/data/seed';
 import { z } from 'zod';
 
+const speakerUtteranceSchema = z.object({
+  speaker: z.number(),
+  speakerLabel: z.string().optional(),
+  transcript: z.string(),
+  start: z.number(),
+  end: z.number(),
+  confidence: z.number(),
+});
+
+const diarizedTranscriptSchema = z.object({
+  utterances: z.array(speakerUtteranceSchema),
+  speakerCount: z.number(),
+  speakerLabels: z.record(z.string(), z.string()).optional(),
+  rawTranscript: z.string(),
+});
+
 const createRecordingSchema = z.object({
   sessionId: z.string(),
   patientId: z.string(),
@@ -10,6 +26,7 @@ const createRecordingSchema = z.object({
   encryptedAudioUrl: z.string(),  // Base64 audio data
   transcriptionStatus: z.enum(['pending', 'processing', 'completed', 'failed']).default('pending'),
   encryptedTranscript: z.string().optional(),
+  diarizedTranscript: diarizedTranscriptSchema.optional(),
   consentObtained: z.boolean(),
 });
 

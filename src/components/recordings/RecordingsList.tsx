@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { VoiceRecording, Session } from '@/types';
+import { VoiceRecording, Session, DiarizedTranscript } from '@/types';
 import { Card, Badge, Modal, Button } from '@/components/ui';
 import { AudioPlayer } from './AudioPlayer';
 
@@ -267,8 +267,8 @@ export function RecordingsList({ recordings, sessions = [], onDelete, onUpdateTr
                     </div>
                   )}
 
-                  {/* Existing Transcript */}
-                  {recording.encryptedTranscript && recording.transcriptionStatus === 'completed' && (
+                  {/* Transcripts Section */}
+                  {(recording.encryptedTranscript || recording.diarizedTranscript) && (
                     <div className="mt-2">
                       <button
                         onClick={() => setExpandedTranscript(
@@ -288,8 +288,61 @@ export function RecordingsList({ recordings, sessions = [], onDelete, onUpdateTr
                       </button>
 
                       {expandedTranscript === recording.id && (
-                        <div className="mt-2 p-3 bg-clinical-50 rounded-lg text-sm text-clinical-700 leading-relaxed">
-                          {recording.encryptedTranscript}
+                        <div className="mt-2 space-y-4">
+                          {/* Live Transcript Section */}
+                          {recording.encryptedTranscript && (
+                            <div className="p-3 bg-sage-50 border border-sage-200 rounded-lg">
+                              <h5 className="text-sm font-medium text-clinical-900 mb-2 flex items-center gap-2">
+                                <svg className="w-4 h-4 text-sage-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                תמלול חי (ללא זיהוי דוברים)
+                              </h5>
+                              <div className="text-sm text-clinical-700 leading-relaxed text-right">
+                                {recording.encryptedTranscript}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Diarized Transcript Section */}
+                          {recording.diarizedTranscript && (
+                            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                              <h5 className="text-sm font-medium text-clinical-900 mb-2 flex items-center gap-2">
+                                <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                                תמלול עם זיהוי דוברים
+                                <Badge variant="info" className="mr-auto">
+                                  {recording.diarizedTranscript.speakerCount} דוברים
+                                </Badge>
+                              </h5>
+                              <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                                {recording.diarizedTranscript.utterances.map((utterance, idx) => {
+                                  const speakerLabels = recording.diarizedTranscript?.speakerLabels || {};
+                                  const label = speakerLabels[utterance.speaker] || `דובר ${utterance.speaker + 1}`;
+                                  const isTherapist = utterance.speaker === 0;
+                                  return (
+                                    <div
+                                      key={idx}
+                                      className={`p-2 rounded ${isTherapist ? 'bg-green-50 border-r-4 border-green-500' : 'bg-blue-100 border-r-4 border-blue-500'}`}
+                                    >
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <span className={`text-xs font-medium ${isTherapist ? 'text-green-700' : 'text-blue-700'}`}>
+                                          {label}
+                                        </span>
+                                        <span className="text-xs text-clinical-400">
+                                          {Math.floor(utterance.start / 60)}:{String(Math.floor(utterance.start % 60)).padStart(2, '0')}
+                                        </span>
+                                      </div>
+                                      <p className="text-sm text-clinical-700 text-right leading-relaxed">
+                                        {utterance.transcript}
+                                      </p>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
