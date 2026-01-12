@@ -11,9 +11,10 @@ interface HeaderProps {
   title: string;
   subtitle?: string;
   actions?: React.ReactNode;
+  onSessionNotificationClick?: (sessionId: string, notificationId: string, markAsRead: () => void) => void;
 }
 
-export function Header({ title, subtitle, actions }: HeaderProps) {
+export function Header({ title, subtitle, actions, onSessionNotificationClick }: HeaderProps) {
   const router = useRouter();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -56,13 +57,26 @@ export function Header({ title, subtitle, actions }: HeaderProps) {
   }, []);
 
   const handleNotificationClick = (notification: Notification) => {
-    markAsRead(notification.id);
     if (notification.relatedId && notification.relatedType === 'session') {
-      router.push(`/sessions/${notification.relatedId}`);
+      // If callback provided, use it (allows showing action modal)
+      if (onSessionNotificationClick) {
+        setIsNotificationsOpen(false);
+        onSessionNotificationClick(
+          notification.relatedId,
+          notification.id,
+          () => markAsRead(notification.id)
+        );
+      } else {
+        // Default behavior: navigate to session
+        markAsRead(notification.id);
+        router.push(`/sessions/${notification.relatedId}`);
+        setIsNotificationsOpen(false);
+      }
     } else if (notification.relatedId && notification.relatedType === 'patient') {
+      markAsRead(notification.id);
       router.push(`/patients/${notification.relatedId}`);
+      setIsNotificationsOpen(false);
     }
-    setIsNotificationsOpen(false);
   };
 
   const getNotificationIcon = (type: Notification['type']) => {
@@ -161,7 +175,7 @@ export function Header({ title, subtitle, actions }: HeaderProps) {
                     />
                   </svg>
                   {unreadCount > 0 && (
-                    <span className="absolute top-1 right-1 min-w-[0.5rem] h-2 px-1 bg-red-500 rounded-full text-[10px] text-white font-medium flex items-center justify-center">
+                    <span className="absolute -top-1 -left-1 min-w-[18px] h-[18px] px-1 bg-red-500 rounded-full text-[10px] text-white font-medium flex items-center justify-center">
                       {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                   )}
@@ -221,17 +235,20 @@ export function Header({ title, subtitle, actions }: HeaderProps) {
                                   {notification.message}
                                 </p>
                               </div>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  dismissNotification(notification.id);
-                                }}
-                                className="text-clinical-400 hover:text-clinical-600 p-1"
-                              >
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                              </button>
+                              {/* Only show dismiss button for read notifications */}
+                              {notification.isRead && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    dismissNotification(notification.id);
+                                  }}
+                                  className="text-clinical-400 hover:text-clinical-600 p-1"
+                                >
+                                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                </button>
+                              )}
                             </div>
                           </div>
                         ))

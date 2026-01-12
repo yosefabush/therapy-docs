@@ -353,7 +353,7 @@ function RiskAssessmentForm({ value, onChange, onClose }: RiskAssessmentFormProp
       />
 
       <Select
-        label="מחשבות רצחניות"
+        label="מחשבות אובדניות"
         value={assessment.homicidalIdeation}
         onChange={(e) => setAssessment(prev => ({
           ...prev,

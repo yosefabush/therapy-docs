@@ -155,11 +155,12 @@ interface TodayScheduleProps {
   sessions: Session[];
   therapists: User[];
   patientNames?: Record<string, string>;
+  onSessionClick?: (session: Session) => void;
 }
 
-export function TodaySchedule({ sessions, therapists, patientNames }: TodayScheduleProps) {
+export function TodaySchedule({ sessions, therapists, patientNames, onSessionClick }: TodayScheduleProps) {
   const getTherapist = (id: string) => therapists.find(t => t.id === id);
-  
+
   const getStatusConfig = (status: Session['status']) => {
     const configs: Record<Session['status'], { variant: 'success' | 'warning' | 'danger' | 'info' | 'sage'; label: string }> = {
       scheduled: { variant: 'info', label: 'מתוכנן' },
@@ -170,7 +171,7 @@ export function TodaySchedule({ sessions, therapists, patientNames }: TodaySched
     };
     return configs[status];
   };
-  
+
   const now = new Date();
   const sortedSessions = [...sessions].sort(
     (a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()
@@ -187,6 +188,13 @@ export function TodaySchedule({ sessions, therapists, patientNames }: TodaySched
     );
   }
 
+  const handleClick = (e: React.MouseEvent, session: Session) => {
+    if (onSessionClick && (session.status === 'scheduled' || session.status === 'in_progress')) {
+      e.preventDefault();
+      onSessionClick(session);
+    }
+  };
+
   return (
     <div className="space-y-2">
       {sortedSessions.map(session => {
@@ -195,25 +203,32 @@ export function TodaySchedule({ sessions, therapists, patientNames }: TodaySched
         const sessionTime = new Date(session.scheduledAt);
         const isPast = sessionTime < now;
         const isNext = !isPast && sortedSessions.findIndex(s => new Date(s.scheduledAt) > now) === sortedSessions.indexOf(session);
+        const canChangeStatus = session.status === 'scheduled' || session.status === 'in_progress';
 
         return (
-          <Link key={session.id} href={`/sessions/${session.id}`}>
+          <Link
+            key={session.id}
+            href={`/sessions/${session.id}`}
+            onClick={(e) => handleClick(e, session)}
+          >
             <div className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
-              isNext ? 'bg-sage-100 border border-sage-200' : 
-              isPast ? 'bg-clinical-50 opacity-60' : 'hover:bg-sage-50'
-            }`}>
+              isNext ? 'bg-sage-100 border border-sage-200' :
+              isPast && session.status !== 'completed' ? 'bg-clinical-50' : 'hover:bg-sage-50'
+            } ${canChangeStatus ? 'cursor-pointer' : ''}`}>
               <div className="text-right w-16 flex-shrink-0">
                 <span className={`text-sm font-medium ${isNext ? 'text-sage-700' : 'text-clinical-600'}`}>
                   {new Intl.DateTimeFormat('he-IL', { hour: 'numeric', minute: '2-digit' }).format(sessionTime)}
                 </span>
               </div>
-              
+
               <div className={`w-1 h-10 rounded-full ${
                 session.status === 'completed' ? 'bg-green-400' :
                 session.status === 'in_progress' ? 'bg-amber-400' :
+                session.status === 'no_show' ? 'bg-red-400' :
+                session.status === 'cancelled' ? 'bg-gray-400' :
                 isNext ? 'bg-sage-500' : 'bg-clinical-200'
               }`} />
-              
+
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-2 flex-wrap">
                   <p className={`text-sm font-semibold ${isNext ? 'text-sage-900' : 'text-clinical-900'}`}>
@@ -239,7 +254,13 @@ export function TodaySchedule({ sessions, therapists, patientNames }: TodaySched
                 </svg>
               )}
 
-              {isNext && (
+              {session.status === 'no_show' && (
+                <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              )}
+
+              {isNext && session.status === 'scheduled' && (
                 <Badge variant="sage">הבא</Badge>
               )}
             </div>

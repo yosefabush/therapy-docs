@@ -5,7 +5,7 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { Header, QuickActionButton } from '@/components/layout/Header';
 import { Card, Button, Select, Tabs, Modal } from '@/components/ui';
 import { SessionList } from '@/components/sessions/SessionList';
-import { SessionForm } from '@/components/sessions/SessionForm';
+import { NewSessionForm } from '@/components/sessions/NewSessionForm';
 import { therapistRoleLabels } from '@/lib/mock-data';
 import { useAuthRedirect, useMyPatients, useMySessions, useUsers } from '@/lib/hooks';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
@@ -219,15 +219,15 @@ export default function SessionsPage() {
       </main>
 
       {/* New Session Modal */}
-      <Modal isOpen={showNewSession} onClose={() => setShowNewSession(false)} title="מפגש חדש" size="xl">
-        <SessionForm
+      <Modal isOpen={showNewSession} onClose={() => setShowNewSession(false)} title="תזמן מפגש חדש" size="lg">
+        <NewSessionForm
+          patients={patients}
+          currentUserId={currentUser.id}
           therapistRole={currentUser.therapistRole!}
-          onSubmit={(notes, status) => {
-            console.log('Submitted:', notes, status);
+          onClose={() => setShowNewSession(false)}
+          onSessionAdded={() => {
+            refetch();
             setShowNewSession(false);
-          }}
-          onSaveDraft={(notes) => {
-            console.log('Draft saved:', notes);
           }}
         />
       </Modal>

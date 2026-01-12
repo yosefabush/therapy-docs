@@ -17,8 +17,12 @@ interface UseNotificationsReturn {
  * Hook to manage notifications based on real session data
  * Generates notifications for:
  * - Upcoming sessions (within 30 minutes)
+ * - Session starting now (within 5 minutes of start time)
  * - Unsigned completed sessions
  * - Overdue sessions (scheduled but past time)
+ *
+ * IMPORTANT: Notifications persist until user reads them (clicks on them).
+ * Dismissing only works for read notifications.
  */
 export function useNotifications(): UseNotificationsReturn {
   const { user } = useCurrentUser();
@@ -37,10 +41,11 @@ export function useNotifications(): UseNotificationsReturn {
       const sessionTime = new Date(session.scheduledAt);
       const minutesUntil = (sessionTime.getTime() - now.getTime()) / (1000 * 60);
 
-      // Upcoming session reminder (within next 30 minutes)
-      if (session.status === 'scheduled' && minutesUntil > 0 && minutesUntil <= 30) {
+      // Upcoming session reminder (within next 30 minutes, but more than 5 minutes away)
+      if (session.status === 'scheduled' && minutesUntil > 5 && minutesUntil <= 30) {
         const notificationId = `reminder-${session.id}`;
-        if (!dismissedIds.has(notificationId)) {
+        // Only hide if both read AND dismissed
+        if (!(readIds.has(notificationId) && dismissedIds.has(notificationId))) {
           generatedNotifications.push({
             id: notificationId,
             type: 'session_reminder',
@@ -54,10 +59,31 @@ export function useNotifications(): UseNotificationsReturn {
         }
       }
 
+      // Session starting NOW (within 5 minutes before or after start time)
+      if (session.status === 'scheduled' && minutesUntil <= 5 && minutesUntil >= -5) {
+        const notificationId = `starting-${session.id}`;
+        // Only hide if both read AND dismissed
+        if (!(readIds.has(notificationId) && dismissedIds.has(notificationId))) {
+          generatedNotifications.push({
+            id: notificationId,
+            type: 'session_reminder',
+            title: 'המפגש מתחיל עכשיו!',
+            message: minutesUntil > 0
+              ? `המפגש מתחיל בעוד ${Math.ceil(minutesUntil)} דקות`
+              : 'המפגש אמור להתחיל עכשיו',
+            relatedId: session.id,
+            relatedType: 'session',
+            isRead: readIds.has(notificationId),
+            createdAt: sessionTime,
+          });
+        }
+      }
+
       // Overdue scheduled session (past scheduled time but still marked as scheduled)
       if (session.status === 'scheduled' && minutesUntil < -5 && minutesUntil > -120) {
         const notificationId = `overdue-${session.id}`;
-        if (!dismissedIds.has(notificationId)) {
+        // Only hide if both read AND dismissed
+        if (!(readIds.has(notificationId) && dismissedIds.has(notificationId))) {
           generatedNotifications.push({
             id: notificationId,
             type: 'session_overdue',
@@ -78,7 +104,8 @@ export function useNotifications(): UseNotificationsReturn {
 
         if (hoursSinceCompleted >= 1) {
           const notificationId = `unsigned-${session.id}`;
-          if (!dismissedIds.has(notificationId)) {
+          // Only hide if both read AND dismissed
+          if (!(readIds.has(notificationId) && dismissedIds.has(notificationId))) {
             generatedNotifications.push({
               id: notificationId,
               type: 'unsigned_session',
@@ -113,9 +140,13 @@ export function useNotifications(): UseNotificationsReturn {
     setReadIds(prev => new Set([...prev, ...notifications.map(n => n.id)]));
   }, [notifications]);
 
+  // Only allow dismissing notifications that have been read
   const dismissNotification = useCallback((id: string) => {
-    setDismissedIds(prev => new Set([...prev, id]));
-  }, []);
+    // Only dismiss if already read
+    if (readIds.has(id)) {
+      setDismissedIds(prev => new Set([...prev, id]));
+    }
+  }, [readIds]);
 
   return {
     notifications,
