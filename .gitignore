@@ -43,6 +43,10 @@ Thumbs.db
 # Testing
 coverage/
 .nyc_output/
+test-results/
 
 # Local data files
 /data
+
+# MCP Configuration
+.mcp.json
