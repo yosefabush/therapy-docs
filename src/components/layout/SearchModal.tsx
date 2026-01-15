@@ -27,6 +27,12 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const { patients } = usePatients();
   const { sessions } = useSessions();
 
+  // Build patient index Map for O(1) lookups instead of O(n) find operations
+  const patientById = React.useMemo(() => {
+    if (!patients) return new Map<string, Patient>();
+    return new Map(patients.map((p: Patient) => [p.id, p]));
+  }, [patients]);
+
   // Filter results based on query
   const results: SearchResult[] = React.useMemo(() => {
     if (!query.trim()) return [];
@@ -55,9 +61,9 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
       }
     });
 
-    // Search sessions (by patient name or date)
+    // Search sessions (by patient name or date) - uses O(1) Map lookup instead of O(n) find
     sessions?.forEach((session: Session) => {
-      const patient = patients?.find((p: Patient) => p.id === session.patientId);
+      const patient = patientById.get(session.patientId);
       if (!patient) return;
 
       const fullName = `${patient.firstName} ${patient.lastName}`.toLowerCase();
@@ -75,7 +81,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
     });
 
     return searchResults.slice(0, 8); // Limit to 8 results
-  }, [query, patients, sessions]);
+  }, [query, patients, sessions, patientById]);
 
   // Focus input when modal opens
   useEffect(() => {

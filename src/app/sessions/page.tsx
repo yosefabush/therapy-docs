@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header, QuickActionButton } from '@/components/layout/Header';
 import { Card, Button, Select, Tabs, Modal } from '@/components/ui';
@@ -33,58 +33,94 @@ export default function SessionsPage() {
     return <ErrorMessage message={sessionsError} onRetry={refetch} />;
   }
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // Memoize today's date start to avoid recalculation
+  const todayStart = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today;
+  }, []);
 
-  const upcomingSessions = mySessions.filter(s =>
-    (s.status === 'scheduled' || s.status === 'in_progress') &&
-    new Date(s.scheduledAt) >= today
-  ).sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime());
+  // Memoize session categorization - combines multiple array operations into single pass
+  const { upcomingSessions, completedSessions, pendingSignature, allSortedSessions } = useMemo(() => {
+    const upcoming: typeof mySessions = [];
+    const completed: typeof mySessions = [];
+    const pending: typeof mySessions = [];
 
-  const completedSessions = mySessions.filter(s => s.status === 'completed')
-    .sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime());
+    // Single pass through sessions to categorize
+    for (const session of mySessions) {
+      if (session.status === 'completed') {
+        completed.push(session);
+        if (!session.signedAt) {
+          pending.push(session);
+        }
+      } else if (
+        (session.status === 'scheduled' || session.status === 'in_progress') &&
+        new Date(session.scheduledAt) >= todayStart
+      ) {
+        upcoming.push(session);
+      }
+    }
 
-  const pendingSignature = completedSessions.filter(s => !s.signedAt);
+    // Sort after filtering (more efficient than filter+sort)
+    upcoming.sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime());
+    completed.sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime());
 
-  const tabs = [
+    // Sort all sessions for 'all' tab
+    const allSorted = [...mySessions].sort((a, b) =>
+      new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime()
+    );
+
+    return {
+      upcomingSessions: upcoming,
+      completedSessions: completed,
+      pendingSignature: pending,
+      allSortedSessions: allSorted,
+    };
+  }, [mySessions, todayStart]);
+
+  // Memoize tabs array to prevent recreation on every render
+  const tabs = useMemo(() => [
     { id: 'upcoming', label: 'קרובים', count: upcomingSessions.length },
     { id: 'completed', label: 'הושלמו', count: completedSessions.length },
     { id: 'pending', label: 'ממתינים לחתימה', count: pendingSignature.length },
     { id: 'all', label: 'כל המפגשים', count: mySessions.length },
-  ];
+  ], [upcomingSessions.length, completedSessions.length, pendingSignature.length, mySessions.length]);
 
-  const getFilteredSessions = () => {
-    let filteredSessions = mySessions;
+  // Memoize filtered sessions based on active tab and date filter
+  const filteredSessions = useMemo(() => {
+    let sessions: typeof mySessions;
 
     switch (activeTab) {
       case 'upcoming':
-        filteredSessions = upcomingSessions;
+        sessions = upcomingSessions;
         break;
       case 'completed':
-        filteredSessions = completedSessions;
+        sessions = completedSessions;
         break;
       case 'pending':
-        filteredSessions = pendingSignature;
+        sessions = pendingSignature;
         break;
       default:
-        filteredSessions = mySessions.sort((a, b) =>
-          new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime()
-        );
+        sessions = allSortedSessions;
     }
 
     if (selectedDate) {
       const filterDate = new Date(selectedDate);
-      filteredSessions = filteredSessions.filter(s => {
-        const sessionDate = new Date(s.scheduledAt);
-        return sessionDate.toDateString() === filterDate.toDateString();
-      });
+      const filterDateStr = filterDate.toDateString();
+      return sessions.filter(s => new Date(s.scheduledAt).toDateString() === filterDateStr);
     }
 
-    return filteredSessions;
-  };
+    return sessions;
+  }, [activeTab, selectedDate, upcomingSessions, completedSessions, pendingSignature, allSortedSessions]);
 
-  const patientNames: Record<string, string> = {};
-  patients.forEach(p => { patientNames[p.id] = `${p.firstName} ${p.lastName}`; });
+  // Memoize patient names map to avoid recreation on every render
+  const patientNames = useMemo(() => {
+    const names: Record<string, string> = {};
+    for (const p of patients) {
+      names[p.id] = `${p.firstName} ${p.lastName}`;
+    }
+    return names;
+  }, [patients]);
 
   return (
     <div className="min-h-screen bg-warm-50">
@@ -193,9 +229,9 @@ export default function SessionsPage() {
           <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} className="mb-6" />
 
           {/* Sessions List */}
-          {getFilteredSessions().length > 0 ? (
+          {filteredSessions.length > 0 ? (
             <SessionList
-              sessions={getFilteredSessions()}
+              sessions={filteredSessions}
               therapists={users}
               patientNames={patientNames}
             />
