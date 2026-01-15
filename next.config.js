@@ -4,6 +4,8 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '2mb',
     },
+    // Optimize barrel imports for icon libraries - reduces bundle size by 15-70%
+    optimizePackageImports: ['lucide-react'],
   },
 }
 
