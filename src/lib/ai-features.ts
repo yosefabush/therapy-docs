@@ -1,10 +1,88 @@
 // AI-Enhanced Features for Therapy Documentation
 // Revolutionary idea: AI-powered session summarization and pattern recognition
 
-import { Session, TherapistRole, TreatmentGoal, AIInsight } from '@/types';
+import { Session, SessionNotes, TherapistRole, TreatmentGoal, AIInsight } from '@/types';
 import { therapistRoleLabels, sessionTypeLabels } from './mock-data';
+import { getPromptForRole, SessionSummaryPrompt } from './prompts';
+
+// Re-export SessionSummaryPrompt type for external use
+export type { SessionSummaryPrompt } from './prompts';
+
+/**
+ * Formats SOAP notes from a session into a structured string for AI consumption
+ * Includes all available fields from SessionNotes
+ */
+function formatSOAPNotes(notes: SessionNotes): string {
+  const sections: string[] = [];
+
+  if (notes.chiefComplaint) {
+    sections.push(`Chief Complaint: ${notes.chiefComplaint}`);
+  }
+  sections.push(`Subjective: ${notes.subjective}`);
+  sections.push(`Objective: ${notes.objective}`);
+  sections.push(`Assessment: ${notes.assessment}`);
+  sections.push(`Plan: ${notes.plan}`);
+
+  if (notes.interventionsUsed?.length) {
+    sections.push(`Interventions Used: ${notes.interventionsUsed.join(', ')}`);
+  }
+  if (notes.progressTowardGoals) {
+    sections.push(`Progress Toward Goals: ${notes.progressTowardGoals}`);
+  }
+  if (notes.medications?.length) {
+    const meds = notes.medications.map(m => `${m.name} ${m.dosage} ${m.frequency}`).join('; ');
+    sections.push(`Medications: ${meds}`);
+  }
+  if (notes.riskAssessment) {
+    sections.push(`Risk Assessment: SI=${notes.riskAssessment.suicidalIdeation}, HI=${notes.riskAssessment.homicidalIdeation}, SH=${notes.riskAssessment.selfHarm}`);
+  }
+  if (notes.homework) {
+    sections.push(`Homework: ${notes.homework}`);
+  }
+  if (notes.nextSessionPlan) {
+    sections.push(`Next Session Plan: ${notes.nextSessionPlan}`);
+  }
+
+  return sections.join('\n\n');
+}
+
+/**
+ * Builds a complete prompt from session data and therapist role
+ * Returns both system and user prompts ready for AI generation
+ *
+ * @param session - The session containing SOAP notes
+ * @param therapistRole - The role of the therapist for role-specific prompt selection
+ * @param transcript - Optional session transcript for additional context
+ * @returns Object containing systemPrompt and userPrompt strings
+ *
+ * Example usage (Phase 2 will implement this):
+ *
+ * const { systemPrompt, userPrompt } = buildPromptFromSession(session, 'psychiatrist', transcript);
+ * const summary = await callAI(systemPrompt, userPrompt);
+ */
+export function buildPromptFromSession(
+  session: Session,
+  therapistRole: TherapistRole,
+  transcript?: string
+): { systemPrompt: string; userPrompt: string } {
+  const promptConfig = getPromptForRole(therapistRole);
+
+  // Format SOAP notes from session
+  const soapNotes = formatSOAPNotes(session.notes);
+
+  // Replace template variables
+  const userPrompt = promptConfig.userPromptTemplate
+    .replace('{{soapNotes}}', soapNotes)
+    .replace('{{transcript}}', transcript || '(No transcript available)');
+
+  return {
+    systemPrompt: promptConfig.systemPrompt,
+    userPrompt
+  };
+}
 
 // Session summary generation based on therapist role
+// TODO (Phase 2): Replace stub generators with AI call using buildPromptFromSession()
 export function generateSessionSummary(session: Session, therapistRole: TherapistRole): string {
   const { notes, sessionType, duration } = session;
   
