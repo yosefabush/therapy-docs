@@ -12,7 +12,7 @@ This roadmap delivers AI-powered insight generation for TherapyDocs in two main 
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Role-Specific Prompts** - Create 10 therapist-role prompts for session summaries
+- [x] **Phase 1: Role-Specific Prompts** - Create 10 therapist-role prompts for session summaries
 - [ ] **Phase 2: Session Summary Generation** - Build AI engine to generate summaries from notes/transcripts
 - [ ] **Phase 3: Session Summary UI** - Add generate/review/save/regenerate workflow on session page
 - [ ] **Phase 4: Patient Insight Engine** - Build cross-session analysis for patterns, progress, risks, gaps
@@ -32,8 +32,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 2 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Create prompt type, registry, and 10 role-specific prompt files
-- [ ] 01-02-PLAN.md — Integrate prompts with generateSessionSummary() dispatch
+- [x] 01-01-PLAN.md — Create prompt type, registry, and 10 role-specific prompt files
+- [x] 01-02-PLAN.md — Integrate prompts with generateSessionSummary() dispatch
 
 ### Phase 2: Session Summary Generation
 **Goal**: AI can generate role-specific session summaries using notes and transcripts as input
@@ -108,7 +108,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Role-Specific Prompts | 0/2 | Planned | - |
+| 1. Role-Specific Prompts | 2/2 | Complete | 2026-01-22 |
 | 2. Session Summary Generation | 0/2 | Not started | - |
 | 3. Session Summary UI | 0/3 | Not started | - |
 | 4. Patient Insight Engine | 0/3 | Not started | - |

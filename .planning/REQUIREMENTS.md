@@ -66,7 +66,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SUMM-01 | Phase 2 | Pending |
 | SUMM-02 | Phase 3 | Pending |
 | SUMM-03 | Phase 2 | Pending |
-| SUMM-04 | Phase 1 | Pending |
+| SUMM-04 | Phase 1 | Complete |
 | SUMM-05 | Phase 3 | Pending |
 | SUMM-06 | Phase 3 | Pending |
 | SUMM-07 | Phase 3 | Pending |
