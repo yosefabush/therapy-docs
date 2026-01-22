@@ -76,12 +76,12 @@ Plans:
   3. Engine tracks improvement or decline over time (progress trends)
   4. Engine detects risk indicators mentioned across sessions
   5. Engine identifies treatment gaps (mentioned but unaddressed concerns)
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 04-01: TBD (session aggregation)
-- [ ] 04-02: TBD (insight generation)
-- [ ] 04-03: TBD (4-category output)
+- [ ] 04-01-PLAN.md — Create PatientInsights type and session aggregation utilities
+- [ ] 04-02-PLAN.md — Create AI-powered insight generator with prompts for 4 categories
+- [ ] 04-03-PLAN.md — Create API route for patient insight generation
 
 ### Phase 5: Patient Insight Integration
 **Goal**: Therapists can trigger insight generation from patient profile and view results on the AI insights page
@@ -110,5 +110,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | 1. Role-Specific Prompts | 2/2 | Complete | 2026-01-22 |
 | 2. Session Summary Generation | 2/2 | Complete | 2026-01-22 |
 | 3. Session Summary UI | 2/2 | Complete | 2026-01-22 |
-| 4. Patient Insight Engine | 0/3 | Not started | - |
+| 4. Patient Insight Engine | 0/3 | Planned | - |
 | 5. Patient Insight Integration | 0/3 | Not started | - |
