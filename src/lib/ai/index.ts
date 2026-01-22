@@ -1,6 +1,10 @@
 // AI module for session summary generation
 // Supports mock mode (development/testing) and real mode (OpenAI API)
 
+import { Session, TherapistRole } from '@/types';
+import { buildPromptFromSession } from '../ai-features';
+import { generateAISummary, type SummaryResult } from './summary-generator';
+
 /**
  * Configuration for AI summary generation
  */
@@ -39,6 +43,36 @@ export function getAIConfig(): AIConfig {
     model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
     maxTokens: parseInt(process.env.OPENAI_MAX_TOKENS || '1000', 10),
   };
+}
+
+/**
+ * Generate an AI summary for a session using role-specific prompts
+ *
+ * @param session - The session to summarize
+ * @param therapistRole - Role for prompt selection
+ * @param transcript - Optional session transcript
+ * @returns Promise with generated summary and metadata
+ *
+ * @example
+ * const result = await generateSessionSummaryAI(session, 'psychiatrist', transcript);
+ * if (result.error) {
+ *   console.error('Generation failed:', result.error);
+ * } else {
+ *   console.log('Summary:', result.summary);
+ * }
+ */
+export async function generateSessionSummaryAI(
+  session: Session,
+  therapistRole: TherapistRole,
+  transcript?: string
+): Promise<SummaryResult> {
+  const { systemPrompt, userPrompt } = buildPromptFromSession(
+    session,
+    therapistRole,
+    transcript
+  );
+
+  return generateAISummary(systemPrompt, userPrompt);
 }
 
 // Re-export from summary-generator
