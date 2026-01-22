@@ -20,11 +20,11 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Patient Insights
 
 - [ ] **INSI-01**: Therapist can trigger patient insight generation from patient profile
-- [ ] **INSI-02**: AI analyzes all sessions for the patient (across therapists)
-- [ ] **INSI-03**: Patterns surfaced (recurring themes, behaviors)
-- [ ] **INSI-04**: Progress trends tracked (improvement/decline over time)
-- [ ] **INSI-05**: Risk indicators detected across sessions
-- [ ] **INSI-06**: Treatment gaps identified (mentioned but unaddressed)
+- [x] **INSI-02**: AI analyzes all sessions for the patient (across therapists)
+- [x] **INSI-03**: Patterns surfaced (recurring themes, behaviors)
+- [x] **INSI-04**: Progress trends tracked (improvement/decline over time)
+- [x] **INSI-05**: Risk indicators detected across sessions
+- [x] **INSI-06**: Treatment gaps identified (mentioned but unaddressed)
 - [ ] **INSI-07**: Insights appear on AI insights page
 - [ ] **INSI-08**: Insights saved and can be regenerated
 
@@ -71,11 +71,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SUMM-06 | Phase 3 | Complete |
 | SUMM-07 | Phase 3 | Complete |
 | INSI-01 | Phase 5 | Pending |
-| INSI-02 | Phase 4 | Pending |
-| INSI-03 | Phase 4 | Pending |
-| INSI-04 | Phase 4 | Pending |
-| INSI-05 | Phase 4 | Pending |
-| INSI-06 | Phase 4 | Pending |
+| INSI-02 | Phase 4 | Complete |
+| INSI-03 | Phase 4 | Complete |
+| INSI-04 | Phase 4 | Complete |
+| INSI-05 | Phase 4 | Complete |
+| INSI-06 | Phase 4 | Complete |
 | INSI-07 | Phase 5 | Pending |
 | INSI-08 | Phase 5 | Pending |
 

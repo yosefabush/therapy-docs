@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Role-Specific Prompts** - Create 10 therapist-role prompts for session summaries
 - [x] **Phase 2: Session Summary Generation** - Build AI engine to generate summaries from notes/transcripts
 - [x] **Phase 3: Session Summary UI** - Add generate/review/save/regenerate workflow on session page
-- [ ] **Phase 4: Patient Insight Engine** - Build cross-session analysis for patterns, progress, risks, gaps
+- [x] **Phase 4: Patient Insight Engine** - Build cross-session analysis for patterns, progress, risks, gaps
 - [ ] **Phase 5: Patient Insight Integration** - Add trigger button and display on insights page
 
 ## Phase Details
@@ -79,9 +79,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 04-01-PLAN.md — Create PatientInsights type and session aggregation utilities
-- [ ] 04-02-PLAN.md — Create AI-powered insight generator with prompts for 4 categories
-- [ ] 04-03-PLAN.md — Create API route for patient insight generation
+- [x] 04-01-PLAN.md — Create PatientInsights type and session aggregation utilities
+- [x] 04-02-PLAN.md — Create AI-powered insight generator with prompts for 4 categories
+- [x] 04-03-PLAN.md — Create API route for patient insight generation
 
 ### Phase 5: Patient Insight Integration
 **Goal**: Therapists can trigger insight generation from patient profile and view results on the AI insights page
@@ -110,5 +110,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | 1. Role-Specific Prompts | 2/2 | Complete | 2026-01-22 |
 | 2. Session Summary Generation | 2/2 | Complete | 2026-01-22 |
 | 3. Session Summary UI | 2/2 | Complete | 2026-01-22 |
-| 4. Patient Insight Engine | 0/3 | Planned | - |
+| 4. Patient Insight Engine | 3/3 | Complete | 2026-01-22 |
 | 5. Patient Insight Integration | 0/3 | Not started | - |
