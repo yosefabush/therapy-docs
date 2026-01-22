@@ -1,10 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sessionRepository } from '@/lib/data/repositories/session.repository';
 import { generateSessionSummaryAI, getAIConfig } from '@/lib/ai';
+import type { AISummary } from '@/types';
 
 interface SummaryRequest {
   transcript?: string;
   regenerate?: boolean;  // Force regeneration even if summary exists
+}
+
+interface SaveSummaryRequest {
+  summary: string;
+  mode: 'mock' | 'real';
+  model?: string;
+  tokensUsed?: number;
+  generatedAt: string;  // ISO string from POST response
 }
 
 interface SummaryResponse {
@@ -144,6 +153,71 @@ export async function GET(
     console.error('Error fetching summary config:', error);
     return NextResponse.json(
       { error: 'Failed to fetch configuration' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * PATCH /api/sessions/[id]/summary
+ *
+ * Saves an AI-generated summary to the session record.
+ * Called when therapist approves/saves a generated summary.
+ *
+ * Request body: SaveSummaryRequest
+ * Response: Updated session with aiSummary field
+ */
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+): Promise<NextResponse> {
+  try {
+    const { id } = await params;
+    const body: SaveSummaryRequest = await request.json();
+
+    // Validate required fields
+    if (!body.summary || !body.mode || !body.generatedAt) {
+      return NextResponse.json(
+        { error: 'Missing required fields: summary, mode, generatedAt' },
+        { status: 400 }
+      );
+    }
+
+    // Fetch session to verify it exists
+    const session = await sessionRepository.findById(id);
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Session not found' },
+        { status: 404 }
+      );
+    }
+
+    // Build aiSummary object
+    const aiSummary: AISummary = {
+      content: body.summary,
+      generatedAt: new Date(body.generatedAt),
+      mode: body.mode,
+      model: body.model,
+      tokensUsed: body.tokensUsed,
+      savedAt: new Date(),
+      // savedBy would come from auth context in real app
+    };
+
+    // Update session with aiSummary
+    const updated = await sessionRepository.update(id, { aiSummary });
+
+    return NextResponse.json({
+      data: {
+        sessionId: id,
+        aiSummary: updated?.aiSummary,
+        savedAt: aiSummary.savedAt?.toISOString(),
+      }
+    });
+
+  } catch (error) {
+    console.error('Error saving summary:', error);
+    return NextResponse.json(
+      { error: 'Failed to save summary' },
       { status: 500 }
     );
   }
