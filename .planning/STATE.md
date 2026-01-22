@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-22)
 
 **Core value:** Each therapist type sees AI-generated insights that speak their professional language
-**Current focus:** Phase 4 - Patient Insight Engine
+**Current focus:** Phase 4 Complete - Ready for Phase 5 (Insights UI)
 
 ## Current Position
 
-Phase: 4 of 5 (Patient Insight Engine)
-Plan: 2 of 3 in current phase
-Status: In progress
-Last activity: 2026-01-22 - Completed 04-02-PLAN.md
+Phase: 4 of 5 (Patient Insight Engine) - COMPLETE
+Plan: 3 of 3 in current phase
+Status: Phase complete
+Last activity: 2026-01-22 - Completed 04-03-PLAN.md
 
-Progress: [███████░░░] 70%
+Progress: [████████░░] 80%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 8
-- Average duration: ~5 minutes
-- Total execution time: ~40.5 minutes
+- Total plans completed: 9
+- Average duration: ~4.8 minutes
+- Total execution time: ~43.5 minutes
 
 **By Phase:**
 
@@ -30,10 +30,10 @@ Progress: [███████░░░] 70%
 | 01 | 2/2 | ~8 min | ~4 min |
 | 02 | 2/2 | ~13 min | ~6.5 min |
 | 03 | 2/2 | ~10 min | ~5 min |
-| 04 | 2/3 | ~9.5 min | ~4.75 min |
+| 04 | 3/3 | ~12.5 min | ~4.2 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-02, 03-01, 03-02, 04-01, 04-02
+- Last 5 plans: 03-01, 03-02, 04-01, 04-02, 04-03
 - Trend: Consistent fast execution
 
 *Updated after each plan completion*
@@ -64,6 +64,8 @@ Recent decisions affecting current work:
 - **confidence-scoring**: Three tiers (0.9+ clear, 0.7-0.9 moderate, <0.7 tentative)
 - **graceful-parsing**: parseInsightResponse handles markdown code fences and missing arrays
 - **bilingual-mock-insights**: Mock generator detects Hebrew content and returns Hebrew insights
+- **post-only-endpoint**: Insights API is POST-only, no GET (persistence deferred)
+- **data-envelope-response**: Response format { data: PatientInsights } or { error: string }
 
 ### Pending Todos
 
@@ -76,10 +78,10 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-22
-Stopped at: Completed 04-02-PLAN.md (AI insight generator with prompts)
+Stopped at: Completed Phase 4 (Patient Insight Engine)
 Resume file: None
 
-Phase 4 deliverables so far:
+Phase 4 deliverables complete:
 - PatientInsights and InsightItem interfaces in @/types
 - aggregatePatientSessions() to fetch completed sessions
 - formatSessionsForInsights() to format sessions for AI
@@ -88,6 +90,7 @@ Phase 4 deliverables so far:
 - generatePatientInsights() with mock/real mode support
 - Bilingual mock insights (Hebrew/English)
 - Module exports from @/lib/ai/patient-insights
+- POST /api/patients/[id]/insights - Insight generation endpoint
 
 Previous deliverables available:
 - POST /api/sessions/[id]/summary - AI summary generation
