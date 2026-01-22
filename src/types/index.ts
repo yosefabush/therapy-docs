@@ -245,6 +245,42 @@ export interface AIInsight {
   acknowledgedAt?: Date;
 }
 
+/**
+ * Complete insight analysis for a patient across all sessions
+ * Contains 4 categories of AI-generated insights (INSI-03 through INSI-06)
+ */
+export interface PatientInsights {
+  id: string;
+  patientId: string;
+
+  // Four insight categories
+  patterns: InsightItem[];        // Recurring themes, behaviors
+  progressTrends: InsightItem[];  // Improvement/decline over time
+  riskIndicators: InsightItem[];  // Risk factors across sessions
+  treatmentGaps: InsightItem[];   // Mentioned but unaddressed concerns
+
+  // Generation metadata
+  generatedAt: Date;
+  mode: 'mock' | 'real';
+  model?: string;
+  tokensUsed?: number;
+
+  // Persistence metadata (for Phase 5)
+  savedAt?: Date;
+  savedBy?: string;
+}
+
+/**
+ * Individual insight item with confidence and session references
+ */
+export interface InsightItem {
+  content: string;           // The insight text
+  confidence: number;        // 0-1 confidence score
+  sessionRefs?: string[];    // Session IDs that support this insight
+  firstSeen?: Date;          // When this pattern first appeared
+  lastSeen?: Date;           // Most recent occurrence
+}
+
 // Speaker utterance from diarization
 export interface SpeakerUtterance {
   speaker: number;
