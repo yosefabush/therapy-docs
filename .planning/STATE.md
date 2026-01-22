@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-22)
 ## Current Position
 
 Phase: 3 of 5 (Session Summary UI)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-01-22 - Completed 03-01-PLAN.md
+Last activity: 2026-01-22 - Completed 03-02-PLAN.md
 
-Progress: [█████░░░░░] 50%
+Progress: [██████░░░░] 60%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5
+- Total plans completed: 6
 - Average duration: ~5 minutes
-- Total execution time: ~25 minutes
+- Total execution time: ~31 minutes
 
 **By Phase:**
 
@@ -29,10 +29,10 @@ Progress: [█████░░░░░] 50%
 |-------|-------|-------|----------|
 | 01 | 2/2 | ~8 min | ~4 min |
 | 02 | 2/2 | ~13 min | ~6.5 min |
-| 03 | 1/3 | ~4 min | ~4 min |
+| 03 | 2/3 | ~10 min | ~5 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01, 01-02, 02-01, 02-02, 03-01
+- Last 5 plans: 01-02, 02-01, 02-02, 03-01, 03-02
 - Trend: Consistent fast execution
 
 *Updated after each plan completion*
@@ -55,6 +55,7 @@ Recent decisions affecting current work:
 - **function-overloads-backward-compat**: Use TypeScript function overloads to add AI mode without breaking callers
 - **api-validates-notes**: POST /api/sessions/[id]/summary returns 400 if session lacks subjective notes
 - **summary-lifecycle-tracking**: AISummary includes generation + approval metadata (savedAt distinguishes unsaved from approved)
+- **ui-state-machine**: SummaryPanel uses 5-state machine (empty/generating/preview/saved/error) for clear UX flow
 
 ### Pending Todos
 
@@ -67,14 +68,15 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-22
-Stopped at: Completed 03-01-PLAN.md
+Stopped at: Completed 03-02-PLAN.md
 Resume file: None
 
 Phase 3 deliverables in progress:
 - AISummary interface and Session.aiSummary field (complete)
 - PATCH /api/sessions/[id]/summary - Save summary endpoint (complete)
-- Summary display component (03-02)
-- Generate/save/regenerate buttons (03-03)
+- SummaryPanel component with full state machine (complete)
+- Session page integration with SummaryPanel (complete)
+- useSession hook refetch capability (complete)
 
 Previous deliverables available:
 - POST /api/sessions/[id]/summary - AI summary generation
