@@ -68,6 +68,7 @@ export interface Session {
   updatedAt: Date;
   signedAt?: Date;
   signedBy?: string;
+  aiSummary?: AISummary;
 }
 
 export type SessionType =
@@ -94,6 +95,16 @@ export interface SessionNotes {
   homework?: string;
   nextSessionPlan?: string;
   additionalNotes?: string;
+}
+
+export interface AISummary {
+  content: string;           // The summary text
+  generatedAt: Date;         // When generated
+  mode: 'mock' | 'real';     // AI mode used
+  model?: string;            // Model name (e.g., gpt-4o-mini)
+  tokensUsed?: number;       // Tokens consumed (if real mode)
+  savedAt?: Date;            // When approved/saved by therapist
+  savedBy?: string;          // Therapist ID who approved
 }
 
 export interface RiskAssessment {
