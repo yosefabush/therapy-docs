@@ -44,11 +44,11 @@ Plans:
   2. Summary incorporates SOAP notes content when available
   3. Summary incorporates transcript content when available
   4. Summary output reflects the role-specific prompt (different roles produce noticeably different summaries)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 02-01: TBD (summary engine)
-- [ ] 02-02: TBD (API route)
+- [ ] 02-01-PLAN.md — Create AI summary engine with mock/real modes
+- [ ] 02-02-PLAN.md — Create API route for summary generation
 
 ### Phase 3: Session Summary UI
 **Goal**: Therapists can generate, review, save, and regenerate AI summaries directly on the session page
