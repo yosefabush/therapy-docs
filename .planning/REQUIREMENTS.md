@@ -63,27 +63,27 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SUMM-01 | TBD | Pending |
-| SUMM-02 | TBD | Pending |
-| SUMM-03 | TBD | Pending |
-| SUMM-04 | TBD | Pending |
-| SUMM-05 | TBD | Pending |
-| SUMM-06 | TBD | Pending |
-| SUMM-07 | TBD | Pending |
-| INSI-01 | TBD | Pending |
-| INSI-02 | TBD | Pending |
-| INSI-03 | TBD | Pending |
-| INSI-04 | TBD | Pending |
-| INSI-05 | TBD | Pending |
-| INSI-06 | TBD | Pending |
-| INSI-07 | TBD | Pending |
-| INSI-08 | TBD | Pending |
+| SUMM-01 | Phase 2 | Pending |
+| SUMM-02 | Phase 3 | Pending |
+| SUMM-03 | Phase 2 | Pending |
+| SUMM-04 | Phase 1 | Pending |
+| SUMM-05 | Phase 3 | Pending |
+| SUMM-06 | Phase 3 | Pending |
+| SUMM-07 | Phase 3 | Pending |
+| INSI-01 | Phase 5 | Pending |
+| INSI-02 | Phase 4 | Pending |
+| INSI-03 | Phase 4 | Pending |
+| INSI-04 | Phase 4 | Pending |
+| INSI-05 | Phase 4 | Pending |
+| INSI-06 | Phase 4 | Pending |
+| INSI-07 | Phase 5 | Pending |
+| INSI-08 | Phase 5 | Pending |
 
 **Coverage:**
 - v1 requirements: 15 total
-- Mapped to phases: 0
-- Unmapped: 15 ⚠️
+- Mapped to phases: 15
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-01-22*
-*Last updated: 2026-01-22 after initial definition*
+*Last updated: 2026-01-22 after roadmap creation*

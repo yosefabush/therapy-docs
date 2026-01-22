@@ -69,6 +69,7 @@ Each therapist type sees AI-generated insights that speak their professional lan
 - **Data persistence**: JSON file-based (existing pattern) — summaries stored in session records
 - **AI provider**: Not specified — need to determine (OpenAI, Anthropic, or other)
 - **Hebrew RTL**: UI must maintain Hebrew localization and RTL layout
+- **Bilingual output**: AI summaries and insights must support both Hebrew and English
 - **HIPAA**: All patient data already encrypted; AI summaries inherit same protection
 
 ## Key Decisions
