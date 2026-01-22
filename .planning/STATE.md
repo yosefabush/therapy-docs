@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-22)
 ## Current Position
 
 Phase: 4 of 5 (Patient Insight Engine)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-01-22 - Completed 04-01-PLAN.md
+Last activity: 2026-01-22 - Completed 04-02-PLAN.md
 
-Progress: [██████▓░░░] 64%
+Progress: [███████░░░] 70%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7
+- Total plans completed: 8
 - Average duration: ~5 minutes
-- Total execution time: ~35 minutes
+- Total execution time: ~40.5 minutes
 
 **By Phase:**
 
@@ -30,10 +30,10 @@ Progress: [██████▓░░░] 64%
 | 01 | 2/2 | ~8 min | ~4 min |
 | 02 | 2/2 | ~13 min | ~6.5 min |
 | 03 | 2/2 | ~10 min | ~5 min |
-| 04 | 1/3 | ~4 min | ~4 min |
+| 04 | 2/3 | ~9.5 min | ~4.75 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-01, 02-02, 03-01, 03-02, 04-01
+- Last 5 plans: 02-02, 03-01, 03-02, 04-01, 04-02
 - Trend: Consistent fast execution
 
 *Updated after each plan completion*
@@ -60,6 +60,10 @@ Recent decisions affecting current work:
 - **insight-4-categories**: PatientInsights has patterns, progressTrends, riskIndicators, treatmentGaps arrays
 - **insight-item-confidence**: InsightItem includes confidence score (0-1) and session references
 - **chronological-sorting**: Sessions sorted oldest-first for AI trend analysis
+- **structured-json-output**: AI returns JSON with 4 arrays for direct mapping to PatientInsights
+- **confidence-scoring**: Three tiers (0.9+ clear, 0.7-0.9 moderate, <0.7 tentative)
+- **graceful-parsing**: parseInsightResponse handles markdown code fences and missing arrays
+- **bilingual-mock-insights**: Mock generator detects Hebrew content and returns Hebrew insights
 
 ### Pending Todos
 
@@ -72,13 +76,18 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-22
-Stopped at: Completed 04-01-PLAN.md (PatientInsights type and session aggregator)
+Stopped at: Completed 04-02-PLAN.md (AI insight generator with prompts)
 Resume file: None
 
 Phase 4 deliverables so far:
 - PatientInsights and InsightItem interfaces in @/types
 - aggregatePatientSessions() to fetch completed sessions
 - formatSessionsForInsights() to format sessions for AI
+- PATIENT_INSIGHT_SYSTEM_PROMPT for 4-category insight analysis
+- buildInsightUserPrompt() for AI prompt construction
+- generatePatientInsights() with mock/real mode support
+- Bilingual mock insights (Hebrew/English)
+- Module exports from @/lib/ai/patient-insights
 
 Previous deliverables available:
 - POST /api/sessions/[id]/summary - AI summary generation
