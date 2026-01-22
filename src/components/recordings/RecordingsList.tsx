@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { VoiceRecording, Session, DiarizedTranscript } from '@/types';
+import { VoiceRecording, Session, DiarizedTranscript, User, Patient } from '@/types';
 import { Card, Badge, Modal, Button } from '@/components/ui';
 import { AudioPlayer } from './AudioPlayer';
 
@@ -22,12 +22,14 @@ const AudioTranscription = dynamic(
 interface RecordingsListProps {
   recordings: VoiceRecording[];
   sessions?: Session[];
+  users?: User[];
+  patient?: Patient;
   onDelete?: (id: string) => void;
   onUpdateTranscript?: (id: string, transcript: string) => void;
   loading?: boolean;
 }
 
-export function RecordingsList({ recordings, sessions = [], onDelete, onUpdateTranscript, loading }: RecordingsListProps) {
+export function RecordingsList({ recordings, sessions = [], users = [], patient, onDelete, onUpdateTranscript, loading }: RecordingsListProps) {
   const [expandedTranscript, setExpandedTranscript] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [transcribingId, setTranscribingId] = useState<string | null>(null);
@@ -122,6 +124,11 @@ export function RecordingsList({ recordings, sessions = [], onDelete, onUpdateTr
     return sessions.find(s => s.id === sessionId);
   };
 
+  const getTherapistName = (therapistId: string): string | undefined => {
+    const therapist = users.find(u => u.id === therapistId);
+    return therapist?.name;
+  };
+
   const getTranscriptionBadge = (status: VoiceRecording['transcriptionStatus']) => {
     switch (status) {
       case 'completed':
@@ -164,7 +171,9 @@ export function RecordingsList({ recordings, sessions = [], onDelete, onUpdateTr
               <div>
                 <h4 className="font-medium text-clinical-900">
                   {session ? (
-                    <>מפגש - {formatDate(session.scheduledAt)}</>
+                    <>
+                      {patient && <span>{patient.firstName} {patient.lastName}</span>}
+                    </>
                   ) : (
                     <>מפגש {sessionId.slice(-6)}</>
                   )}
@@ -174,6 +183,9 @@ export function RecordingsList({ recordings, sessions = [], onDelete, onUpdateTr
                     {session.sessionType === 'individual_therapy' ? 'טיפול פרטני' :
                      session.sessionType === 'initial_assessment' ? 'הערכה ראשונית' :
                      session.sessionType}
+                    {getTherapistName(session.therapistId) && (
+                      <span className="mr-2">• מטפל/ת: {getTherapistName(session.therapistId)}</span>
+                    )}
                   </p>
                 )}
               </div>

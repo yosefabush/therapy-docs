@@ -13,7 +13,7 @@ interface AudioPlayerProps {
 export function AudioPlayer({ audioUrl, duration, onDelete, showDelete = true }: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [audioDuration, setAudioDuration] = useState(duration);
+  const [audioDuration, setAudioDuration] = useState(isFinite(duration) && duration > 0 ? duration : 0);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
@@ -25,7 +25,15 @@ export function AudioPlayer({ audioUrl, duration, onDelete, showDelete = true }:
     };
 
     const handleLoadedMetadata = () => {
-      setAudioDuration(audio.duration);
+      if (isFinite(audio.duration) && audio.duration > 0) {
+        setAudioDuration(audio.duration);
+      }
+    };
+
+    const handleDurationChange = () => {
+      if (isFinite(audio.duration) && audio.duration > 0) {
+        setAudioDuration(audio.duration);
+      }
     };
 
     const handleEnded = () => {
@@ -35,17 +43,24 @@ export function AudioPlayer({ audioUrl, duration, onDelete, showDelete = true }:
 
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('durationchange', handleDurationChange);
     audio.addEventListener('ended', handleEnded);
+
+    // Check if duration is already available
+    if (isFinite(audio.duration) && audio.duration > 0) {
+      setAudioDuration(audio.duration);
+    }
 
     return () => {
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('durationchange', handleDurationChange);
       audio.removeEventListener('ended', handleEnded);
     };
   }, []);
 
   const formatTime = (seconds: number) => {
-    if (isNaN(seconds)) return '00:00';
+    if (!isFinite(seconds) || isNaN(seconds) || seconds < 0) return '00:00';
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
@@ -98,9 +113,9 @@ export function AudioPlayer({ audioUrl, duration, onDelete, showDelete = true }:
       {/* Progress Section */}
       <div className="flex-1 min-w-0">
         {/* Progress Bar */}
-        <div className="relative h-2 bg-sage-200 rounded-full overflow-hidden">
+        <div className="relative h-2 bg-sage-200 rounded-full overflow-hidden" dir="ltr">
           <div
-            className="absolute top-0 right-0 h-full bg-sage-600 rounded-full transition-all duration-100"
+            className="absolute top-0 left-0 h-full bg-sage-600 rounded-full transition-all duration-100"
             style={{ width: `${progress}%` }}
           />
           <input
@@ -109,7 +124,7 @@ export function AudioPlayer({ audioUrl, duration, onDelete, showDelete = true }:
             max={audioDuration || 0}
             value={currentTime}
             onChange={handleSeek}
-            className="absolute top-0 right-0 w-full h-full opacity-0 cursor-pointer"
+            className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
             dir="ltr"
           />
         </div>

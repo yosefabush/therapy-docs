@@ -281,6 +281,8 @@ export default function PatientDetailPage() {
               <RecordingsList
                 recordings={recordings}
                 sessions={sessions}
+                users={users}
+                patient={patient}
                 onDelete={deleteRecording}
               />
             </div>

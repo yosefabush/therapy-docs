@@ -29,7 +29,8 @@
       "Bash(findstr:*)",
       "Bash(powershell:*)",
       "Bash(timeout:*)",
-      "Skill(senior-frontend)"
+      "Skill(senior-frontend)",
+      "Bash(npm run lint -- --max-warnings=0 src/app/sessions/page.tsx)"
     ]
   },
   "enabledPlugins": {
