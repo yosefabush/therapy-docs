@@ -5,33 +5,33 @@
 See: .planning/PROJECT.md (updated 2026-01-22)
 
 **Core value:** Each therapist type sees AI-generated insights that speak their professional language
-**Current focus:** Phase 2 - Session Summary Generation
+**Current focus:** Phase 2 - Session Summary Generation (COMPLETE)
 
 ## Current Position
 
 Phase: 2 of 5 (Session Summary Generation)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-01-22 - Completed 02-01-PLAN.md
+Plan: 2 of 2 in current phase (COMPLETE)
+Status: Phase complete
+Last activity: 2026-01-22 - Completed 02-02-PLAN.md
 
-Progress: [███░░░░░░░] 30%
+Progress: [████░░░░░░] 40%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
-- Average duration: ~5 minutes
-- Total execution time: ~14 minutes
+- Total plans completed: 4
+- Average duration: ~6 minutes
+- Total execution time: ~21 minutes
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01 | 2/2 | ~8 min | ~4 min |
-| 02 | 1/2 | ~6 min | ~6 min |
+| 02 | 2/2 | ~13 min | ~6.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01, 01-02, 02-01
+- Last 5 plans: 01-01, 01-02, 02-01, 02-02
 - Trend: Consistent fast execution
 
 *Updated after each plan completion*
@@ -51,6 +51,8 @@ Recent decisions affecting current work:
 - **mock-mode-default**: Auto-detect mock/real mode based on OPENAI_API_KEY presence
 - **gpt-4o-mini-default**: Use gpt-4o-mini as default model for cost efficiency
 - **error-as-return-value**: Return SummaryResult with error field instead of throwing exceptions
+- **function-overloads-backward-compat**: Use TypeScript function overloads to add AI mode without breaking callers
+- **api-validates-notes**: POST /api/sessions/[id]/summary returns 400 if session lacks subjective notes
 
 ### Pending Todos
 
@@ -63,5 +65,11 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-22
-Stopped at: Completed 02-01-PLAN.md
+Stopped at: Completed 02-02-PLAN.md (Phase 2 complete)
 Resume file: None
+
+Phase 2 deliverables ready for Phase 3 UI integration:
+- POST /api/sessions/[id]/summary - AI summary generation
+- GET /api/sessions/[id]/summary - Configuration check
+- generateSessionSummaryAI() from @/lib/ai
+- generateSessionSummary(session, role, { useAI: true }) for async AI mode
