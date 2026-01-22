@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-01-22)
 
 **Core value:** Each therapist type sees AI-generated insights that speak their professional language
-**Current focus:** Phase 3 - Session Summary UI
+**Current focus:** Phase 4 - Patient Insight Engine
 
 ## Current Position
 
-Phase: 3 of 5 (Session Summary UI)
-Plan: 2 of 3 in current phase
-Status: In progress
-Last activity: 2026-01-22 - Completed 03-02-PLAN.md
+Phase: 4 of 5 (Patient Insight Engine)
+Plan: 0 of 3 in current phase
+Status: Ready to plan
+Last activity: 2026-01-22 - Phase 3 verified and complete
 
 Progress: [██████░░░░] 60%
 
@@ -29,7 +29,7 @@ Progress: [██████░░░░] 60%
 |-------|-------|-------|----------|
 | 01 | 2/2 | ~8 min | ~4 min |
 | 02 | 2/2 | ~13 min | ~6.5 min |
-| 03 | 2/3 | ~10 min | ~5 min |
+| 03 | 2/2 | ~10 min | ~5 min |
 
 **Recent Trend:**
 - Last 5 plans: 01-02, 02-01, 02-02, 03-01, 03-02
@@ -68,18 +68,19 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-22
-Stopped at: Completed 03-02-PLAN.md
+Stopped at: Completed Phase 3 (Session Summary UI)
 Resume file: None
 
-Phase 3 deliverables in progress:
-- AISummary interface and Session.aiSummary field (complete)
-- PATCH /api/sessions/[id]/summary - Save summary endpoint (complete)
-- SummaryPanel component with full state machine (complete)
-- Session page integration with SummaryPanel (complete)
-- useSession hook refetch capability (complete)
+Phase 3 deliverables complete:
+- AISummary interface and Session.aiSummary field
+- PATCH /api/sessions/[id]/summary - Save summary endpoint
+- SummaryPanel component with full state machine (empty/generating/preview/saved/error)
+- Session page integration with SummaryPanel
+- useSession hook refetch capability
 
 Previous deliverables available:
 - POST /api/sessions/[id]/summary - AI summary generation
 - GET /api/sessions/[id]/summary - Configuration check
 - generateSessionSummaryAI() from @/lib/ai
 - generateSessionSummary(session, role, { useAI: true }) for async AI mode
+- 10 role-specific prompts in src/lib/ai/prompts/session-summary/

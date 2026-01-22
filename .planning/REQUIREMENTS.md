@@ -9,13 +9,13 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Session Summaries
 
-- [ ] **SUMM-01**: Therapist can generate AI summary for a session (prompt auto-selected by their role)
-- [ ] **SUMM-02**: Summary appears above SOAP notes on session page
-- [ ] **SUMM-03**: Summary uses SOAP notes + transcript (if available) as input
-- [ ] **SUMM-04**: 10 distinct prompts tailored to each therapist role's focus areas
-- [ ] **SUMM-05**: Therapist can review summary before it saves
-- [ ] **SUMM-06**: Summary saved to session record
-- [ ] **SUMM-07**: Therapist can regenerate summary
+- [x] **SUMM-01**: Therapist can generate AI summary for a session (prompt auto-selected by their role)
+- [x] **SUMM-02**: Summary appears above SOAP notes on session page
+- [x] **SUMM-03**: Summary uses SOAP notes + transcript (if available) as input
+- [x] **SUMM-04**: 10 distinct prompts tailored to each therapist role's focus areas
+- [x] **SUMM-05**: Therapist can review summary before it saves
+- [x] **SUMM-06**: Summary saved to session record
+- [x] **SUMM-07**: Therapist can regenerate summary
 
 ### Patient Insights
 
@@ -64,12 +64,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | SUMM-01 | Phase 2 | Complete |
-| SUMM-02 | Phase 3 | Pending |
+| SUMM-02 | Phase 3 | Complete |
 | SUMM-03 | Phase 2 | Complete |
 | SUMM-04 | Phase 1 | Complete |
-| SUMM-05 | Phase 3 | Pending |
-| SUMM-06 | Phase 3 | Pending |
-| SUMM-07 | Phase 3 | Pending |
+| SUMM-05 | Phase 3 | Complete |
+| SUMM-06 | Phase 3 | Complete |
+| SUMM-07 | Phase 3 | Complete |
 | INSI-01 | Phase 5 | Pending |
 | INSI-02 | Phase 4 | Pending |
 | INSI-03 | Phase 4 | Pending |

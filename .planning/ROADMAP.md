@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Role-Specific Prompts** - Create 10 therapist-role prompts for session summaries
 - [x] **Phase 2: Session Summary Generation** - Build AI engine to generate summaries from notes/transcripts
-- [ ] **Phase 3: Session Summary UI** - Add generate/review/save/regenerate workflow on session page
+- [x] **Phase 3: Session Summary UI** - Add generate/review/save/regenerate workflow on session page
 - [ ] **Phase 4: Patient Insight Engine** - Build cross-session analysis for patterns, progress, risks, gaps
 - [ ] **Phase 5: Patient Insight Integration** - Add trigger button and display on insights page
 
@@ -63,8 +63,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — Add AISummary type and PATCH endpoint for summary persistence
-- [ ] 03-02-PLAN.md — Create SummaryPanel component and integrate into session page
+- [x] 03-01-PLAN.md — Add AISummary type and PATCH endpoint for summary persistence
+- [x] 03-02-PLAN.md — Create SummaryPanel component and integrate into session page
 
 ### Phase 4: Patient Insight Engine
 **Goal**: AI can analyze all sessions for a patient and surface patterns, progress trends, risk indicators, and treatment gaps
@@ -109,6 +109,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 |-------|----------------|--------|-----------|
 | 1. Role-Specific Prompts | 2/2 | Complete | 2026-01-22 |
 | 2. Session Summary Generation | 2/2 | Complete | 2026-01-22 |
-| 3. Session Summary UI | 0/2 | Planned | - |
+| 3. Session Summary UI | 2/2 | Complete | 2026-01-22 |
 | 4. Patient Insight Engine | 0/3 | Not started | - |
 | 5. Patient Insight Integration | 0/3 | Not started | - |
