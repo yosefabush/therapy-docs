@@ -93,12 +93,12 @@ Plans:
   3. Generated insights appear on the AI insights page
   4. Insights are saved and persist across sessions
   5. Therapist can regenerate insights to get updated analysis
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 05-01: TBD (trigger UI)
-- [ ] 05-02: TBD (insights display)
-- [ ] 05-03: TBD (persistence/regenerate)
+- [ ] 05-01-PLAN.md — Create InsightPanel component and integrate into patient profile
+- [ ] 05-02-PLAN.md — Enhance AI insights page with patient selector and real data
+- [ ] 05-03-PLAN.md — Add persistence layer with GET/PATCH endpoints
 
 ## Progress
 
