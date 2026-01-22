@@ -4,9 +4,12 @@
 import { Session, SessionNotes, TherapistRole, TreatmentGoal, AIInsight } from '@/types';
 import { therapistRoleLabels, sessionTypeLabels } from './mock-data';
 import { getPromptForRole, SessionSummaryPrompt } from './prompts';
+import { generateSessionSummaryAI, type SummaryResult } from './ai';
 
 // Re-export SessionSummaryPrompt type for external use
 export type { SessionSummaryPrompt } from './prompts';
+// Re-export SummaryResult for callers using AI mode
+export type { SummaryResult } from './ai';
 
 /**
  * Formats SOAP notes from a session into a structured string for AI consumption
@@ -81,11 +84,52 @@ export function buildPromptFromSession(
   };
 }
 
-// Session summary generation based on therapist role
-// TODO (Phase 2): Replace stub generators with AI call using buildPromptFromSession()
-export function generateSessionSummary(session: Session, therapistRole: TherapistRole): string {
-  const { notes, sessionType, duration } = session;
-  
+/**
+ * Session Summary Generation
+ *
+ * Two modes available:
+ *
+ * 1. Stub mode (default, synchronous):
+ *    const summary = generateSessionSummary(session, role);
+ *    - Uses hardcoded templates
+ *    - No API calls
+ *    - For backward compatibility
+ *
+ * 2. AI mode (async):
+ *    const result = await generateSessionSummary(session, role, { useAI: true });
+ *    - Uses role-specific prompts
+ *    - Calls AI API (or mock)
+ *    - Returns SummaryResult with metadata
+ *
+ * For new code, prefer using generateSessionSummaryAI() directly from '@/lib/ai'.
+ */
+
+/**
+ * Generate a session summary - synchronous stub version
+ * @deprecated Use generateSessionSummaryAI() from '@/lib/ai' for actual AI generation
+ */
+export function generateSessionSummary(session: Session, therapistRole: TherapistRole): string;
+
+/**
+ * Generate a session summary - async AI version
+ */
+export function generateSessionSummary(
+  session: Session,
+  therapistRole: TherapistRole,
+  options: { useAI: true; transcript?: string }
+): Promise<SummaryResult>;
+
+export function generateSessionSummary(
+  session: Session,
+  therapistRole: TherapistRole,
+  options?: { useAI?: boolean; transcript?: string }
+): string | Promise<SummaryResult> {
+  // If AI mode requested, use the new AI generation
+  if (options?.useAI) {
+    return generateSessionSummaryAI(session, therapistRole, options.transcript);
+  }
+
+  // Otherwise use existing stub implementation for backward compatibility
   // Different summary styles based on role
   const summaryStyles: Record<TherapistRole, (session: Session) => string> = {
     psychologist: (s) => generatePsychologySummary(s),
@@ -99,7 +143,7 @@ export function generateSessionSummary(session: Session, therapistRole: Therapis
     music_therapist: (s) => generateMusicTherapySummary(s),
     family_therapist: (s) => generateFamilyTherapySummary(s),
   };
-  
+
   const generator = summaryStyles[therapistRole];
   return generator ? generator(session) : generateGenericSummary(session);
 }
