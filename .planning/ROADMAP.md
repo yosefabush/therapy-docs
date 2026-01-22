@@ -29,11 +29,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Prompts emphasize role-specific focus areas (psychiatrist: medication/symptoms; OT: functional progress; etc.)
   3. Prompts accept SOAP notes and transcript as input variables
   4. Role dispatch mechanism selects correct prompt based on therapist's role
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 01-01: TBD (prompt authoring)
-- [ ] 01-02: TBD (role dispatch integration)
+- [ ] 01-01-PLAN.md — Create prompt type, registry, and 10 role-specific prompt files
+- [ ] 01-02-PLAN.md — Integrate prompts with generateSessionSummary() dispatch
 
 ### Phase 2: Session Summary Generation
 **Goal**: AI can generate role-specific session summaries using notes and transcripts as input
@@ -108,7 +108,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Role-Specific Prompts | 0/2 | Not started | - |
+| 1. Role-Specific Prompts | 0/2 | Planned | - |
 | 2. Session Summary Generation | 0/2 | Not started | - |
 | 3. Session Summary UI | 0/3 | Not started | - |
 | 4. Patient Insight Engine | 0/3 | Not started | - |
