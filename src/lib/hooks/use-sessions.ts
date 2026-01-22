@@ -75,30 +75,31 @@ export function useSession(id: string) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchSession = useCallback(async () => {
     if (!id) {
       setLoading(false);
       setSession(null);
       return;
     }
 
-    async function fetchSession() {
-      setLoading(true);
-      try {
-        const response = await apiClient.get<Session>(`/sessions/${id}`);
-        if (response.error) {
-          setError(response.error);
-        } else {
-          setSession(response.data ?? null);
-        }
-      } catch (err) {
-        setError('Failed to fetch session');
-      } finally {
-        setLoading(false);
+    setLoading(true);
+    try {
+      const response = await apiClient.get<Session>(`/sessions/${id}`);
+      if (response.error) {
+        setError(response.error);
+      } else {
+        setSession(response.data ?? null);
       }
+    } catch (err) {
+      setError('Failed to fetch session');
+    } finally {
+      setLoading(false);
     }
-    fetchSession();
   }, [id]);
 
-  return { session, loading, error };
+  useEffect(() => {
+    fetchSession();
+  }, [fetchSession]);
+
+  return { session, loading, error, refetch: fetchSession };
 }
