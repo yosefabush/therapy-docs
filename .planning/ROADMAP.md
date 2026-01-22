@@ -60,12 +60,11 @@ Plans:
   3. Therapist can approve/save the summary to the session record
   4. Saved summary persists across page reloads
   5. Therapist can regenerate summary to get a fresh version
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 03-01: TBD (UI component)
-- [ ] 03-02: TBD (persistence)
-- [ ] 03-03: TBD (regenerate flow)
+- [ ] 03-01-PLAN.md — Add AISummary type and PATCH endpoint for summary persistence
+- [ ] 03-02-PLAN.md — Create SummaryPanel component and integrate into session page
 
 ### Phase 4: Patient Insight Engine
 **Goal**: AI can analyze all sessions for a patient and surface patterns, progress trends, risk indicators, and treatment gaps
@@ -110,6 +109,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 |-------|----------------|--------|-----------|
 | 1. Role-Specific Prompts | 2/2 | Complete | 2026-01-22 |
 | 2. Session Summary Generation | 2/2 | Complete | 2026-01-22 |
-| 3. Session Summary UI | 0/3 | Not started | - |
+| 3. Session Summary UI | 0/2 | Planned | - |
 | 4. Patient Insight Engine | 0/3 | Not started | - |
 | 5. Patient Insight Integration | 0/3 | Not started | - |
