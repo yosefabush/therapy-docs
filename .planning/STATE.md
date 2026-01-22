@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-01-22)
 
 **Core value:** Each therapist type sees AI-generated insights that speak their professional language
-**Current focus:** Phase 2 - Session Summary Generation (COMPLETE)
+**Current focus:** Phase 3 - Session Summary UI
 
 ## Current Position
 
-Phase: 2 of 5 (Session Summary Generation)
-Plan: 2 of 2 in current phase (COMPLETE)
-Status: Phase complete
-Last activity: 2026-01-22 - Completed 02-02-PLAN.md
+Phase: 3 of 5 (Session Summary UI)
+Plan: 0 of 3 in current phase
+Status: Ready to plan
+Last activity: 2026-01-22 - Phase 2 verified and complete
 
 Progress: [████░░░░░░] 40%
 
