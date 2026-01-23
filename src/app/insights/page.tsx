@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
-import { Card } from '@/components/ui';
+import { Card, Badge } from '@/components/ui';
 import { therapistRoleLabels } from '@/lib/mock-data';
 import { useAuthRedirect, useMyPatients } from '@/lib/hooks';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
@@ -55,28 +55,41 @@ export default function InsightsPage() {
   const [insightsError, setInsightsError] = useState<string | null>(null);
 
   // Fetch insights when patient selected
+  // First checks for saved insights (GET), then falls back to generating new ones (POST)
   const fetchInsights = async (patientId: string) => {
     setInsightsLoading(true);
     setInsightsError(null);
 
     try {
-      const response = await fetch(`/api/patients/${patientId}/insights`, {
+      // First, try to get saved insights
+      const getResponse = await fetch(`/api/patients/${patientId}/insights`);
+      const getResult = await getResponse.json();
+
+      if (getResponse.ok && getResult.data) {
+        // Found saved insights - display them
+        setInsights(getResult.data);
+        setInsightsLoading(false);
+        return;
+      }
+
+      // No saved insights - generate new ones via POST
+      const postResponse = await fetch(`/api/patients/${patientId}/insights`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
 
-      const result = await response.json();
+      const postResult = await postResponse.json();
 
       // Handle error response from API
-      if (!response.ok || result.error) {
-        setInsightsError(result.error || `Server error (${response.status})`);
+      if (!postResponse.ok || postResult.error) {
+        setInsightsError(postResult.error || `Server error (${postResponse.status})`);
         setInsights(null);
         return;
       }
 
       // Handle success - response format: { data: PatientInsights }
-      if (result.data) {
-        setInsights(result.data);
+      if (postResult.data) {
+        setInsights(postResult.data);
       } else {
         setInsightsError('Invalid response format');
         setInsights(null);
@@ -102,10 +115,52 @@ export default function InsightsPage() {
   }, [selectedPatientId]);
 
   // Regenerate handler (for "Regenerate" button)
-  const handleRegenerate = () => {
-    if (selectedPatientId) {
-      fetchInsights(selectedPatientId);
+  // Forces new generation via POST, skipping the GET check for saved insights
+  const handleRegenerate = async () => {
+    if (!selectedPatientId) return;
+
+    setInsightsLoading(true);
+    setInsightsError(null);
+
+    try {
+      // Force regeneration via POST (skip GET check)
+      const response = await fetch(`/api/patients/${selectedPatientId}/insights`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || result.error) {
+        setInsightsError(result.error || 'Failed to regenerate');
+        return;
+      }
+
+      if (result.data) {
+        setInsights(result.data);
+      }
+    } catch (err) {
+      console.error('Regeneration failed:', err);
+      setInsightsError('Network error');
+    } finally {
+      setInsightsLoading(false);
     }
+  };
+
+  // Format relative time for display
+  const formatRelativeTime = (date: Date | string) => {
+    const d = typeof date === 'string' ? new Date(date) : date;
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMins < 1) return 'עכשיו';
+    if (diffMins < 60) return `לפני ${diffMins} דקות`;
+    if (diffHours < 24) return `לפני ${diffHours} שעות`;
+    if (diffDays < 7) return `לפני ${diffDays} ימים`;
+    return new Intl.DateTimeFormat('he-IL', { dateStyle: 'short' }).format(d);
   };
 
   // Loading states
@@ -244,7 +299,18 @@ export default function InsightsPage() {
           {/* Insights display */}
           {selectedPatientId && insights && !insightsLoading && (
             <>
-              <div className="flex justify-end mb-4">
+              <div className="flex items-center justify-between mb-4">
+                {/* Saved indicator */}
+                <div className="flex items-center gap-2">
+                  {insights.savedAt && (
+                    <Badge variant="success">
+                      נשמר {formatRelativeTime(insights.savedAt)}
+                    </Badge>
+                  )}
+                  {!insights.savedAt && (
+                    <Badge variant="outline">לא נשמר</Badge>
+                  )}
+                </div>
                 <button
                   onClick={handleRegenerate}
                   className="px-4 py-2 text-sage-700 border border-sage-300 rounded-lg hover:bg-sage-50 transition-colors flex items-center gap-2"
