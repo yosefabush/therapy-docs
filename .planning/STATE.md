@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-22)
 ## Current Position
 
 Phase: 5 of 5 (Patient Insight Integration)
-Plan: 2 of 3 in current phase
+Plan: 2 of 3 in current phase (05-01, 05-02 complete)
 Status: In progress
-Last activity: 2026-01-23 - Completed 05-02-PLAN.md
+Last activity: 2026-01-23 - Completed 05-01-PLAN.md
 
-Progress: [████████░░] 85%
+Progress: [█████████░] 90%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 10
-- Average duration: ~4.7 minutes
-- Total execution time: ~47.5 minutes
+- Total plans completed: 11
+- Average duration: ~4.8 minutes
+- Total execution time: ~52.5 minutes
 
 **By Phase:**
 
@@ -31,10 +31,10 @@ Progress: [████████░░] 85%
 | 02 | 2/2 | ~13 min | ~6.5 min |
 | 03 | 2/2 | ~10 min | ~5 min |
 | 04 | 3/3 | ~12.5 min | ~4.2 min |
-| 05 | 2/3 | ~4 min | ~4 min |
+| 05 | 2/3 | ~9 min | ~4.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-02, 04-01, 04-02, 04-03, 05-02
+- Last 5 plans: 04-01, 04-02, 04-03, 05-01, 05-02
 - Trend: Consistent fast execution
 
 *Updated after each plan completion*
@@ -69,6 +69,9 @@ Recent decisions affecting current work:
 - **data-envelope-response**: Response format { data: PatientInsights } or { error: string }
 - **variant-based-styling**: Use variant prop for PatientInsightCard color schemes
 - **stats-from-insights**: Update stats based on selected patient only (not all patients)
+- **insight-panel-state-machine**: InsightPanel uses 5-state machine matching SummaryPanel pattern
+- **confidence-color-coding**: High (90%+) green, Medium (70-89%) yellow, Low (<70%) gray
+- **conditional-render-insights**: Only show InsightPanel when patient has completed sessions
 
 ### Pending Todos
 
@@ -81,15 +84,16 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-23
-Stopped at: Completed 05-02-PLAN.md (Insights Page with Patient Selector)
+Stopped at: Completed 05-01-PLAN.md (InsightPanel Component)
 Resume file: None
 
 Phase 5 deliverables (in progress):
-- [x] 05-01: Insights page foundation (skipped - plan revised)
+- [x] 05-01: InsightPanel component with state machine
+- [x] 05-01: Patient profile integration showing AI insights
 - [x] 05-02: PatientInsightCard component with variant styling
 - [x] 05-02: Enhanced insights page with patient selector
 - [x] 05-02: API integration (POST /api/patients/[id]/insights)
-- [ ] 05-03: Patient detail page integration
+- [ ] 05-03: Insight persistence
 
 Phase 4 deliverables available:
 - PatientInsights and InsightItem interfaces in @/types
