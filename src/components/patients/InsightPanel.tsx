@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { PatientInsights, InsightItem } from '@/types';
 
-type PanelState = 'empty' | 'generating' | 'preview' | 'saved' | 'error';
+type PanelState = 'empty' | 'generating' | 'preview' | 'saved' | 'error' | 'saving';
 
 interface InsightPanelProps {
   patientId: string;
@@ -20,6 +20,7 @@ interface GenerationMetadata {
   model?: string;
   tokensUsed?: number;
   generatedAt: string;
+  savedAt?: string;
 }
 
 // Category configuration with Hebrew labels and icons
@@ -134,11 +135,14 @@ export function InsightPanel({
   const [insights, setInsights] = useState<PatientInsights | null>(null);
   const [metadata, setMetadata] = useState<GenerationMetadata | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Initialize state based on existingInsights prop
   useEffect(() => {
     if (existingInsights) {
-      setState('saved');
+      // If insights have savedAt, show as saved; otherwise show as preview
+      const isSaved = !!existingInsights.savedAt;
+      setState(isSaved ? 'saved' : 'preview');
       setInsights(existingInsights);
       setMetadata({
         mode: existingInsights.mode,
@@ -148,6 +152,11 @@ export function InsightPanel({
           typeof existingInsights.generatedAt === 'string'
             ? existingInsights.generatedAt
             : new Date(existingInsights.generatedAt).toISOString(),
+        savedAt: existingInsights.savedAt
+          ? typeof existingInsights.savedAt === 'string'
+            ? existingInsights.savedAt
+            : new Date(existingInsights.savedAt).toISOString()
+          : undefined,
       });
     }
   }, [existingInsights]);
@@ -201,10 +210,42 @@ export function InsightPanel({
   };
 
   const handleSave = async () => {
-    // Note: Save functionality will be implemented in Plan 03
-    // For now, just transition to saved state
-    setState('saved');
-    onInsightsSaved?.();
+    if (!insights) return;
+
+    setSaveError(null);
+    setState('saving');
+
+    try {
+      const response = await fetch(`/api/patients/${patientId}/insights`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ insights }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || result.error) {
+        setSaveError(result.error || 'Failed to save insights');
+        setState('preview'); // Go back to preview on error
+        return;
+      }
+
+      // Update local state with saved version
+      setInsights(result.data);
+      setMetadata(prev => prev ? {
+        ...prev,
+        savedAt: result.data.savedAt
+          ? typeof result.data.savedAt === 'string'
+            ? result.data.savedAt
+            : new Date(result.data.savedAt).toISOString()
+          : undefined,
+      } : null);
+      setState('saved');
+      onInsightsSaved?.();
+    } catch {
+      setSaveError('Failed to connect to server');
+      setState('preview'); // Go back to preview on error
+    }
   };
 
   const formatDate = (isoString: string) => {
@@ -312,6 +353,48 @@ export function InsightPanel({
     );
   }
 
+  // Saving state - show spinner while saving
+  if (state === 'saving') {
+    return (
+      <Card className="bg-gradient-to-br from-sage-50 to-warm-50 border-sage-200">
+        <div className="flex items-center gap-2 mb-3">
+          <svg
+            className="w-5 h-5 text-sage-600"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+            />
+          </svg>
+          <h3 className="font-semibold text-sage-800">תובנות AI</h3>
+        </div>
+        <div className="flex items-center gap-3 text-sage-600">
+          <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            />
+          </svg>
+          <span>שומר תובנות...</span>
+        </div>
+      </Card>
+    );
+  }
+
   // Preview and Saved states - show insights with action buttons
   const isSaved = state === 'saved';
 
@@ -344,6 +427,13 @@ export function InsightPanel({
         </div>
       </div>
 
+      {/* Save error message */}
+      {saveError && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm text-red-700">{saveError}</p>
+        </div>
+      )}
+
       {/* Insights by category */}
       {insights && (
         <div className="space-y-4 mb-4">
@@ -358,6 +448,7 @@ export function InsightPanel({
       {metadata && (
         <p className="text-xs text-clinical-500 mb-4">
           נוצר: {formatDate(metadata.generatedAt)}
+          {metadata.savedAt && ` | נשמר: ${formatDate(metadata.savedAt)}`}
           {metadata.model && ` | מודל: ${metadata.model}`}
           {metadata.tokensUsed && ` | טוקנים: ${metadata.tokensUsed}`}
         </p>

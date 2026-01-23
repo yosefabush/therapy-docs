@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Sidebar } from '@/components/layout/Sidebar';
@@ -13,6 +13,7 @@ import { RecordingsList } from '@/components/recordings';
 import { InsightPanel } from '@/components/patients/InsightPanel';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
+import type { PatientInsights } from '@/types';
 
 export default function PatientDetailPage() {
   const params = useParams();
@@ -22,6 +23,8 @@ export default function PatientDetailPage() {
   const [activeTab, setActiveTab] = useState('overview');
   const [showNewSession, setShowNewSession] = useState(false);
   const [showEditPatient, setShowEditPatient] = useState(false);
+  const [existingInsights, setExistingInsights] = useState<PatientInsights | null>(null);
+  const [insightsLoading, setInsightsLoading] = useState(false);
 
   const { user: currentUser, loading: userLoading } = useCurrentUser();
   const { patient, loading: patientLoading, error: patientError } = usePatient(patientId);
@@ -30,6 +33,31 @@ export default function PatientDetailPage() {
   const { reports, loading: reportsLoading } = useReports(patientId);
   const { users, loading: usersLoading } = useUsers();
   const { recordings, loading: recordingsLoading, deleteRecording } = useVoiceRecordings({ patientId });
+
+  const completedSessions = sessions.filter(s => s.status === 'completed');
+
+  // Fetch existing insights on mount
+  useEffect(() => {
+    const fetchInsights = async () => {
+      if (!patient?.id) return;
+      setInsightsLoading(true);
+      try {
+        const response = await fetch(`/api/patients/${patient.id}/insights`);
+        const result = await response.json();
+        if (result.data) {
+          setExistingInsights(result.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch insights:', error);
+      } finally {
+        setInsightsLoading(false);
+      }
+    };
+
+    if (patient?.id && completedSessions.length > 0) {
+      fetchInsights();
+    }
+  }, [patient?.id, completedSessions.length]);
 
   if (userLoading || patientLoading || sessionsLoading || goalsLoading || reportsLoading || usersLoading || recordingsLoading) {
     return <LoadingSpinner className="h-screen" />;
@@ -64,7 +92,6 @@ export default function PatientDetailPage() {
     { id: 'documents', label: 'מסמכים' },
   ];
 
-  const completedSessions = sessions.filter(s => s.status === 'completed');
   const upcomingSessions = sessions.filter(s => s.status === 'scheduled' && new Date(s.scheduledAt) > new Date());
   const avgProgress = goals.length > 0
     ? Math.round(goals.reduce((sum, g) => sum + g.progress, 0) / goals.length)
@@ -269,6 +296,16 @@ export default function PatientDetailPage() {
                   <InsightPanel
                     patientId={patient.id}
                     patientName={`${patient.firstName} ${patient.lastName}`}
+                    existingInsights={existingInsights}
+                    onInsightsSaved={() => {
+                      // Refetch insights after saving to ensure we have the latest saved state
+                      fetch(`/api/patients/${patient.id}/insights`)
+                        .then(res => res.json())
+                        .then(result => {
+                          if (result.data) setExistingInsights(result.data);
+                        })
+                        .catch(console.error);
+                    }}
                   />
                 )}
               </div>
