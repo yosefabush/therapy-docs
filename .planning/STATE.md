@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-22)
 
 **Core value:** Each therapist type sees AI-generated insights that speak their professional language
-**Current focus:** Phase 5 In Progress - Insights UI Integration
+**Current focus:** Phase 5 Complete - All AI Features Delivered
 
 ## Current Position
 
 Phase: 5 of 5 (Patient Insight Integration)
-Plan: 2 of 3 in current phase (05-01, 05-02 complete)
-Status: In progress
-Last activity: 2026-01-23 - Completed 05-01-PLAN.md
+Plan: 3 of 3 in current phase (05-01, 05-02, 05-03 complete)
+Status: Project Complete
+Last activity: 2026-01-23 - Completed 05-03-PLAN.md
 
-Progress: [█████████░] 90%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 11
-- Average duration: ~4.8 minutes
-- Total execution time: ~52.5 minutes
+- Total plans completed: 12
+- Average duration: ~5.0 minutes
+- Total execution time: ~60.5 minutes
 
 **By Phase:**
 
@@ -31,10 +31,10 @@ Progress: [█████████░] 90%
 | 02 | 2/2 | ~13 min | ~6.5 min |
 | 03 | 2/2 | ~10 min | ~5 min |
 | 04 | 3/3 | ~12.5 min | ~4.2 min |
-| 05 | 2/3 | ~9 min | ~4.5 min |
+| 05 | 3/3 | ~17 min | ~5.7 min |
 
 **Recent Trend:**
-- Last 5 plans: 04-01, 04-02, 04-03, 05-01, 05-02
+- Last 5 plans: 04-02, 04-03, 05-01, 05-02, 05-03
 - Trend: Consistent fast execution
 
 *Updated after each plan completion*
@@ -65,35 +65,41 @@ Recent decisions affecting current work:
 - **confidence-scoring**: Three tiers (0.9+ clear, 0.7-0.9 moderate, <0.7 tentative)
 - **graceful-parsing**: parseInsightResponse handles markdown code fences and missing arrays
 - **bilingual-mock-insights**: Mock generator detects Hebrew content and returns Hebrew insights
-- **post-only-endpoint**: Insights API is POST-only, no GET (persistence deferred)
 - **data-envelope-response**: Response format { data: PatientInsights } or { error: string }
 - **variant-based-styling**: Use variant prop for PatientInsightCard color schemes
 - **stats-from-insights**: Update stats based on selected patient only (not all patients)
 - **insight-panel-state-machine**: InsightPanel uses 5-state machine matching SummaryPanel pattern
 - **confidence-color-coding**: High (90%+) green, Medium (70-89%) yellow, Low (<70%) gray
 - **conditional-render-insights**: Only show InsightPanel when patient has completed sessions
+- **json-repository-pattern**: Follow existing JsonRepository pattern for insights storage
+- **get-then-post-pattern**: Insights page checks GET first, falls back to POST for generation
+- **savedAt-tracking**: Use savedAt field to distinguish saved vs freshly generated insights
 
 ### Pending Todos
 
-None yet.
+None - project complete.
 
 ### Blockers/Concerns
 
-None yet.
+None - all features delivered.
 
 ## Session Continuity
 
 Last session: 2026-01-23
-Stopped at: Completed 05-01-PLAN.md (InsightPanel Component)
+Stopped at: Completed 05-03-PLAN.md (Insight Persistence)
 Resume file: None
 
-Phase 5 deliverables (in progress):
+Phase 5 deliverables (complete):
 - [x] 05-01: InsightPanel component with state machine
 - [x] 05-01: Patient profile integration showing AI insights
 - [x] 05-02: PatientInsightCard component with variant styling
 - [x] 05-02: Enhanced insights page with patient selector
 - [x] 05-02: API integration (POST /api/patients/[id]/insights)
-- [ ] 05-03: Insight persistence
+- [x] 05-03: patientInsightsRepository with CRUD operations
+- [x] 05-03: GET and PATCH endpoints for insight persistence
+- [x] 05-03: InsightPanel save functionality
+- [x] 05-03: Patient profile loads existing insights on mount
+- [x] 05-03: Insights page shows saved insights first
 
 Phase 4 deliverables available:
 - PatientInsights and InsightItem interfaces in @/types
@@ -105,6 +111,8 @@ Phase 4 deliverables available:
 - Bilingual mock insights (Hebrew/English)
 - Module exports from @/lib/ai/patient-insights
 - POST /api/patients/[id]/insights - Insight generation endpoint
+- GET /api/patients/[id]/insights - Fetch saved insights endpoint
+- PATCH /api/patients/[id]/insights - Save insights endpoint
 
 Previous deliverables available:
 - POST /api/sessions/[id]/summary - AI summary generation
