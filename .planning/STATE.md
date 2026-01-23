@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-22)
 
 **Core value:** Each therapist type sees AI-generated insights that speak their professional language
-**Current focus:** Phase 4 Complete - Ready for Phase 5 (Insights UI)
+**Current focus:** Phase 5 In Progress - Insights UI Integration
 
 ## Current Position
 
-Phase: 4 of 5 (Patient Insight Engine) - COMPLETE
-Plan: 3 of 3 in current phase
-Status: Phase complete
-Last activity: 2026-01-22 - Completed 04-03-PLAN.md
+Phase: 5 of 5 (Patient Insight Integration)
+Plan: 2 of 3 in current phase
+Status: In progress
+Last activity: 2026-01-23 - Completed 05-02-PLAN.md
 
-Progress: [████████░░] 80%
+Progress: [████████░░] 85%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 9
-- Average duration: ~4.8 minutes
-- Total execution time: ~43.5 minutes
+- Total plans completed: 10
+- Average duration: ~4.7 minutes
+- Total execution time: ~47.5 minutes
 
 **By Phase:**
 
@@ -31,9 +31,10 @@ Progress: [████████░░] 80%
 | 02 | 2/2 | ~13 min | ~6.5 min |
 | 03 | 2/2 | ~10 min | ~5 min |
 | 04 | 3/3 | ~12.5 min | ~4.2 min |
+| 05 | 2/3 | ~4 min | ~4 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-01, 03-02, 04-01, 04-02, 04-03
+- Last 5 plans: 03-02, 04-01, 04-02, 04-03, 05-02
 - Trend: Consistent fast execution
 
 *Updated after each plan completion*
@@ -66,6 +67,8 @@ Recent decisions affecting current work:
 - **bilingual-mock-insights**: Mock generator detects Hebrew content and returns Hebrew insights
 - **post-only-endpoint**: Insights API is POST-only, no GET (persistence deferred)
 - **data-envelope-response**: Response format { data: PatientInsights } or { error: string }
+- **variant-based-styling**: Use variant prop for PatientInsightCard color schemes
+- **stats-from-insights**: Update stats based on selected patient only (not all patients)
 
 ### Pending Todos
 
@@ -77,11 +80,18 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-22
-Stopped at: Completed Phase 4 (Patient Insight Engine)
+Last session: 2026-01-23
+Stopped at: Completed 05-02-PLAN.md (Insights Page with Patient Selector)
 Resume file: None
 
-Phase 4 deliverables complete:
+Phase 5 deliverables (in progress):
+- [x] 05-01: Insights page foundation (skipped - plan revised)
+- [x] 05-02: PatientInsightCard component with variant styling
+- [x] 05-02: Enhanced insights page with patient selector
+- [x] 05-02: API integration (POST /api/patients/[id]/insights)
+- [ ] 05-03: Patient detail page integration
+
+Phase 4 deliverables available:
 - PatientInsights and InsightItem interfaces in @/types
 - aggregatePatientSessions() to fetch completed sessions
 - formatSessionsForInsights() to format sessions for AI
