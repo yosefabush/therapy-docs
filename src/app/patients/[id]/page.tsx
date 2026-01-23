@@ -10,6 +10,7 @@ import { ReportGenerator, ReportCard } from '@/components/reports/ReportGenerato
 import { therapistRoleLabels } from '@/lib/mock-data';
 import { useCurrentUser, usePatient, useSessions, useTreatmentGoals, useReports, useUsers, useVoiceRecordings } from '@/lib/hooks';
 import { RecordingsList } from '@/components/recordings';
+import { InsightPanel } from '@/components/patients/InsightPanel';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
 
@@ -262,6 +263,14 @@ export default function PatientDetailPage() {
                     הוסף חבר צוות
                   </Button>
                 </Card>
+
+                {/* AI Insights - only show when patient has completed sessions */}
+                {completedSessions.length > 0 && (
+                  <InsightPanel
+                    patientId={patient.id}
+                    patientName={`${patient.firstName} ${patient.lastName}`}
+                  />
+                )}
               </div>
             </div>
           )}
