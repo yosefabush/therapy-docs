@@ -19,14 +19,14 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Patient Insights
 
-- [ ] **INSI-01**: Therapist can trigger patient insight generation from patient profile
+- [x] **INSI-01**: Therapist can trigger patient insight generation from patient profile
 - [x] **INSI-02**: AI analyzes all sessions for the patient (across therapists)
 - [x] **INSI-03**: Patterns surfaced (recurring themes, behaviors)
 - [x] **INSI-04**: Progress trends tracked (improvement/decline over time)
 - [x] **INSI-05**: Risk indicators detected across sessions
 - [x] **INSI-06**: Treatment gaps identified (mentioned but unaddressed)
-- [ ] **INSI-07**: Insights appear on AI insights page
-- [ ] **INSI-08**: Insights saved and can be regenerated
+- [x] **INSI-07**: Insights appear on AI insights page
+- [x] **INSI-08**: Insights saved and can be regenerated
 
 ## v2 Requirements
 
@@ -70,14 +70,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SUMM-05 | Phase 3 | Complete |
 | SUMM-06 | Phase 3 | Complete |
 | SUMM-07 | Phase 3 | Complete |
-| INSI-01 | Phase 5 | Pending |
+| INSI-01 | Phase 5 | Complete |
 | INSI-02 | Phase 4 | Complete |
 | INSI-03 | Phase 4 | Complete |
 | INSI-04 | Phase 4 | Complete |
 | INSI-05 | Phase 4 | Complete |
 | INSI-06 | Phase 4 | Complete |
-| INSI-07 | Phase 5 | Pending |
-| INSI-08 | Phase 5 | Pending |
+| INSI-07 | Phase 5 | Complete |
+| INSI-08 | Phase 5 | Complete |
 
 **Coverage:**
 - v1 requirements: 15 total
@@ -86,4 +86,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-22*
-*Last updated: 2026-01-22 after roadmap creation*
+*Last updated: 2026-01-23 after Phase 5 completion*

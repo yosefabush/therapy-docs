@@ -96,9 +96,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 05-01-PLAN.md — Create InsightPanel component and integrate into patient profile
-- [ ] 05-02-PLAN.md — Enhance AI insights page with patient selector and real data
-- [ ] 05-03-PLAN.md — Add persistence layer with GET/PATCH endpoints
+- [x] 05-01-PLAN.md — Create InsightPanel component and integrate into patient profile
+- [x] 05-02-PLAN.md — Enhance AI insights page with patient selector and real data
+- [x] 05-03-PLAN.md — Add persistence layer with GET/PATCH endpoints
 
 ## Progress
 
@@ -111,4 +111,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | 2. Session Summary Generation | 2/2 | Complete | 2026-01-22 |
 | 3. Session Summary UI | 2/2 | Complete | 2026-01-22 |
 | 4. Patient Insight Engine | 3/3 | Complete | 2026-01-22 |
-| 5. Patient Insight Integration | 0/3 | Not started | - |
+| 5. Patient Insight Integration | 3/3 | Complete | 2026-01-23 |
