@@ -2,122 +2,51 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-01-22)
+See: .planning/PROJECT.md (updated 2026-01-24)
 
 **Core value:** Each therapist type sees AI-generated insights that speak their professional language
-**Current focus:** Phase 5 Complete - All AI Features Delivered
+**Current focus:** v1.0 milestone complete - Planning next milestone
 
 ## Current Position
 
-Phase: 5 of 5 (Patient Insight Integration)
-Plan: 3 of 3 in current phase (05-01, 05-02, 05-03 complete)
-Status: Project Complete
-Last activity: 2026-01-23 - Completed 05-03-PLAN.md
+Phase: None (milestone complete)
+Plan: None
+Status: Ready for next milestone planning
+Last activity: 2026-01-24 - v1.0 milestone complete
 
-Progress: [██████████] 100%
+Progress: Milestone archived, ready for fresh start
 
-## Performance Metrics
+## v1.0 Milestone Summary
 
-**Velocity:**
-- Total plans completed: 12
-- Average duration: ~5.0 minutes
-- Total execution time: ~60.5 minutes
-
-**By Phase:**
-
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| 01 | 2/2 | ~8 min | ~4 min |
-| 02 | 2/2 | ~13 min | ~6.5 min |
-| 03 | 2/2 | ~10 min | ~5 min |
-| 04 | 3/3 | ~12.5 min | ~4.2 min |
-| 05 | 3/3 | ~17 min | ~5.7 min |
-
-**Recent Trend:**
-- Last 5 plans: 04-02, 04-03, 05-01, 05-02, 05-03
-- Trend: Consistent fast execution
-
-*Updated after each plan completion*
+**Delivered:** Role-specific AI session summaries and cross-session patient insights
+**Timeline:** 17 days (2026-01-06 to 2026-01-23)
+**Velocity:** 12 plans, ~5 min average per plan
+**Code:** 41 files modified, +6,606 lines, -308 lines
+**Phases:** 5 phases complete (all success criteria met)
+**Requirements:** 15/15 v1 requirements validated
+**Archive:** See .planning/milestones/v1.0-ROADMAP.md and v1.0-REQUIREMENTS.md
 
 ## Accumulated Context
 
 ### Decisions
 
-Decisions are logged in PROJECT.md Key Decisions table.
-Recent decisions affecting current work:
-
-- **use-template-variables**: Use {{soapNotes}} and {{transcript}} as standard template placeholders
-- **type-safe-registry**: Use Record<TherapistRole, SessionSummaryPrompt> with compile-time exhaustiveness check
-- **bilingual-support**: Each prompt instructs AI to match input language (Hebrew/English)
-- **preserve-existing-stubs**: Keep existing role-specific stub functions as fallback until Phase 2 AI integration
-- **soap-section-formatting**: Use double newlines between SOAP sections for readability
-- **mock-mode-default**: Auto-detect mock/real mode based on OPENAI_API_KEY presence
-- **gpt-4o-mini-default**: Use gpt-4o-mini as default model for cost efficiency
-- **error-as-return-value**: Return SummaryResult with error field instead of throwing exceptions
-- **function-overloads-backward-compat**: Use TypeScript function overloads to add AI mode without breaking callers
-- **api-validates-notes**: POST /api/sessions/[id]/summary returns 400 if session lacks subjective notes
-- **summary-lifecycle-tracking**: AISummary includes generation + approval metadata (savedAt distinguishes unsaved from approved)
-- **ui-state-machine**: SummaryPanel uses 5-state machine (empty/generating/preview/saved/error) for clear UX flow
-- **insight-4-categories**: PatientInsights has patterns, progressTrends, riskIndicators, treatmentGaps arrays
-- **insight-item-confidence**: InsightItem includes confidence score (0-1) and session references
-- **chronological-sorting**: Sessions sorted oldest-first for AI trend analysis
-- **structured-json-output**: AI returns JSON with 4 arrays for direct mapping to PatientInsights
-- **confidence-scoring**: Three tiers (0.9+ clear, 0.7-0.9 moderate, <0.7 tentative)
-- **graceful-parsing**: parseInsightResponse handles markdown code fences and missing arrays
-- **bilingual-mock-insights**: Mock generator detects Hebrew content and returns Hebrew insights
-- **data-envelope-response**: Response format { data: PatientInsights } or { error: string }
-- **variant-based-styling**: Use variant prop for PatientInsightCard color schemes
-- **stats-from-insights**: Update stats based on selected patient only (not all patients)
-- **insight-panel-state-machine**: InsightPanel uses 5-state machine matching SummaryPanel pattern
-- **confidence-color-coding**: High (90%+) green, Medium (70-89%) yellow, Low (<70%) gray
-- **conditional-render-insights**: Only show InsightPanel when patient has completed sessions
-- **json-repository-pattern**: Follow existing JsonRepository pattern for insights storage
-- **get-then-post-pattern**: Insights page checks GET first, falls back to POST for generation
-- **savedAt-tracking**: Use savedAt field to distinguish saved vs freshly generated insights
+All decisions are logged in PROJECT.md Key Decisions table with outcomes marked ✓ Good.
 
 ### Pending Todos
 
-None - project complete.
+None - milestone complete.
 
 ### Blockers/Concerns
 
-None - all features delivered.
+None - all features delivered and validated.
 
 ## Session Continuity
 
-Last session: 2026-01-23
-Stopped at: Completed 05-03-PLAN.md (Insight Persistence)
+Last session: 2026-01-24
+Stopped at: v1.0 milestone complete
 Resume file: None
 
-Phase 5 deliverables (complete):
-- [x] 05-01: InsightPanel component with state machine
-- [x] 05-01: Patient profile integration showing AI insights
-- [x] 05-02: PatientInsightCard component with variant styling
-- [x] 05-02: Enhanced insights page with patient selector
-- [x] 05-02: API integration (POST /api/patients/[id]/insights)
-- [x] 05-03: patientInsightsRepository with CRUD operations
-- [x] 05-03: GET and PATCH endpoints for insight persistence
-- [x] 05-03: InsightPanel save functionality
-- [x] 05-03: Patient profile loads existing insights on mount
-- [x] 05-03: Insights page shows saved insights first
-
-Phase 4 deliverables available:
-- PatientInsights and InsightItem interfaces in @/types
-- aggregatePatientSessions() to fetch completed sessions
-- formatSessionsForInsights() to format sessions for AI
-- PATIENT_INSIGHT_SYSTEM_PROMPT for 4-category insight analysis
-- buildInsightUserPrompt() for AI prompt construction
-- generatePatientInsights() with mock/real mode support
-- Bilingual mock insights (Hebrew/English)
-- Module exports from @/lib/ai/patient-insights
-- POST /api/patients/[id]/insights - Insight generation endpoint
-- GET /api/patients/[id]/insights - Fetch saved insights endpoint
-- PATCH /api/patients/[id]/insights - Save insights endpoint
-
-Previous deliverables available:
-- POST /api/sessions/[id]/summary - AI summary generation
-- GET /api/sessions/[id]/summary - Configuration check
-- PATCH /api/sessions/[id]/summary - Save summary endpoint
-- SummaryPanel component with full state machine
-- generateSessionSummaryAI() from @/lib/ai
-- 10 role-specific prompts in src/lib/ai/prompts/session-summary/
+**Next steps:**
+- Run `/gsd:new-milestone` to start next milestone cycle
+- Consider `/clear` first for fresh context window
+- All v1.0 features documented in milestones/ archive
