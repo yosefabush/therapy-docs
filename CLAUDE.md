@@ -13,7 +13,7 @@ npm run start    # Start production server
 
 ## Architecture
 
-TherapyDocs is a HIPAA-compliant clinical documentation system for mental health professionals, built with Next.js 14 App Router and TypeScript.
+TherapyDocs is a HIPAA-compliant clinical documentation system for mental health professionals, built with Next.js 16 App Router and TypeScript.
 
 ### Core Concepts
 

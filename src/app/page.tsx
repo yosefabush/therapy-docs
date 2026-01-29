@@ -140,9 +140,8 @@ export default function Dashboard() {
 
             <Card className="animate-in opacity-0 stagger-3 text-center" style={{ animationFillMode: 'forwards' }}>
               <div className="flex flex-col items-center">
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 ${
-                  pendingDocumentation > 0 ? 'bg-amber-100' : 'bg-green-100'
-                }`}>
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 ${pendingDocumentation > 0 ? 'bg-amber-100' : 'bg-green-100'
+                  }`}>
                   <svg className={`w-6 h-6 ${pendingDocumentation > 0 ? 'text-amber-600' : 'text-green-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
@@ -161,9 +160,8 @@ export default function Dashboard() {
 
             <Card className={`animate-in opacity-0 stagger-4 text-center ${criticalInsights.length > 0 ? 'border-red-200 bg-red-50' : ''}`} style={{ animationFillMode: 'forwards' }}>
               <div className="flex flex-col items-center">
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 ${
-                  criticalInsights.length > 0 ? 'bg-red-100' : 'bg-sage-100'
-                }`}>
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 ${criticalInsights.length > 0 ? 'bg-red-100' : 'bg-sage-100'
+                  }`}>
                   <svg className={`w-6 h-6 ${criticalInsights.length > 0 ? 'text-red-600' : 'text-sage-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                   </svg>
@@ -282,7 +280,7 @@ export default function Dashboard() {
             {/* Right Sidebar */}
             <div className="space-y-6 flex flex-col">
               {/* My Patients */}
-              <Card>
+              <Card className="flex-1 flex flex-col">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-semibold text-clinical-900" style={{ fontFamily: '"David Libre", Georgia, serif' }}>
                     המטופלים שלי
@@ -290,7 +288,7 @@ export default function Dashboard() {
                   <a href="/patients"><Button variant="ghost" size="sm">הצג הכל</Button></a>
                 </div>
                 {myPatients.length === 0 ? (
-                  <div className="text-center py-8">
+                  <div className="text-center py-8 flex-1 flex flex-col items-center justify-center">
                     <svg className="w-12 h-12 text-clinical-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
@@ -300,7 +298,7 @@ export default function Dashboard() {
                     </a>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-3 flex-1">
                     {myPatients.slice(0, 4).map(patient => {
                       const patientGoals = goals.filter(g => g.patientId === patient.id);
                       const avgProgress = patientGoals.length > 0
@@ -327,34 +325,6 @@ export default function Dashboard() {
                   </div>
                 )}
               </Card>
-
-              {/* AI Insights - Sidebar */}
-              {allInsights.length > 0 && (
-                <Card className="flex-1 flex flex-col">
-                  <div className="flex items-center gap-2 mb-4">
-                    <svg className="w-5 h-5 text-sage-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                    </svg>
-                    <h2 className="text-lg font-semibold text-clinical-900" style={{ fontFamily: '"David Libre", Georgia, serif' }}>
-                      תובנות AI
-                    </h2>
-                  </div>
-                  <div className="space-y-3 flex-1">
-                    {allInsights.slice(0, 5).map(insight => (
-                      <div
-                        key={insight.id}
-                        className={`p-3 rounded-lg text-sm ${
-                          insight.type === 'risk_indicator' ? 'bg-red-50 text-red-800' :
-                          insight.type === 'progress_trend' ? 'bg-green-50 text-green-800' :
-                          'bg-blue-50 text-blue-800'
-                        }`}
-                      >
-                        {insight.content}
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-              )}
             </div>
           </div>
 

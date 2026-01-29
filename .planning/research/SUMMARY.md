@@ -17,7 +17,7 @@ The primary risks are clinical safety failures from hallucinated data, professio
 
 ### Recommended Stack
 
-The core technology stack centers on modern LLM integration with HIPAA compliance built-in from the start. **Vercel AI SDK 6.x** provides a unified provider API with native Next.js integration, allowing seamless switching between providers while maintaining structured output capabilities via Zod schemas. This matches TherapyDocs' existing TypeScript/Next.js 14 architecture and already-installed Zod validation library.
+The core technology stack centers on modern LLM integration with HIPAA compliance built-in from the start. **Vercel AI SDK 6.x** provides a unified provider API with native Next.js integration, allowing seamless switching between providers while maintaining structured output capabilities via Zod schemas. This matches TherapyDocs' existing TypeScript/Next.js 16 architecture and already-installed Zod validation library.
 
 **Core technologies:**
 - **Anthropic Claude (claude-sonnet-4.5)**: Primary LLM provider with HIPAA BAA via AWS Bedrock/direct, healthcare-specific features (ICD-10, FHIR integrations), and 200K token context for cross-session analysis. Pricing: $3/$15 per million tokens (input/output), with 50% batch discount and 90% prompt caching savings.

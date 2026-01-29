@@ -7,7 +7,7 @@
 ```
 therapy-docs/
 ├── src/
-│   ├── app/                    # Next.js 14 App Router routes and API
+│   ├── app/                    # Next.js 16 App Router routes and API
 │   │   ├── api/                # RESTful API endpoints
 │   │   ├── layout.tsx          # Root layout wrapper
 │   │   ├── page.tsx            # Dashboard (home)

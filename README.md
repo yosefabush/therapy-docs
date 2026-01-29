@@ -1,6 +1,6 @@
 # TherapyDocs - Clinical Documentation System
 
-A modern, HIPAA-compliant therapy documentation system built with Next.js 14, designed for mental health professionals, clinics, and health insurance funds.
+A modern, HIPAA-compliant therapy documentation system built with Next.js 16, designed for mental health professionals, clinics, and health insurance funds.
 
 ![TherapyDocs](https://img.shields.io/badge/Version-1.0.0-sage)
 ![License](https://img.shields.io/badge/License-MIT-blue)
@@ -62,7 +62,7 @@ TherapyDocs revolutionizes how therapists document and manage treatment sessions
 
 ## 🛠 Technology Stack
 
-- **Framework**: Next.js 14 (App Router)
+- **Framework**: Next.js 16 (App Router)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS with custom medical theme
 - **State Management**: React Hooks

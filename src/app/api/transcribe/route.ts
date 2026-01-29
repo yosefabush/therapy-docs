@@ -76,26 +76,92 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get utterances with speaker info
-    const utterances = result?.results?.utterances || [];
+    // Debug: log raw response structure
+    const rawUtterances = result?.results?.utterances || [];
+    const words = alternatives?.words || [];
+    console.log('[Deepgram Debug] Utterances count:', rawUtterances.length);
+    console.log('[Deepgram Debug] First utterance:', JSON.stringify(rawUtterances[0]));
+    console.log('[Deepgram Debug] Words count:', words.length);
+    console.log('[Deepgram Debug] First 3 words:', JSON.stringify(words.slice(0, 3)));
+    console.log('[Deepgram Debug] Unique speakers in utterances:', [...new Set(rawUtterances.map((u: any) => u.speaker))]);
+    console.log('[Deepgram Debug] Unique speakers in words:', [...new Set(words.map((w: any) => w.speaker))]);
 
-    // Count unique speakers
-    const speakerSet = new Set<number>();
-    utterances.forEach((u: any) => {
-      if (typeof u.speaker === 'number') {
-        speakerSet.add(u.speaker);
-      }
-    });
+    // Build speaker utterances - prefer utterances array if it has speaker data,
+    // otherwise build from word-level speaker info
+    const utterancesSpeakers = new Set(rawUtterances.map((u: any) => u.speaker).filter((s: any) => typeof s === 'number'));
+    const wordsSpeakers = new Set(words.map((w: any) => w.speaker).filter((s: any) => typeof s === 'number'));
 
-    // Format the diarized transcript
-    const diarizedTranscript: DiarizedTranscript = {
-      utterances: utterances.map((u: any): SpeakerUtterance => ({
+    let speakerUtterances: SpeakerUtterance[];
+    let speakerSet: Set<number>;
+
+    if (utterancesSpeakers.size > 1) {
+      // Utterances have multiple speakers - use them directly
+      speakerSet = utterancesSpeakers;
+      speakerUtterances = rawUtterances.map((u: any): SpeakerUtterance => ({
         speaker: u.speaker ?? 0,
         transcript: u.transcript || '',
         start: u.start || 0,
         end: u.end || 0,
         confidence: u.confidence || 0,
-      })),
+      }));
+    } else if (wordsSpeakers.size > 1) {
+      // Words have speaker info but utterances don't - build segments from words
+      console.log('[Deepgram Debug] Building utterances from word-level speaker data');
+      speakerSet = wordsSpeakers;
+      speakerUtterances = [];
+      let currentSpeaker = words[0]?.speaker ?? 0;
+      let currentWords: string[] = [];
+      let segmentStart = words[0]?.start ?? 0;
+      let segmentEnd = 0;
+      let confidenceSum = 0;
+      let wordCount = 0;
+
+      for (const word of words) {
+        const speaker = word.speaker ?? 0;
+        if (speaker !== currentSpeaker && currentWords.length > 0) {
+          speakerUtterances.push({
+            speaker: currentSpeaker,
+            transcript: currentWords.join(' '),
+            start: segmentStart,
+            end: segmentEnd,
+            confidence: wordCount > 0 ? confidenceSum / wordCount : 0,
+          });
+          currentWords = [];
+          currentSpeaker = speaker;
+          segmentStart = word.start || 0;
+          confidenceSum = 0;
+          wordCount = 0;
+        }
+        currentWords.push(word.punctuated_word || word.word || '');
+        segmentEnd = word.end || 0;
+        confidenceSum += word.confidence || 0;
+        wordCount++;
+      }
+      // Push last segment
+      if (currentWords.length > 0) {
+        speakerUtterances.push({
+          speaker: currentSpeaker,
+          transcript: currentWords.join(' '),
+          start: segmentStart,
+          end: segmentEnd,
+          confidence: wordCount > 0 ? confidenceSum / wordCount : 0,
+        });
+      }
+    } else {
+      // No multi-speaker data found - return what we have
+      speakerSet = utterancesSpeakers.size > 0 ? utterancesSpeakers : new Set([0]);
+      speakerUtterances = rawUtterances.map((u: any): SpeakerUtterance => ({
+        speaker: u.speaker ?? 0,
+        transcript: u.transcript || '',
+        start: u.start || 0,
+        end: u.end || 0,
+        confidence: u.confidence || 0,
+      }));
+    }
+
+    // Format the diarized transcript
+    const diarizedTranscript: DiarizedTranscript = {
+      utterances: speakerUtterances,
       speakerCount: speakerSet.size || 1,
       rawTranscript: alternatives.transcript || '',
       speakerLabels: {

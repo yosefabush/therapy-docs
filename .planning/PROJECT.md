@@ -41,7 +41,7 @@ Each therapist type sees AI-generated insights that speak their professional lan
 
 **Current State (v1.0 shipped):**
 - Codebase: ~701KB TypeScript across 41 modified files
-- Tech stack: Next.js 14 App Router, TypeScript, JSON file-based persistence
+- Tech stack: Next.js 16 App Router, TypeScript, JSON file-based persistence
 - AI Features: Session summaries and patient insights with mock/real modes
 - Bilingual: Full Hebrew and English support with RTL layouts
 - Repository pattern: Consistent JSON storage for insights and summaries
@@ -70,7 +70,7 @@ None - all features production-ready
 
 ## Constraints
 
-- **Tech stack**: Next.js 14 App Router, TypeScript, existing repository pattern
+- **Tech stack**: Next.js 16 App Router, TypeScript, existing repository pattern
 - **Data persistence**: JSON file-based (existing pattern) — summaries stored in session records
 - **AI provider**: Not specified — need to determine (OpenAI, Anthropic, or other)
 - **Hebrew RTL**: UI must maintain Hebrew localization and RTL layout

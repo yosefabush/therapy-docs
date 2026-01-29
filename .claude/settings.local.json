@@ -30,7 +30,39 @@
       "Bash(powershell:*)",
       "Bash(timeout:*)",
       "Skill(senior-frontend)",
-      "Bash(npm run lint -- --max-warnings=0 src/app/sessions/page.tsx)"
+      "Bash(npm run lint -- --max-warnings=0 src/app/sessions/page.tsx)",
+      "WebSearch",
+      "WebFetch(domain:ai-sdk.dev)",
+      "Bash(git -C \"C:/Users/Yosefg/AI/AI PILOT/therapy-docs/therapy-docs\" check-ignore -q .planning)",
+      "Bash(npx tsc:*)",
+      "Bash(test:*)",
+      "Bash(if not exist \".planning\\\\milestones\" mkdir \".planning\\\\milestones\")",
+      "Bash(move \".planning\\\\v1-MILESTONE-AUDIT.md\" \".planning\\\\milestones\\\\v1.0-MILESTONE-AUDIT.md\")",
+      "Bash(git tag -a v1.0 -m \"$\\(cat <<''EOF''\nv1.0 AI Insights MVP\n\nDelivered: Role-specific AI session summaries and cross-session patient insights for mental health professionals\n\nKey accomplishments:\n- 10 role-specific AI prompts tailored to each therapist type\n- Complete session summary workflow with generate/review/save/regenerate\n- Patient insight engine with 4-category analysis \\(patterns, progress, risks, gaps\\)\n- Persistence layer with GET/PATCH endpoints\n- Bilingual support \\(Hebrew/English\\) with RTL layout\n- Mock/Real AI modes for development and production\n\nSee .planning/MILESTONES.md for full details.\nEOF\n\\)\")",
+      "WebFetch(domain:developers.deepgram.com)",
+      "WebFetch(domain:github.com)"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -c (New-Object Media.SoundPlayer 'C:\\Windows\\Media\\Windows Background.wav').PlaySync()"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -c (New-Object Media.SoundPlayer 'C:\\Windows\\Media\\Windows Logoff Sound.wav').PlaySync()"
+          }
+        ]
+      }
     ]
   },
   "enabledPlugins": {

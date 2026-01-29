@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-For adding AI-powered clinical insights to TherapyDocs, I recommend a stack centered on **Vercel AI SDK 6.x** with **Anthropic Claude** as the primary LLM provider. This combination offers the best balance of HIPAA-compliance readiness, TypeScript integration with your existing Next.js 14 stack, structured output capabilities, and cost-effectiveness for clinical documentation workloads.
+For adding AI-powered clinical insights to TherapyDocs, I recommend a stack centered on **Vercel AI SDK 6.x** with **Anthropic Claude** as the primary LLM provider. This combination offers the best balance of HIPAA-compliance readiness, TypeScript integration with your existing Next.js 16 stack, structured output capabilities, and cost-effectiveness for clinical documentation workloads.
 
 The existing Deepgram integration for transcription remains. AI features will layer on top, processing transcripts and session data to generate role-specific summaries and cross-session patient insights.
 

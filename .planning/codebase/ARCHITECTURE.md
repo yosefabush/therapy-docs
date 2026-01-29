@@ -4,10 +4,10 @@
 
 ## Pattern Overview
 
-**Overall:** Next.js 14 App Router with Client/Server Component Separation and Repository Pattern Data Access
+**Overall:** Next.js 16 App Router with Client/Server Component Separation and Repository Pattern Data Access
 
 **Key Characteristics:**
-- Server-side Next.js 14 App Router with TypeScript for route definition and data operations
+- Server-side Next.js 16 App Router with TypeScript for route definition and data operations
 - Client components (`'use client'`) for interactive UI and hooks-based state management
 - Repository pattern for data abstraction (`src/lib/data/repositories/`)
 - Feature-based component organization with role-specific business logic

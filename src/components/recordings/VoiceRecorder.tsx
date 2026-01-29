@@ -283,8 +283,22 @@ export function VoiceRecorder({ sessionId, patientId, onRecordingComplete, onClo
     }
   }, [speakerLabels]);
 
+  const [speakerLabelConfirmed, setSpeakerLabelConfirmed] = useState(false);
+
   const handleSave = useCallback(async () => {
     if (audioChunksRef.current.length === 0) return;
+
+    // Alert once to confirm speaker labels if diarization was used
+    if (diarizedTranscript && !speakerLabelConfirmed) {
+      const labelsText = Object.entries(speakerLabels)
+        .map(([num, label]) => `${label}`)
+        .join(', ');
+      const confirmed = window.confirm(
+        `אנא ודא ששמות הדוברים נכונים:\n${labelsText}\n\nהאם השמות נכונים?`
+      );
+      if (!confirmed) return;
+      setSpeakerLabelConfirmed(true);
+    }
 
     const mimeType = mediaRecorderRef.current?.mimeType || 'audio/webm';
     const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
@@ -301,7 +315,7 @@ export function VoiceRecorder({ sessionId, patientId, onRecordingComplete, onClo
       );
     };
     reader.readAsDataURL(audioBlob);
-  }, [recordingTime, onRecordingComplete, savedTranscript, diarizedTranscript]);
+  }, [recordingTime, onRecordingComplete, savedTranscript, diarizedTranscript, speakerLabels, speakerLabelConfirmed]);
 
   const handleReset = () => {
     if (audioPreviewUrl) URL.revokeObjectURL(audioPreviewUrl);
@@ -316,6 +330,7 @@ export function VoiceRecorder({ sessionId, patientId, onRecordingComplete, onClo
     setTranscriptError(null);
     setDiarizedTranscript(null);
     setDiarizeError(null);
+    setSpeakerLabelConfirmed(false);
   };
 
   const clearTranscript = () => {
@@ -599,7 +614,7 @@ export function VoiceRecorder({ sessionId, patientId, onRecordingComplete, onClo
                       ></span>
                       <input
                         type="text"
-                        value={speakerLabels[idx] || `דובר ${idx + 1}`}
+                        value={speakerLabels[idx]}
                         onChange={(e) => updateSpeakerLabel(idx, e.target.value)}
                         className="text-xs px-2 py-1 border border-sage-300 rounded w-20 text-right"
                       />
