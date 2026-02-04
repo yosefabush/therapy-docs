@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Sidebar, MobileMenuProvider, useMobileMenu } from '@/components/layout/Sidebar';
+import { Sidebar, MobileMenuProvider } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { Card, Badge, Button, ProgressBar, Modal } from '@/components/ui';
@@ -16,7 +16,6 @@ import { Session } from '@/types';
 
 // Inner component that uses mobile menu context
 function DashboardContent() {
-  const { toggle: toggleMobileMenu } = useMobileMenu();
   const [showNewSession, setShowNewSession] = useState(false);
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [pendingNotificationMarkAsRead, setPendingNotificationMarkAsRead] = useState<(() => void) | null>(null);
@@ -94,7 +93,6 @@ function DashboardContent() {
         <Header
           title="לוח בקרה"
           subtitle={`ברוך שובך, ${currentUser.name.split(' ')[0]}`}
-          onMobileMenuToggle={toggleMobileMenu}
           onSessionNotificationClick={(sessionId, notificationId, markAsRead) => {
             // Find the session in our data
             const session = sessions.find(s => s.id === sessionId);

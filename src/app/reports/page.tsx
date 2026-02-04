@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Sidebar, MobileMenuProvider, useMobileMenu } from '@/components/layout/Sidebar';
+import { Sidebar, MobileMenuProvider } from '@/components/layout/Sidebar';
 import { Header, QuickActionButton } from '@/components/layout/Header';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { Card, Button, Badge, Tabs, Modal } from '@/components/ui';
@@ -10,7 +10,6 @@ import { useAuthRedirect, useMyPatients, useMyReports } from '@/lib/hooks';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 function ReportsPageContent() {
-  const { toggle: toggleMobileMenu } = useMobileMenu();
   const [activeTab, setActiveTab] = useState('all');
   const [showNewReport, setShowNewReport] = useState(false);
   const [viewingReport, setViewingReport] = useState<string | null>(null);
@@ -198,7 +197,6 @@ function ReportsPageContent() {
         <Header
           title="דוחות"
           subtitle={`${reports.length} דוחות בסה"כ`}
-          onMobileMenuToggle={toggleMobileMenu}
           actions={
             <QuickActionButton
               label="דוח חדש"

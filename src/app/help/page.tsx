@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Sidebar, MobileMenuProvider, useMobileMenu } from '@/components/layout/Sidebar';
+import { Sidebar, MobileMenuProvider } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { Card, Button, Tabs } from '@/components/ui';
@@ -11,7 +11,6 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
 
 function HelpPageContent() {
-  const { toggle: toggleMobileMenu } = useMobileMenu();
   const [activeTab, setActiveTab] = useState('faq');
   const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
 
@@ -114,7 +113,6 @@ function HelpPageContent() {
         <Header
           title="עזרה ותמיכה"
           subtitle="מדריכים, שאלות נפוצות ויצירת קשר"
-          onMobileMenuToggle={toggleMobileMenu}
         />
 
         <div className="p-4 sm:p-6 lg:p-8">

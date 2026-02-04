@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Sidebar, MobileMenuProvider, useMobileMenu } from '@/components/layout/Sidebar';
+import { Sidebar, MobileMenuProvider } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { Card, Badge } from '@/components/ui';
@@ -45,8 +45,6 @@ const GapIcon = () => (
 );
 
 function InsightsPageContent() {
-  const { toggle: toggleMobileMenu } = useMobileMenu();
-
   // Auth and patients
   const { user: currentUser, loading: userLoading } = useAuthRedirect();
   const { patients: myPatients, loading: patientsLoading } = useMyPatients(currentUser?.id);
@@ -193,7 +191,6 @@ function InsightsPageContent() {
         <Header
           title="תובנות AI"
           subtitle="ניתוח אוטומטי של דפוסים ומגמות"
-          onMobileMenuToggle={toggleMobileMenu}
         />
 
         <div className="p-4 sm:p-6 lg:p-8">

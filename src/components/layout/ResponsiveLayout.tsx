@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Sidebar, MobileMenuProvider, useMobileMenu } from './Sidebar';
+import { Sidebar, MobileMenuProvider } from './Sidebar';
 import { Header } from './Header';
 import { BottomNav } from './BottomNav';
 
@@ -31,8 +31,6 @@ function ResponsiveLayoutInner({
   onLogout,
   onSessionNotificationClick,
 }: ResponsiveLayoutProps) {
-  const { toggle } = useMobileMenu();
-
   return (
     <div className="min-h-screen bg-warm-50">
       <Sidebar user={user} onLogout={onLogout} />
@@ -43,7 +41,6 @@ function ResponsiveLayoutInner({
           title={headerTitle}
           subtitle={headerSubtitle}
           actions={headerActions}
-          onMobileMenuToggle={toggle}
           onSessionNotificationClick={onSessionNotificationClick}
         />
         {children}

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { Sidebar, MobileMenuProvider, useMobileMenu } from '@/components/layout/Sidebar';
+import { Sidebar, MobileMenuProvider } from '@/components/layout/Sidebar';
 import { Header, QuickActionButton } from '@/components/layout/Header';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { Card, Button, Select, Tabs, Modal } from '@/components/ui';
@@ -13,7 +13,6 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
 
 function SessionsPageContent() {
-  const { toggle: toggleMobileMenu } = useMobileMenu();
   const [activeTab, setActiveTab] = useState('upcoming');
   const [showNewSession, setShowNewSession] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>('');
@@ -153,7 +152,6 @@ function SessionsPageContent() {
         <Header
           title="מפגשים"
           subtitle={`${mySessions.length} מפגשים בסה"כ`}
-          onMobileMenuToggle={toggleMobileMenu}
           actions={
             <QuickActionButton
               label="מפגש חדש"

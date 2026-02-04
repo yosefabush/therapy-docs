@@ -137,35 +137,31 @@ export function Header({ title, subtitle, actions, onSessionNotificationClick, o
     <>
       <header className="sticky top-0 z-30 bg-warm-50/95 backdrop-blur-sm border-b border-sage-100">
         <div className="px-4 md:px-8 py-4">
-          <div className="flex items-center justify-between gap-4 md:gap-8">
-            {/* Mobile Menu Button */}
-            {onMobileMenuToggle && (
-              <button
-                onClick={onMobileMenuToggle}
-                className="md:hidden p-2 rounded-lg text-clinical-500 hover:bg-sage-50 hover:text-sage-700 transition-colors"
-                aria-label="Open menu"
-              >
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-            )}
+          <div className="flex items-center justify-between gap-2 md:gap-8">
+            {/* Title Section + Quick Actions */}
+            <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
+              <div className="min-w-0">
+                <h1
+                  className="text-lg md:text-2xl font-semibold text-clinical-900 truncate"
+                  style={{ fontFamily: '"David Libre", Georgia, serif' }}
+                >
+                  {title}
+                </h1>
+                {subtitle && (
+                  <p className="text-sm text-clinical-500 mt-0.5 truncate hidden sm:block">{subtitle}</p>
+                )}
+              </div>
 
-            {/* Title Section */}
-            <div className="flex-1 min-w-0">
-              <h1
-                className="text-lg md:text-2xl font-semibold text-clinical-900 truncate"
-                style={{ fontFamily: '"David Libre", Georgia, serif' }}
-              >
-                {title}
-              </h1>
-              {subtitle && (
-                <p className="text-sm text-clinical-500 mt-0.5 truncate hidden sm:block">{subtitle}</p>
+              {/* Quick Actions - next to title */}
+              {actions && (
+                <div className="flex items-center gap-1 md:gap-2">
+                  {actions}
+                </div>
               )}
             </div>
 
-            {/* Search & Actions */}
-            <div className="flex items-center gap-2 md:gap-4">
+            {/* Search, Notifications & Profile */}
+            <div className="flex items-center gap-1 md:gap-4">
               {/* Global Search Button - Full on desktop, icon only on mobile */}
               <button
                 onClick={() => setIsSearchOpen(true)}
@@ -363,11 +359,6 @@ export function Header({ title, subtitle, actions, onSessionNotificationClick, o
                   </div>
                 )}
               </div>
-
-              {/* Quick Actions - hidden on mobile, shown on md+ */}
-              <div className="hidden md:flex items-center gap-4">
-                {actions}
-              </div>
             </div>
           </div>
         </div>
@@ -388,9 +379,10 @@ interface QuickActionButtonProps {
 
 export function QuickActionButton({ label, onClick, icon }: QuickActionButtonProps) {
   return (
-    <Button variant="primary" onClick={onClick}>
-      {icon && <span className="ml-2">{icon}</span>}
-      {label}
+    <Button variant="primary" onClick={onClick} className="!px-3 md:!px-4">
+      {icon && <span className="md:ml-2">{icon}</span>}
+      <span className="hidden md:inline">{label}</span>
+      <span className="sr-only md:hidden">{label}</span>
     </Button>
   );
 }

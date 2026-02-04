@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Sidebar, MobileMenuProvider, useMobileMenu } from '@/components/layout/Sidebar';
+import { Sidebar, MobileMenuProvider } from '@/components/layout/Sidebar';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { Card, Button, Badge, Avatar, Modal } from '@/components/ui';
 import { SessionForm } from '@/components/sessions/SessionForm';
@@ -13,7 +13,6 @@ import { useSession, useCurrentUser, usePatient, useUsers } from '@/lib/hooks';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 function SessionDetailPageContent() {
-  const { toggle: toggleMobileMenu } = useMobileMenu();
   const params = useParams();
   const router = useRouter();
   const sessionId = params.id as string;
@@ -134,15 +133,6 @@ function SessionDetailPageContent() {
       <main className="md:mr-64 pb-20 md:pb-0">
         <div className="sticky top-0 z-30 bg-white border-b border-sage-100 px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-2 text-sm text-clinical-500 mb-2">
-            <button
-              onClick={toggleMobileMenu}
-              className="md:hidden p-2 -mr-2 rounded-lg text-clinical-500 hover:bg-sage-50 hover:text-sage-700 transition-colors"
-              aria-label="Open menu"
-            >
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
             <Link href="/sessions" className="hover:text-sage-600">מפגשים</Link>
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Sidebar, MobileMenuProvider, useMobileMenu } from '@/components/layout/Sidebar';
+import { Sidebar, MobileMenuProvider } from '@/components/layout/Sidebar';
 import { Header, QuickActionButton } from '@/components/layout/Header';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { Card, Button, Select, Tabs, Modal } from '@/components/ui';
@@ -14,7 +14,6 @@ import { ErrorMessage } from '@/components/ui/ErrorMessage';
 import { apiClient } from '@/lib/api/client';
 
 function PatientsPageContent() {
-  const { toggle: toggleMobileMenu } = useMobileMenu();
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showNewPatient, setShowNewPatient] = useState(false);
@@ -74,7 +73,6 @@ function PatientsPageContent() {
         <Header
           title="מטופלים"
           subtitle={`${patients.length} מטופלים בסה"כ`}
-          onMobileMenuToggle={toggleMobileMenu}
           actions={
             <QuickActionButton
               label="מטופל חדש"
