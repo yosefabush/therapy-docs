@@ -279,40 +279,38 @@ function ReportsPageContent() {
                 const patient = getPatient(report.patientId);
                 return (
                   <Card key={report.id} hover className="cursor-pointer">
-                    <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-                      <div className="flex items-center justify-between min-w-[500px] sm:min-w-0">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-lg bg-sage-100 flex items-center justify-center flex-shrink-0">
-                            <svg className="w-6 h-6 text-sage-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                          </div>
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <h3 className="font-medium text-clinical-900">{getReportTypeLabel(report.reportType)}</h3>
-                              {getStatusBadge(report.status)}
-                            </div>
-                            <p className="text-sm text-clinical-500">
-                              {patient ? `${patient.firstName} ${patient.lastName}` : 'מטופל'} • {new Intl.DateTimeFormat('he-IL', { dateStyle: 'medium' }).format(new Date(report.dateRange.start))} - {new Intl.DateTimeFormat('he-IL', { dateStyle: 'medium' }).format(new Date(report.dateRange.end))}
-                            </p>
-                            <p className="text-xs text-clinical-400 mt-1">
-                              נוצר: {new Intl.DateTimeFormat('he-IL', { dateStyle: 'medium' }).format(new Date(report.generatedAt))}
-                            </p>
-                          </div>
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-sage-100 flex items-center justify-center flex-shrink-0">
+                          <svg className="w-5 h-5 sm:w-6 sm:h-6 text-sage-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
                         </div>
-                        <div className="flex items-center gap-2 flex-shrink-0 mr-4">
-                          <Button variant="ghost" size="sm" onClick={() => setViewingReport(report.id)}>
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => downloadReportAsPDF(report, patient)}>
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                            </svg>
-                          </Button>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-medium text-clinical-900 text-sm sm:text-base">{getReportTypeLabel(report.reportType)}</h3>
+                            {getStatusBadge(report.status)}
+                          </div>
+                          <p className="text-xs sm:text-sm text-clinical-500 truncate">
+                            {patient ? `${patient.firstName} ${patient.lastName}` : 'מטופל'} • {new Intl.DateTimeFormat('he-IL', { dateStyle: 'short' }).format(new Date(report.dateRange.start))} - {new Intl.DateTimeFormat('he-IL', { dateStyle: 'short' }).format(new Date(report.dateRange.end))}
+                          </p>
+                          <p className="text-xs text-clinical-400 mt-0.5">
+                            נוצר: {new Intl.DateTimeFormat('he-IL', { dateStyle: 'short' }).format(new Date(report.generatedAt))}
+                          </p>
                         </div>
+                      </div>
+                      <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                        <Button variant="ghost" size="sm" onClick={() => setViewingReport(report.id)}>
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => downloadReportAsPDF(report, patient)}>
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                          </svg>
+                        </Button>
                       </div>
                     </div>
                   </Card>

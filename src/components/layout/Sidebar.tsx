@@ -259,19 +259,19 @@ export function Sidebar({ user, onLogout }: SidebarProps) {
         {sidebarContent}
       </aside>
 
-      {/* Mobile Sidebar Overlay */}
+      {/* Mobile Sidebar Overlay - stops above bottom nav */}
       {isMobileOpen && (
         <div
-          className="fixed inset-0 bg-clinical-900/50 backdrop-blur-sm z-40 md:hidden"
+          className="fixed top-0 bottom-16 left-0 right-0 bg-clinical-900/50 backdrop-blur-sm z-40 md:hidden"
           onClick={closeMobileMenu}
           aria-hidden="true"
         />
       )}
 
-      {/* Mobile Sidebar - slide-out panel */}
+      {/* Mobile Sidebar - slide-out panel, stops above bottom nav */}
       <aside
         className={clsx(
-          'fixed inset-y-0 right-0 w-64 bg-white border-l border-sage-100 flex flex-col z-50 md:hidden',
+          'fixed top-0 bottom-16 right-0 w-64 bg-white border-l border-sage-100 flex flex-col z-50 md:hidden overflow-y-auto',
           'transform transition-transform duration-300 ease-in-out',
           isMobileOpen ? 'translate-x-0' : 'translate-x-full'
         )}
