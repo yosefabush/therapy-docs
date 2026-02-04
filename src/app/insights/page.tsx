@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Sidebar } from '@/components/layout/Sidebar';
+import { Sidebar, MobileMenuProvider, useMobileMenu } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
+import { BottomNav } from '@/components/layout/BottomNav';
 import { Card, Badge } from '@/components/ui';
 import { therapistRoleLabels } from '@/lib/mock-data';
 import { useAuthRedirect, useMyPatients } from '@/lib/hooks';
@@ -43,7 +44,9 @@ const GapIcon = () => (
   </div>
 );
 
-export default function InsightsPage() {
+function InsightsPageContent() {
+  const { toggle: toggleMobileMenu } = useMobileMenu();
+
   // Auth and patients
   const { user: currentUser, loading: userLoading } = useAuthRedirect();
   const { patients: myPatients, loading: patientsLoading } = useMyPatients(currentUser?.id);
@@ -179,20 +182,21 @@ export default function InsightsPage() {
   const gapsCount = insights?.treatmentGaps.length || 0;
 
   return (
-    <div className="min-h-screen bg-warm-50">
+    <div className="min-h-screen bg-warm-50 overflow-x-hidden">
       <Sidebar user={{
         name: currentUser.name,
         role: therapistRoleLabels[currentUser.therapistRole!],
         organization: currentUser.organization,
       }} />
 
-      <main className="mr-64">
+      <main className="md:mr-64 pb-20 md:pb-0">
         <Header
           title="תובנות AI"
           subtitle="ניתוח אוטומטי של דפוסים ומגמות"
+          onMobileMenuToggle={toggleMobileMenu}
         />
 
-        <div className="p-8">
+        <div className="p-4 sm:p-6 lg:p-8">
           {/* Patient Selector */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-clinical-700 mb-2">
@@ -213,7 +217,7 @@ export default function InsightsPage() {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
             <Card className={`text-center ${riskCount > 0 ? 'border-red-200 bg-red-50' : ''}`}>
               <div className="flex flex-col items-center">
                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-3 ${riskCount > 0 ? 'bg-red-100' : 'bg-sage-100'}`}>
@@ -321,7 +325,7 @@ export default function InsightsPage() {
                   יצירה מחדש
                 </button>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 <PatientInsightCard
                   title="דפוסים"
                   icon={<PatternIcon />}
@@ -355,6 +359,18 @@ export default function InsightsPage() {
           )}
         </div>
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <BottomNav />
     </div>
+  );
+}
+
+// Main export wraps content with MobileMenuProvider
+export default function InsightsPage() {
+  return (
+    <MobileMenuProvider>
+      <InsightsPageContent />
+    </MobileMenuProvider>
   );
 }

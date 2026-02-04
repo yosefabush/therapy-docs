@@ -3,7 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { Sidebar } from '@/components/layout/Sidebar';
+import { Sidebar, MobileMenuProvider, useMobileMenu } from '@/components/layout/Sidebar';
+import { Header } from '@/components/layout/Header';
+import { BottomNav } from '@/components/layout/BottomNav';
 import { Card, Button, Badge, ProgressBar, Tabs, Avatar, Modal } from '@/components/ui';
 import { SessionList } from '@/components/sessions/SessionList';
 import { ReportGenerator, ReportCard } from '@/components/reports/ReportGenerator';
@@ -15,7 +17,8 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
 import type { PatientInsights } from '@/types';
 
-export default function PatientDetailPage() {
+function PatientDetailPageContent() {
+  const { toggle: toggleMobileMenu } = useMobileMenu();
   const params = useParams();
   const patientId = params.id as string;
   const router = useRouter();
@@ -98,18 +101,28 @@ export default function PatientDetailPage() {
     : 0;
 
   return (
-    <div className="min-h-screen bg-warm-50">
+    <div className="min-h-screen bg-warm-50 overflow-x-hidden">
       <Sidebar user={{
         name: currentUser.name,
         role: therapistRoleLabels[currentUser.therapistRole!],
         organization: currentUser.organization,
       }} />
 
-      <main className="mr-64">
+      <main className="md:mr-64 overflow-x-hidden pb-20 md:pb-0">
         {/* Custom Header with Patient Info */}
-        <div className="sticky top-0 z-40 bg-white border-b border-sage-100">
-          <div className="px-8 py-4">
+        <div className="sticky top-0 z-30 bg-white border-b border-sage-100">
+          <div className="px-4 sm:px-6 lg:px-8 py-4">
+            {/* Mobile menu button and breadcrumb */}
             <div className="flex items-center gap-2 text-sm text-clinical-500 mb-2">
+              <button
+                onClick={toggleMobileMenu}
+                className="md:hidden p-2 -mr-2 rounded-lg text-clinical-500 hover:bg-sage-50 hover:text-sage-700 transition-colors"
+                aria-label="Open menu"
+              >
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
               <Link href="/patients" className="hover:text-sage-600">מטופלים</Link>
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
@@ -117,61 +130,61 @@ export default function PatientDetailPage() {
               <span className="text-clinical-700">{patient.firstName} {patient.lastName}</span>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3 sm:gap-4">
                 <Avatar name={`${patient.firstName} ${patient.lastName}`} size="lg" />
                 <div>
-                  <div className="flex items-center gap-2">
-                    <h1 className="text-2xl font-semibold text-clinical-900" style={{ fontFamily: '"Crimson Pro", Georgia, serif' }}>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h1 className="text-xl sm:text-2xl font-semibold text-clinical-900" style={{ fontFamily: '"Crimson Pro", Georgia, serif' }}>
                       {patient.firstName} {patient.lastName}
                     </h1>
                     <Badge variant={patient.status === 'active' ? 'success' : 'sage'}>
                       {patient.status}
                     </Badge>
                   </div>
-                  <p className="text-clinical-500">{patient.primaryDiagnosis || 'אין אבחנה'}</p>
+                  <p className="text-clinical-500 text-sm sm:text-base">{patient.primaryDiagnosis || 'אין אבחנה'}</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <Button variant="secondary" onClick={() => setShowEditPatient(true)}>
-                  <svg className="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                <Button variant="secondary" onClick={() => setShowEditPatient(true)} className="flex-1 sm:flex-none">
+                  <svg className="w-4 h-4 ml-1 sm:ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
-                  עריכה
+                  <span className="hidden sm:inline">עריכה</span>
                 </Button>
-                <Button variant="primary" onClick={() => setShowNewSession(true)}>
-                  <svg className="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <Button variant="primary" onClick={() => setShowNewSession(true)} className="flex-1 sm:flex-none">
+                  <svg className="w-4 h-4 ml-1 sm:ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
-                  מפגש חדש
+                  <span className="hidden sm:inline">מפגש חדש</span>
                 </Button>
               </div>
             </div>
           </div>
 
-          <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} className="px-8" />
+          <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} className="px-4 sm:px-6 lg:px-8" />
         </div>
 
-        <div className="p-8">
+        <div className="p-4 sm:p-6 lg:p-8">
           {activeTab === 'overview' && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
               {/* Stats */}
-              <div className="lg:col-span-2 space-y-6">
-                <div className="grid grid-cols-3 gap-4">
+              <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                   <Card>
                     <p className="text-sm text-clinical-500">סה&quot;כ מפגשים</p>
-                    <p className="text-3xl font-semibold text-clinical-900 mt-1">{sessions.length}</p>
+                    <p className="text-2xl sm:text-3xl font-semibold text-clinical-900 mt-1">{sessions.length}</p>
                     <p className="text-xs text-clinical-400 mt-1">{completedSessions.length} הושלמו</p>
                   </Card>
                   <Card>
                     <p className="text-sm text-clinical-500">התקדמות בטיפול</p>
-                    <p className="text-3xl font-semibold text-clinical-900 mt-1">{avgProgress}%</p>
+                    <p className="text-2xl sm:text-3xl font-semibold text-clinical-900 mt-1">{avgProgress}%</p>
                     <ProgressBar value={avgProgress} className="mt-2" />
                   </Card>
                   <Card>
                     <p className="text-sm text-clinical-500">קרובים</p>
-                    <p className="text-3xl font-semibold text-clinical-900 mt-1">{upcomingSessions.length}</p>
+                    <p className="text-2xl sm:text-3xl font-semibold text-clinical-900 mt-1">{upcomingSessions.length}</p>
                     <p className="text-xs text-clinical-400 mt-1">מפגשים מתוזמנים</p>
                   </Card>
                 </div>
@@ -426,7 +439,19 @@ export default function PatientDetailPage() {
           }}
         />
       </Modal>
+
+      {/* Mobile Bottom Navigation */}
+      <BottomNav />
     </div>
+  );
+}
+
+// Main export wraps content with MobileMenuProvider
+export default function PatientDetailPage() {
+  return (
+    <MobileMenuProvider>
+      <PatientDetailPageContent />
+    </MobileMenuProvider>
   );
 }
 
@@ -500,7 +525,7 @@ function EditPatientForm({ patient, onClose, onSaved }: EditPatientFormProps) {
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-clinical-700 mb-1.5">תאריך לידה</label>
           <input
@@ -535,7 +560,7 @@ function EditPatientForm({ patient, onClose, onSaved }: EditPatientFormProps) {
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-clinical-700 mb-1.5">מקור הפניה</label>
           <input

@@ -52,77 +52,92 @@ export function SessionList({ sessions, therapists, patientNames, showPatient = 
 
         return (
           <Link key={session.id} href={`/sessions/${session.id}`}>
-            <Card 
-              hover 
+            <Card
+              hover
               padding="none"
               className="animate-in opacity-0"
               style={{ animationDelay: `${index * 0.05}s`, animationFillMode: 'forwards' }}
             >
-              <div className="p-4">
-                <div className="flex items-start gap-4">
-                  {/* Time Block */}
-                  <div className="w-20 flex-shrink-0 text-center">
-                    <div className="text-xs font-medium text-clinical-500 tracking-wide">
-                      {new Intl.DateTimeFormat('he-IL', { weekday: 'short' }).format(new Date(session.scheduledAt))}
-                    </div>
-                    <div className="text-2xl font-semibold text-clinical-900">
-                      {new Intl.DateTimeFormat('he-IL', { day: 'numeric' }).format(new Date(session.scheduledAt))}
-                    </div>
-                    <div className="text-xs text-clinical-500">
-                      {new Intl.DateTimeFormat('he-IL', { month: 'short' }).format(new Date(session.scheduledAt))}
-                    </div>
-                  </div>
-
-                  {/* Session Details */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-medium text-clinical-900">
-                        {sessionTypeLabels[session.sessionType]}
-                      </h3>
-                      <Badge variant={statusConfig.variant}>{statusConfig.label}</Badge>
-                    </div>
-
-                    {showPatient && patientNames && (
-                      <p className="text-sm text-sage-700 font-medium mb-1">
-                        מטופל: {patientNames[session.patientId] || session.patientId}
-                      </p>
-                    )}
-
-                    <div className="flex items-center gap-4 text-sm text-clinical-500">
-                      <span className="flex items-center gap-1">
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        {new Intl.DateTimeFormat('he-IL', { hour: 'numeric', minute: '2-digit' }).format(new Date(session.scheduledAt))}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        {session.location === 'in_person' ? 'פנים אל פנים' : session.location === 'telehealth' ? 'טלה-בריאות' : 'ביקור בית'}
-                      </span>
-                      <span>{formatDuration(session.duration)}</span>
-                    </div>
-                  </div>
-
-                  {/* Therapist */}
-                  {therapist && (
-                    <div className="flex items-center gap-2">
-                      <Avatar name={therapist.name} size="sm" />
-                      <div className="text-right">
-                        <p className="text-sm font-medium text-clinical-900">{therapist.name}</p>
-                        <p className="text-xs text-clinical-500">
-                          {therapistRoleLabels[session.therapistRole]}
-                        </p>
+              <div className="p-3 sm:p-4">
+                <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
+                  <div className="flex items-start gap-3 sm:gap-4 min-w-[320px]">
+                    {/* Time Block */}
+                    <div className="w-14 sm:w-20 flex-shrink-0 text-center">
+                      <div className="text-xs font-medium text-clinical-500 tracking-wide">
+                        {new Intl.DateTimeFormat('he-IL', { weekday: 'short' }).format(new Date(session.scheduledAt))}
+                      </div>
+                      <div className="text-xl sm:text-2xl font-semibold text-clinical-900">
+                        {new Intl.DateTimeFormat('he-IL', { day: 'numeric' }).format(new Date(session.scheduledAt))}
+                      </div>
+                      <div className="text-xs text-clinical-500">
+                        {new Intl.DateTimeFormat('he-IL', { month: 'short' }).format(new Date(session.scheduledAt))}
                       </div>
                     </div>
-                  )}
 
-                  {/* Arrow */}
-                  <svg className="w-5 h-5 text-clinical-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
-                  </svg>
+                    {/* Session Details */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <h3 className="font-medium text-clinical-900 text-sm sm:text-base">
+                          {sessionTypeLabels[session.sessionType]}
+                        </h3>
+                        <Badge variant={statusConfig.variant}>{statusConfig.label}</Badge>
+                      </div>
+
+                      {showPatient && patientNames && (
+                        <p className="text-sm text-sage-700 font-medium mb-1 truncate">
+                          מטופל: {patientNames[session.patientId] || session.patientId}
+                        </p>
+                      )}
+
+                      <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-clinical-500 flex-wrap">
+                        <span className="flex items-center gap-1">
+                          <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          {new Intl.DateTimeFormat('he-IL', { hour: 'numeric', minute: '2-digit' }).format(new Date(session.scheduledAt))}
+                        </span>
+                        <span className="hidden sm:flex items-center gap-1">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                          {session.location === 'in_person' ? 'פנים אל פנים' : session.location === 'telehealth' ? 'טלה-בריאות' : 'ביקור בית'}
+                        </span>
+                        <span>{formatDuration(session.duration)}</span>
+                      </div>
+
+                      {/* Therapist - shown inline on mobile */}
+                      {therapist && (
+                        <div className="flex sm:hidden items-center gap-2 mt-2 pt-2 border-t border-sage-100">
+                          <Avatar name={therapist.name} size="sm" />
+                          <div className="text-right min-w-0">
+                            <p className="text-xs font-medium text-clinical-900 truncate">{therapist.name}</p>
+                            <p className="text-xs text-clinical-500 truncate">
+                              {therapistRoleLabels[session.therapistRole]}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Therapist - hidden on mobile, shown on sm+ */}
+                    {therapist && (
+                      <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
+                        <Avatar name={therapist.name} size="sm" />
+                        <div className="text-right">
+                          <p className="text-sm font-medium text-clinical-900">{therapist.name}</p>
+                          <p className="text-xs text-clinical-500">
+                            {therapistRoleLabels[session.therapistRole]}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Arrow */}
+                    <svg className="w-5 h-5 text-clinical-400 flex-shrink-0 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
                 </div>
 
                 {/* Session Summary (if completed) */}
@@ -211,58 +226,62 @@ export function TodaySchedule({ sessions, therapists, patientNames, onSessionCli
             href={`/sessions/${session.id}`}
             onClick={(e) => handleClick(e, session)}
           >
-            <div className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
+            <div className={`rounded-lg transition-all ${
               isNext ? 'bg-sage-100 border border-sage-200' :
               isPast && session.status !== 'completed' ? 'bg-clinical-50' : 'hover:bg-sage-50'
             } ${canChangeStatus ? 'cursor-pointer' : ''}`}>
-              <div className="text-right w-16 flex-shrink-0">
-                <span className={`text-sm font-medium ${isNext ? 'text-sage-700' : 'text-clinical-600'}`}>
-                  {new Intl.DateTimeFormat('he-IL', { hour: 'numeric', minute: '2-digit' }).format(sessionTime)}
-                </span>
-              </div>
-
-              <div className={`w-1 h-10 rounded-full ${
-                session.status === 'completed' ? 'bg-green-400' :
-                session.status === 'in_progress' ? 'bg-amber-400' :
-                session.status === 'no_show' ? 'bg-red-400' :
-                session.status === 'cancelled' ? 'bg-gray-400' :
-                isNext ? 'bg-sage-500' : 'bg-clinical-200'
-              }`} />
-
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-2 flex-wrap">
-                  <p className={`text-sm font-semibold ${isNext ? 'text-sage-900' : 'text-clinical-900'}`}>
-                    {sessionTypeLabels[session.sessionType]}
-                  </p>
-                  <Badge variant={statusConfig.variant}>{statusConfig.label}</Badge>
-                  {patientNames && (
-                    <span className="text-xs font-bold text-sage-700 bg-sage-50 px-2 py-1 rounded border border-sage-200">
-                      {patientNames[session.patientId] || session.patientId}
+              <div className="overflow-x-auto">
+                <div className="flex items-center gap-3 p-3 min-w-[300px]">
+                  <div className="text-right w-16 flex-shrink-0">
+                    <span className={`text-sm font-medium ${isNext ? 'text-sage-700' : 'text-clinical-600'}`}>
+                      {new Intl.DateTimeFormat('he-IL', { hour: 'numeric', minute: '2-digit' }).format(sessionTime)}
                     </span>
+                  </div>
+
+                  <div className={`w-1 h-10 rounded-full flex-shrink-0 ${
+                    session.status === 'completed' ? 'bg-green-400' :
+                    session.status === 'in_progress' ? 'bg-amber-400' :
+                    session.status === 'no_show' ? 'bg-red-400' :
+                    session.status === 'cancelled' ? 'bg-gray-400' :
+                    isNext ? 'bg-sage-500' : 'bg-clinical-200'
+                  }`} />
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                      <p className={`text-sm font-semibold ${isNext ? 'text-sage-900' : 'text-clinical-900'}`}>
+                        {sessionTypeLabels[session.sessionType]}
+                      </p>
+                      <Badge variant={statusConfig.variant}>{statusConfig.label}</Badge>
+                      {patientNames && (
+                        <span className="text-xs font-bold text-sage-700 bg-sage-50 px-2 py-1 rounded border border-sage-200">
+                          {patientNames[session.patientId] || session.patientId}
+                        </span>
+                      )}
+                    </div>
+                    {therapist && (
+                      <p className="text-xs text-clinical-500">
+                        {therapistRoleLabels[session.therapistRole]}
+                      </p>
+                    )}
+                  </div>
+
+                  {session.status === 'completed' && (
+                    <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  )}
+
+                  {session.status === 'no_show' && (
+                    <svg className="w-5 h-5 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                  )}
+
+                  {isNext && session.status === 'scheduled' && (
+                    <Badge variant="sage">הבא</Badge>
                   )}
                 </div>
-                {therapist && (
-                  <p className="text-xs text-clinical-500">
-                    {therapistRoleLabels[session.therapistRole]}
-                  </p>
-                )}
               </div>
-
-              {session.status === 'completed' && (
-                <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-              )}
-
-              {session.status === 'no_show' && (
-                <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-              )}
-
-              {isNext && session.status === 'scheduled' && (
-                <Badge variant="sage">הבא</Badge>
-              )}
             </div>
           </Link>
         );

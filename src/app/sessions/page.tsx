@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { Sidebar } from '@/components/layout/Sidebar';
+import { Sidebar, MobileMenuProvider, useMobileMenu } from '@/components/layout/Sidebar';
 import { Header, QuickActionButton } from '@/components/layout/Header';
+import { BottomNav } from '@/components/layout/BottomNav';
 import { Card, Button, Select, Tabs, Modal } from '@/components/ui';
 import { SessionList } from '@/components/sessions/SessionList';
 import { NewSessionForm } from '@/components/sessions/NewSessionForm';
@@ -11,7 +12,8 @@ import { useAuthRedirect, useMyPatients, useMySessions, useUsers } from '@/lib/h
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
 
-export default function SessionsPage() {
+function SessionsPageContent() {
+  const { toggle: toggleMobileMenu } = useMobileMenu();
   const [activeTab, setActiveTab] = useState('upcoming');
   const [showNewSession, setShowNewSession] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>('');
@@ -140,17 +142,18 @@ export default function SessionsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-warm-50">
+    <div className="min-h-screen bg-warm-50 overflow-x-hidden">
       <Sidebar user={{
         name: currentUser.name,
         role: therapistRoleLabels[currentUser.therapistRole!],
         organization: currentUser.organization,
       }} />
 
-      <main className="mr-64">
+      <main className="md:mr-64 pb-20 md:pb-0">
         <Header
           title="מפגשים"
           subtitle={`${mySessions.length} מפגשים בסה"כ`}
+          onMobileMenuToggle={toggleMobileMenu}
           actions={
             <QuickActionButton
               label="מפגש חדש"
@@ -164,9 +167,9 @@ export default function SessionsPage() {
           }
         />
 
-        <div className="p-8">
+        <div className="p-4 sm:p-6 lg:p-8">
           {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
             <Card className="text-center">
               <div className="flex flex-col items-center">
                 <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center mb-3">
@@ -215,13 +218,13 @@ export default function SessionsPage() {
 
           {/* Filters */}
           <Card className="mb-6">
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
               <div className="flex-1">
                 <input
                   type="date"
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
-                  className="px-4 py-2.5 rounded-lg border border-sage-200 bg-white text-clinical-900 focus:outline-none focus:ring-2 focus:ring-sage-500"
+                  className="w-full px-4 py-2.5 rounded-lg border border-sage-200 bg-white text-clinical-900 focus:outline-none focus:ring-2 focus:ring-sage-500"
                   placeholder="סינון לפי תאריך"
                 />
               </div>
@@ -232,10 +235,10 @@ export default function SessionsPage() {
                   { value: 'telehealth', label: 'טלה-בריאות' },
                   { value: 'home_visit', label: 'ביקור בית' },
                 ]}
-                className="w-40"
+                className="w-full sm:w-40"
               />
               {selectedDate && (
-                <Button variant="ghost" size="sm" onClick={() => setSelectedDate('')}>
+                <Button variant="ghost" size="sm" onClick={() => setSelectedDate('')} className="w-full sm:w-auto">
                   נקה סינון
                 </Button>
               )}
@@ -284,6 +287,18 @@ export default function SessionsPage() {
           }}
         />
       </Modal>
+
+      {/* Mobile Bottom Navigation */}
+      <BottomNav />
     </div>
+  );
+}
+
+// Main export wraps content with MobileMenuProvider
+export default function SessionsPage() {
+  return (
+    <MobileMenuProvider>
+      <SessionsPageContent />
+    </MobileMenuProvider>
   );
 }

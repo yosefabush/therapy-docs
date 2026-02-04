@@ -105,7 +105,7 @@ export function NewSessionForm({ patients, currentUserId, therapistRole, onClose
         </select>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-clinical-700 mb-1.5">תאריך</label>
           <input
@@ -128,7 +128,7 @@ export function NewSessionForm({ patients, currentUserId, therapistRole, onClose
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-clinical-700 mb-1.5">משך (דקות)</label>
           <select

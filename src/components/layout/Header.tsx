@@ -1,20 +1,29 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui';
 import { useNotifications } from '@/lib/hooks';
 import { SearchModal } from './SearchModal';
 import { Notification } from '@/types';
 
+// Import mobile menu context type (we'll check for it dynamically)
+interface MobileMenuContextType {
+  isOpen: boolean;
+  open: () => void;
+  close: () => void;
+  toggle: () => void;
+}
+
 interface HeaderProps {
   title: string;
   subtitle?: string;
   actions?: React.ReactNode;
   onSessionNotificationClick?: (sessionId: string, notificationId: string, markAsRead: () => void) => void;
+  onMobileMenuToggle?: () => void;
 }
 
-export function Header({ title, subtitle, actions, onSessionNotificationClick }: HeaderProps) {
+export function Header({ title, subtitle, actions, onSessionNotificationClick, onMobileMenuToggle }: HeaderProps) {
   const router = useRouter();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -118,28 +127,41 @@ export function Header({ title, subtitle, actions, onSessionNotificationClick }:
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-warm-50/95 backdrop-blur-sm border-b border-sage-100">
-        <div className="px-8 py-4">
-          <div className="flex items-center justify-between gap-8">
+      <header className="sticky top-0 z-30 bg-warm-50/95 backdrop-blur-sm border-b border-sage-100">
+        <div className="px-4 md:px-8 py-4">
+          <div className="flex items-center justify-between gap-4 md:gap-8">
+            {/* Mobile Menu Button */}
+            {onMobileMenuToggle && (
+              <button
+                onClick={onMobileMenuToggle}
+                className="md:hidden p-2 rounded-lg text-clinical-500 hover:bg-sage-50 hover:text-sage-700 transition-colors"
+                aria-label="Open menu"
+              >
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+            )}
+
             {/* Title Section */}
-            <div>
+            <div className="flex-1 min-w-0">
               <h1
-                className="text-2xl font-semibold text-clinical-900"
+                className="text-lg md:text-2xl font-semibold text-clinical-900 truncate"
                 style={{ fontFamily: '"David Libre", Georgia, serif' }}
               >
                 {title}
               </h1>
               {subtitle && (
-                <p className="text-sm text-clinical-500 mt-0.5">{subtitle}</p>
+                <p className="text-sm text-clinical-500 mt-0.5 truncate hidden sm:block">{subtitle}</p>
               )}
             </div>
 
             {/* Search & Actions */}
-            <div className="flex items-center gap-4">
-              {/* Global Search Button */}
+            <div className="flex items-center gap-2 md:gap-4">
+              {/* Global Search Button - Full on desktop, icon only on mobile */}
               <button
                 onClick={() => setIsSearchOpen(true)}
-                className="relative w-64 pr-10 pl-4 py-2 rounded-lg border border-sage-200 bg-white text-sm text-clinical-400 text-right hover:border-sage-300 transition-colors cursor-pointer"
+                className="hidden md:flex relative w-64 pr-10 pl-4 py-2 rounded-lg border border-sage-200 bg-white text-sm text-clinical-400 text-right hover:border-sage-300 transition-colors cursor-pointer"
               >
                 <svg
                   className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-clinical-400"
@@ -158,6 +180,16 @@ export function Header({ title, subtitle, actions, onSessionNotificationClick }:
                 <kbd className="absolute left-3 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center px-1.5 py-0.5 rounded bg-sage-100 text-xs text-clinical-500 font-mono">
                   ⌘K
                 </kbd>
+              </button>
+              {/* Mobile search icon */}
+              <button
+                onClick={() => setIsSearchOpen(true)}
+                className="md:hidden p-2 rounded-lg text-clinical-500 hover:bg-sage-50 hover:text-sage-700 transition-colors"
+                aria-label="Search"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
               </button>
 
               {/* Notifications */}
@@ -183,7 +215,7 @@ export function Header({ title, subtitle, actions, onSessionNotificationClick }:
 
                 {/* Notifications Dropdown */}
                 {isNotificationsOpen && (
-                  <div className="absolute left-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-sage-200 overflow-hidden z-50">
+                  <div className="fixed md:absolute left-4 right-4 md:left-0 md:right-auto top-16 md:top-auto md:mt-2 w-auto md:w-80 bg-white rounded-xl shadow-lg border border-sage-200 overflow-hidden z-50">
                     {/* Header */}
                     <div className="px-4 py-3 border-b border-sage-100 flex items-center justify-between">
                       <h3 className="text-sm font-medium text-clinical-900">התראות</h3>
@@ -258,8 +290,10 @@ export function Header({ title, subtitle, actions, onSessionNotificationClick }:
                 )}
               </div>
 
-              {/* Quick Actions */}
-              {actions}
+              {/* Quick Actions - hidden on mobile, shown on md+ */}
+              <div className="hidden md:flex items-center gap-4">
+                {actions}
+              </div>
             </div>
           </div>
         </div>

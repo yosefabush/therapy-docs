@@ -1,10 +1,17 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { ClientProviders } from '@/lib/contexts/ClientProviders';
 
 export const metadata: Metadata = {
   title: 'TherapyDocs | מערכת תיעוד קליני',
   description: 'מערכת תיעוד טיפולי מאובטחת ואינטואיטיבית לאנשי מקצוע בתחום הבריאות',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({

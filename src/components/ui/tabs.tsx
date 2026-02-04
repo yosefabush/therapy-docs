@@ -62,14 +62,14 @@ interface LegacyTabsProps {
 
 function LegacyTabs({ tabs, activeTab, onChange, className }: LegacyTabsProps) {
   return (
-    <div className={cn('border-b border-sage-200', className)}>
-      <nav className="flex gap-6" aria-label="Tabs">
+    <div className={cn('border-b border-sage-200 -mx-4 sm:mx-0', className)}>
+      <nav className="flex gap-4 sm:gap-6 overflow-x-auto scrollbar-hide px-4 sm:px-0" aria-label="Tabs">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => onChange(tab.id)}
             className={cn(
-              'py-3 px-1 border-b-2 font-medium text-sm transition-colors',
+              'py-3 px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex-shrink-0',
               activeTab === tab.id
                 ? 'border-sage-600 text-sage-700'
                 : 'border-transparent text-clinical-500 hover:text-clinical-700 hover:border-sage-300'
@@ -78,7 +78,7 @@ function LegacyTabs({ tabs, activeTab, onChange, className }: LegacyTabsProps) {
             {tab.label}
             {tab.count !== undefined && (
               <span className={cn(
-                'ml-2 px-2 py-0.5 rounded-full text-xs',
+                'mr-2 px-2 py-0.5 rounded-full text-xs',
                 activeTab === tab.id ? 'bg-sage-100 text-sage-700' : 'bg-clinical-100 text-clinical-600'
               )}>
                 {tab.count}

@@ -1,11 +1,43 @@
 'use client';
 
-import React from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { clsx } from 'clsx';
 import { Avatar } from '@/components/ui';
 import { clearAuthUser } from '@/lib/hooks';
+
+// Context for mobile menu state
+interface MobileMenuContextType {
+  isOpen: boolean;
+  open: () => void;
+  close: () => void;
+  toggle: () => void;
+}
+
+const MobileMenuContext = createContext<MobileMenuContextType | null>(null);
+
+export function useMobileMenu() {
+  const context = useContext(MobileMenuContext);
+  if (!context) {
+    throw new Error('useMobileMenu must be used within a MobileMenuProvider');
+  }
+  return context;
+}
+
+export function MobileMenuProvider({ children }: { children: React.ReactNode }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const open = useCallback(() => setIsOpen(true), []);
+  const close = useCallback(() => setIsOpen(false), []);
+  const toggle = useCallback(() => setIsOpen(prev => !prev), []);
+
+  return (
+    <MobileMenuContext.Provider value={{ isOpen, open, close, toggle }}>
+      {children}
+    </MobileMenuContext.Provider>
+  );
+}
 
 interface SidebarProps {
   user: {
@@ -20,11 +52,26 @@ export function Sidebar({ user, onLogout }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
+  // Try to use mobile menu context if available
+  let mobileMenuContext: MobileMenuContextType | null = null;
+  try {
+    mobileMenuContext = useContext(MobileMenuContext);
+  } catch {
+    // Context not available, that's fine for desktop-only views
+  }
+
+  const closeMobileMenu = () => {
+    if (mobileMenuContext) {
+      mobileMenuContext.close();
+    }
+  };
+
   const handleLogout = () => {
     clearAuthUser();
     if (onLogout) {
       onLogout();
     }
+    closeMobileMenu();
     router.push('/login');
   };
 
@@ -98,11 +145,15 @@ export function Sidebar({ user, onLogout }: SidebarProps) {
     },
   ];
 
-  return (
-    <aside className="fixed inset-y-0 right-0 w-64 bg-white border-l border-sage-100 flex flex-col">
+  const handleNavClick = () => {
+    closeMobileMenu();
+  };
+
+  const sidebarContent = (
+    <>
       {/* Logo */}
       <div className="px-6 py-5 border-b border-sage-100">
-        <Link href="/" className="flex items-center gap-3">
+        <Link href="/" className="flex items-center gap-3" onClick={handleNavClick}>
           <div className="w-10 h-10 rounded-xl bg-sage-600 flex items-center justify-center">
             <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
@@ -121,11 +172,12 @@ export function Sidebar({ user, onLogout }: SidebarProps) {
       <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
         {navigation.map((item) => {
           const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
-          
+
           return (
             <Link
               key={item.name}
               href={item.href}
+              onClick={handleNavClick}
               className={clsx(
                 'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
                 isActive
@@ -145,11 +197,12 @@ export function Sidebar({ user, onLogout }: SidebarProps) {
           </p>
           {secondaryNavigation.map((item) => {
             const isActive = pathname === item.href;
-            
+
             return (
               <Link
                 key={item.name}
                 href={item.href}
+                onClick={handleNavClick}
                 className={clsx(
                   'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
                   isActive
@@ -194,6 +247,47 @@ export function Sidebar({ user, onLogout }: SidebarProps) {
           <span className="text-xs font-medium text-green-700">תואם HIPAA</span>
         </div>
       </div>
-    </aside>
+    </>
+  );
+
+  const isMobileOpen = mobileMenuContext?.isOpen ?? false;
+
+  return (
+    <>
+      {/* Desktop Sidebar - hidden on mobile */}
+      <aside className="hidden md:flex fixed inset-y-0 right-0 w-64 bg-white border-l border-sage-100 flex-col z-40">
+        {sidebarContent}
+      </aside>
+
+      {/* Mobile Sidebar Overlay */}
+      {isMobileOpen && (
+        <div
+          className="fixed inset-0 bg-clinical-900/50 backdrop-blur-sm z-40 md:hidden"
+          onClick={closeMobileMenu}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Mobile Sidebar - slide-out panel */}
+      <aside
+        className={clsx(
+          'fixed inset-y-0 right-0 w-64 bg-white border-l border-sage-100 flex flex-col z-50 md:hidden',
+          'transform transition-transform duration-300 ease-in-out',
+          isMobileOpen ? 'translate-x-0' : 'translate-x-full'
+        )}
+      >
+        {/* Close button for mobile */}
+        <button
+          onClick={closeMobileMenu}
+          className="absolute top-4 left-4 p-2 rounded-lg text-clinical-500 hover:bg-sage-50 hover:text-sage-700 transition-colors"
+          aria-label="Close menu"
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        {sidebarContent}
+      </aside>
+    </>
   );
 }

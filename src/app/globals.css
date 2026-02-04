@@ -283,6 +283,20 @@
     text-wrap: balance;
   }
 
+  /* Safe area padding for devices with home indicators (iPhone X+) */
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  /* Hide scrollbar but keep scroll functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari, Opera */
+  }
+
   .animate-in {
     animation: fadeSlideIn 0.4s ease-out forwards;
   }

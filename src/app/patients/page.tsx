@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Sidebar } from '@/components/layout/Sidebar';
+import { Sidebar, MobileMenuProvider, useMobileMenu } from '@/components/layout/Sidebar';
 import { Header, QuickActionButton } from '@/components/layout/Header';
+import { BottomNav } from '@/components/layout/BottomNav';
 import { Card, Button, Select, Tabs, Modal } from '@/components/ui';
 import { PatientList } from '@/components/patients/PatientList';
 import { therapistRoleLabels } from '@/lib/mock-data';
@@ -12,7 +13,8 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
 import { apiClient } from '@/lib/api/client';
 
-export default function PatientsPage() {
+function PatientsPageContent() {
+  const { toggle: toggleMobileMenu } = useMobileMenu();
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showNewPatient, setShowNewPatient] = useState(false);
@@ -61,17 +63,18 @@ export default function PatientsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-warm-50">
+    <div className="min-h-screen bg-warm-50 overflow-x-hidden">
       <Sidebar user={{
         name: currentUser.name,
         role: therapistRoleLabels[currentUser.therapistRole!],
         organization: currentUser.organization,
       }} />
 
-      <main className="mr-64">
+      <main className="md:mr-64 overflow-x-hidden pb-20 md:pb-0">
         <Header
           title="מטופלים"
           subtitle={`${patients.length} מטופלים בסה"כ`}
+          onMobileMenuToggle={toggleMobileMenu}
           actions={
             <QuickActionButton
               label="מטופל חדש"
@@ -85,10 +88,10 @@ export default function PatientsPage() {
           }
         />
 
-        <div className="p-8">
+        <div className="p-4 sm:p-6 lg:p-8">
           {/* Filters */}
           <Card className="mb-6">
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <div className="flex-1">
                 <div className="relative">
                   <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-clinical-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -109,7 +112,7 @@ export default function PatientsPage() {
                   { value: 'name', label: 'שם מטופל' },
                   { value: 'sessions', label: 'הכי הרבה מפגשים' },
                 ]}
-                className="w-48"
+                className="w-full sm:w-48"
               />
             </div>
           </Card>
@@ -143,7 +146,19 @@ export default function PatientsPage() {
           currentUserId={currentUser.id}
         />
       </Modal>
+
+      {/* Mobile Bottom Navigation */}
+      <BottomNav />
     </div>
+  );
+}
+
+// Main export wraps content with MobileMenuProvider
+export default function PatientsPage() {
+  return (
+    <MobileMenuProvider>
+      <PatientsPageContent />
+    </MobileMenuProvider>
   );
 }
 
@@ -275,7 +290,7 @@ function NewPatientForm({ onClose, onPatientAdded, currentUserId }: NewPatientFo
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-clinical-700 mb-1.5">שם פרטי</label>
           <input
@@ -308,7 +323,7 @@ function NewPatientForm({ onClose, onPatientAdded, currentUserId }: NewPatientFo
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-clinical-700 mb-1.5">תאריך לידה</label>
           <input
@@ -356,7 +371,7 @@ function NewPatientForm({ onClose, onPatientAdded, currentUserId }: NewPatientFo
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-clinical-700 mb-1.5">מקור הפניה</label>
           <input

@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Sidebar } from '@/components/layout/Sidebar';
+import { Sidebar, MobileMenuProvider, useMobileMenu } from '@/components/layout/Sidebar';
+import { BottomNav } from '@/components/layout/BottomNav';
 import { Card, Button, Badge, Avatar, Modal } from '@/components/ui';
 import { SessionForm } from '@/components/sessions/SessionForm';
 import { SummaryPanel } from '@/components/sessions/SummaryPanel';
@@ -11,7 +12,8 @@ import { therapistRoleLabels, sessionTypeLabels } from '@/lib/mock-data';
 import { useSession, useCurrentUser, usePatient, useUsers } from '@/lib/hooks';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
-export default function SessionDetailPage() {
+function SessionDetailPageContent() {
+  const { toggle: toggleMobileMenu } = useMobileMenu();
   const params = useParams();
   const router = useRouter();
   const sessionId = params.id as string;
@@ -105,7 +107,7 @@ export default function SessionDetailPage() {
     return (
       <div className="min-h-screen bg-warm-50">
         <Sidebar user={{ name: currentUser.name, role: therapistRoleLabels[currentUser.therapistRole!], organization: currentUser.organization }} />
-        <main className="mr-64 p-8">
+        <main className="md:mr-64 p-4 sm:p-6 lg:p-8 pb-20 md:pb-8">
           <div className="max-w-4xl mx-auto">
             <div className="flex items-center justify-between mb-6">
               <h1 className="text-2xl font-semibold text-clinical-900">עריכת רשומות מפגש</h1>
@@ -129,9 +131,18 @@ export default function SessionDetailPage() {
     <div className="min-h-screen bg-warm-50">
       <Sidebar user={{ name: currentUser.name, role: therapistRoleLabels[currentUser.therapistRole!], organization: currentUser.organization }} />
 
-      <main className="mr-64">
-        <div className="sticky top-0 z-40 bg-white border-b border-sage-100 px-8 py-4">
+      <main className="md:mr-64 pb-20 md:pb-0">
+        <div className="sticky top-0 z-30 bg-white border-b border-sage-100 px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-2 text-sm text-clinical-500 mb-2">
+            <button
+              onClick={toggleMobileMenu}
+              className="md:hidden p-2 -mr-2 rounded-lg text-clinical-500 hover:bg-sage-50 hover:text-sage-700 transition-colors"
+              aria-label="Open menu"
+            >
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
             <Link href="/sessions" className="hover:text-sage-600">מפגשים</Link>
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
@@ -139,34 +150,34 @@ export default function SessionDetailPage() {
             <span className="text-clinical-700">{sessionTypeLabels[session.sessionType]}</span>
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-semibold text-clinical-900" style={{ fontFamily: '"David Libre", Georgia, serif' }}>
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                <h1 className="text-xl sm:text-2xl font-semibold text-clinical-900" style={{ fontFamily: '"David Libre", Georgia, serif' }}>
                   {sessionTypeLabels[session.sessionType]}
                 </h1>
                 <Badge variant={statusConfig.variant}>{statusConfig.label}</Badge>
                 {session.signedAt && <Badge variant="success">✓ חתום</Badge>}
               </div>
-              <p className="text-clinical-500">{formatDateTime(session.scheduledAt)}</p>
+              <p className="text-clinical-500 text-sm sm:text-base">{formatDateTime(session.scheduledAt)}</p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               {session.status === 'completed' && !session.signedAt && (
                 <>
-                  <Button variant="secondary" onClick={() => setIsEditing(true)}>עריכת רשומות</Button>
-                  <Button variant="primary" onClick={() => setShowSignModal(true)}>חתימה והשלמה</Button>
+                  <Button variant="secondary" size="sm" onClick={() => setIsEditing(true)}>עריכת רשומות</Button>
+                  <Button variant="primary" size="sm" onClick={() => setShowSignModal(true)}>חתימה והשלמה</Button>
                 </>
               )}
               {session.status === 'scheduled' && (
-                <Button variant="primary" onClick={() => setIsEditing(true)}>התחל מפגש</Button>
+                <Button variant="primary" size="sm" onClick={() => setIsEditing(true)}>התחל מפגש</Button>
               )}
             </div>
           </div>
         </div>
 
-        <div className="p-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="p-4 sm:p-6 lg:p-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             <div className="lg:col-span-2 space-y-6">
               {/* AI Summary */}
               {session.status === 'completed' && (
@@ -232,30 +243,32 @@ export default function SessionDetailPage() {
               {session.notes.riskAssessment && (
                 <Card className="border-red-200">
                   <h3 className="text-lg font-semibold text-clinical-900 mb-4">הערכת סיכון</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-clinical-500">מחשבות אובדניות</p>
-                      <Badge variant={session.notes.riskAssessment.suicidalIdeation === 'none' ? 'success' : 'danger'}>
-                        {getRiskLabel('suicidalIdeation', session.notes.riskAssessment.suicidalIdeation)}
-                      </Badge>
-                    </div>
-                    <div>
-                      <p className="text-sm text-clinical-500">מחשבות אובדניות</p>
-                      <Badge variant={session.notes.riskAssessment.homicidalIdeation === 'none' ? 'success' : 'danger'}>
-                        {getRiskLabel('homicidalIdeation', session.notes.riskAssessment.homicidalIdeation)}
-                      </Badge>
-                    </div>
-                    <div>
-                      <p className="text-sm text-clinical-500">פגיעה עצמית</p>
-                      <Badge variant={session.notes.riskAssessment.selfHarm === 'none' ? 'success' : 'warning'}>
-                        {getRiskLabel('selfHarm', session.notes.riskAssessment.selfHarm)}
-                      </Badge>
-                    </div>
-                    <div>
-                      <p className="text-sm text-clinical-500">שימוש בחומרים</p>
-                      <Badge variant={session.notes.riskAssessment.substanceUse === 'none' ? 'success' : 'warning'}>
-                        {getRiskLabel('substanceUse', session.notes.riskAssessment.substanceUse)}
-                      </Badge>
+                  <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+                    <div className="grid grid-cols-2 sm:grid-cols-2 gap-4 min-w-[320px]">
+                      <div>
+                        <p className="text-sm text-clinical-500">מחשבות אובדניות</p>
+                        <Badge variant={session.notes.riskAssessment.suicidalIdeation === 'none' ? 'success' : 'danger'}>
+                          {getRiskLabel('suicidalIdeation', session.notes.riskAssessment.suicidalIdeation)}
+                        </Badge>
+                      </div>
+                      <div>
+                        <p className="text-sm text-clinical-500">מחשבות אובדניות</p>
+                        <Badge variant={session.notes.riskAssessment.homicidalIdeation === 'none' ? 'success' : 'danger'}>
+                          {getRiskLabel('homicidalIdeation', session.notes.riskAssessment.homicidalIdeation)}
+                        </Badge>
+                      </div>
+                      <div>
+                        <p className="text-sm text-clinical-500">פגיעה עצמית</p>
+                        <Badge variant={session.notes.riskAssessment.selfHarm === 'none' ? 'success' : 'warning'}>
+                          {getRiskLabel('selfHarm', session.notes.riskAssessment.selfHarm)}
+                        </Badge>
+                      </div>
+                      <div>
+                        <p className="text-sm text-clinical-500">שימוש בחומרים</p>
+                        <Badge variant={session.notes.riskAssessment.substanceUse === 'none' ? 'success' : 'warning'}>
+                          {getRiskLabel('substanceUse', session.notes.riskAssessment.substanceUse)}
+                        </Badge>
+                      </div>
                     </div>
                   </div>
                 </Card>
@@ -343,6 +356,18 @@ export default function SessionDetailPage() {
           </div>
         </div>
       </Modal>
+
+      {/* Mobile Bottom Navigation */}
+      <BottomNav />
     </div>
+  );
+}
+
+// Main export wraps content with MobileMenuProvider
+export default function SessionDetailPage() {
+  return (
+    <MobileMenuProvider>
+      <SessionDetailPageContent />
+    </MobileMenuProvider>
   );
 }

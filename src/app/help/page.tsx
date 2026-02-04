@@ -1,15 +1,17 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Sidebar } from '@/components/layout/Sidebar';
+import { Sidebar, MobileMenuProvider, useMobileMenu } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
+import { BottomNav } from '@/components/layout/BottomNav';
 import { Card, Button, Tabs } from '@/components/ui';
 import { therapistRoleLabels } from '@/lib/mock-data';
 import { useCurrentUser } from '@/lib/hooks';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
 
-export default function HelpPage() {
+function HelpPageContent() {
+  const { toggle: toggleMobileMenu } = useMobileMenu();
   const [activeTab, setActiveTab] = useState('faq');
   const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
 
@@ -101,20 +103,21 @@ export default function HelpPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-warm-50">
+    <div className="min-h-screen bg-warm-50 overflow-x-hidden">
       <Sidebar user={{
         name: currentUser.name,
         role: therapistRoleLabels[currentUser.therapistRole!],
         organization: currentUser.organization,
       }} />
 
-      <main className="mr-64">
+      <main className="md:mr-64 pb-20 md:pb-0">
         <Header
           title="עזרה ותמיכה"
           subtitle="מדריכים, שאלות נפוצות ויצירת קשר"
+          onMobileMenuToggle={toggleMobileMenu}
         />
 
-        <div className="p-8">
+        <div className="p-4 sm:p-6 lg:p-8">
           <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} className="mb-6" />
 
           {activeTab === 'faq' && (
@@ -229,6 +232,18 @@ export default function HelpPage() {
           )}
         </div>
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <BottomNav />
     </div>
+  );
+}
+
+// Main export wraps content with MobileMenuProvider
+export default function HelpPage() {
+  return (
+    <MobileMenuProvider>
+      <HelpPageContent />
+    </MobileMenuProvider>
   );
 }

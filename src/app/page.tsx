@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Sidebar } from '@/components/layout/Sidebar';
+import { Sidebar, MobileMenuProvider, useMobileMenu } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
+import { BottomNav } from '@/components/layout/BottomNav';
 import { Card, Badge, Button, ProgressBar, Modal } from '@/components/ui';
 import { PatientCardCompact } from '@/components/patients/PatientList';
 import { TodaySchedule } from '@/components/sessions/SessionList';
@@ -13,7 +14,9 @@ import { useAuthRedirect, useMyPatients, useMySessions, useMyTreatmentGoals } fr
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Session } from '@/types';
 
-export default function Dashboard() {
+// Inner component that uses mobile menu context
+function DashboardContent() {
+  const { toggle: toggleMobileMenu } = useMobileMenu();
   const [showNewSession, setShowNewSession] = useState(false);
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [pendingNotificationMarkAsRead, setPendingNotificationMarkAsRead] = useState<(() => void) | null>(null);
@@ -80,17 +83,18 @@ export default function Dashboard() {
   const criticalInsights = allInsights.filter(i => i.type === 'risk_indicator');
 
   return (
-    <div className="min-h-screen bg-warm-50">
+    <div className="min-h-screen bg-warm-50 overflow-x-hidden">
       <Sidebar user={{
         name: currentUser.name,
         role: therapistRoleLabels[currentUser.therapistRole!],
         organization: currentUser.organization,
       }} />
 
-      <main className="mr-64">
+      <main className="md:mr-64 pb-20 md:pb-0">
         <Header
           title="לוח בקרה"
           subtitle={`ברוך שובך, ${currentUser.name.split(' ')[0]}`}
+          onMobileMenuToggle={toggleMobileMenu}
           onSessionNotificationClick={(sessionId, notificationId, markAsRead) => {
             // Find the session in our data
             const session = sessions.find(s => s.id === sessionId);
@@ -104,9 +108,9 @@ export default function Dashboard() {
           }}
         />
 
-        <div className="p-8">
+        <div className="p-4 sm:p-6 lg:p-8">
           {/* Stats Row */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
             <Card className="animate-in opacity-0 stagger-1 text-center" style={{ animationFillMode: 'forwards' }}>
               <div className="flex flex-col items-center">
                 <div className="w-12 h-12 rounded-xl bg-sage-100 flex items-center justify-center mb-3">
@@ -115,7 +119,7 @@ export default function Dashboard() {
                   </svg>
                 </div>
                 <p className="text-sm text-clinical-500">מפגשים להיום</p>
-                <p className="text-3xl font-semibold text-clinical-900 mt-1">
+                <p className="text-2xl sm:text-3xl font-semibold text-clinical-900 mt-1">
                   {completedToday}/{todaysSessions.length}
                 </p>
               </div>
@@ -132,7 +136,7 @@ export default function Dashboard() {
                   </svg>
                 </div>
                 <p className="text-sm text-clinical-500">מטופלים פעילים</p>
-                <p className="text-3xl font-semibold text-clinical-900 mt-1">
+                <p className="text-2xl sm:text-3xl font-semibold text-clinical-900 mt-1">
                   {myPatients.filter(p => p.status === 'active').length}
                 </p>
               </div>
@@ -147,7 +151,7 @@ export default function Dashboard() {
                   </svg>
                 </div>
                 <p className="text-sm text-clinical-500">תיעוד ממתין</p>
-                <p className="text-3xl font-semibold text-clinical-900 mt-1">
+                <p className="text-2xl sm:text-3xl font-semibold text-clinical-900 mt-1">
                   {pendingDocumentation}
                 </p>
               </div>
@@ -167,7 +171,7 @@ export default function Dashboard() {
                   </svg>
                 </div>
                 <p className="text-sm text-clinical-500">התראות AI</p>
-                <p className="text-3xl font-semibold text-clinical-900 mt-1">
+                <p className="text-2xl sm:text-3xl font-semibold text-clinical-900 mt-1">
                   {criticalInsights.length}
                 </p>
               </div>
@@ -177,9 +181,9 @@ export default function Dashboard() {
             </Card>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {/* Today's Schedule */}
-            <div className="lg:col-span-2">
+            <div className="md:col-span-2 lg:col-span-2">
               <Card>
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-semibold text-clinical-900" style={{ fontFamily: '"David Libre", Georgia, serif' }}>
@@ -245,29 +249,29 @@ export default function Dashboard() {
                 <h2 className="text-lg font-semibold text-clinical-900 mb-4" style={{ fontFamily: '"David Libre", Georgia, serif' }}>
                   פעולות מהירות
                 </h2>
-                <div className="flex gap-4">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                   <button
                     onClick={() => setShowNewSession(true)}
-                    className="flex-1 flex items-center gap-3 p-4 rounded-lg hover:bg-sage-50 transition-colors border border-sage-100"
+                    className="flex-1 flex items-center gap-3 p-3 sm:p-4 rounded-lg hover:bg-sage-50 transition-colors border border-sage-100"
                   >
-                    <div className="w-10 h-10 rounded-lg bg-sage-100 flex items-center justify-center">
-                      <svg className="w-5 h-5 text-sage-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-sage-100 flex items-center justify-center flex-shrink-0">
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5 text-sage-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                     </div>
                     <span className="text-sm font-medium text-clinical-900">תזמן מפגש חדש</span>
                   </button>
-                  <a href="/reports" className="flex-1 flex items-center gap-3 p-4 rounded-lg hover:bg-sage-50 transition-colors border border-sage-100">
-                    <div className="w-10 h-10 rounded-lg bg-warm-100 flex items-center justify-center">
-                      <svg className="w-5 h-5 text-warm-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <a href="/reports" className="flex-1 flex items-center gap-3 p-3 sm:p-4 rounded-lg hover:bg-sage-50 transition-colors border border-sage-100">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-warm-100 flex items-center justify-center flex-shrink-0">
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5 text-warm-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                     </div>
                     <span className="text-sm font-medium text-clinical-900">צור דוח</span>
                   </a>
-                  <a href="/help" className="flex-1 flex items-center gap-3 p-4 rounded-lg hover:bg-sage-50 transition-colors border border-sage-100">
-                    <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                      <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <a href="/help" className="flex-1 flex items-center gap-3 p-3 sm:p-4 rounded-lg hover:bg-sage-50 transition-colors border border-sage-100">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                       </svg>
                     </div>
@@ -298,7 +302,7 @@ export default function Dashboard() {
                     </a>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-3 flex-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1">
                     {myPatients.slice(0, 4).map(patient => {
                       const patientGoals = goals.filter(g => g.patientId === patient.id);
                       const avgProgress = patientGoals.length > 0
@@ -371,8 +375,17 @@ export default function Dashboard() {
         }}
       />
 
+      {/* Mobile Bottom Navigation */}
+      <BottomNav />
     </div>
   );
 }
 
-
+// Main export wraps content with MobileMenuProvider
+export default function Dashboard() {
+  return (
+    <MobileMenuProvider>
+      <DashboardContent />
+    </MobileMenuProvider>
+  );
+}

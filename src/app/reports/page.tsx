@@ -1,14 +1,16 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Sidebar } from '@/components/layout/Sidebar';
+import { Sidebar, MobileMenuProvider, useMobileMenu } from '@/components/layout/Sidebar';
 import { Header, QuickActionButton } from '@/components/layout/Header';
+import { BottomNav } from '@/components/layout/BottomNav';
 import { Card, Button, Badge, Tabs, Modal } from '@/components/ui';
 import { therapistRoleLabels } from '@/lib/mock-data';
 import { useAuthRedirect, useMyPatients, useMyReports } from '@/lib/hooks';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
-export default function ReportsPage() {
+function ReportsPageContent() {
+  const { toggle: toggleMobileMenu } = useMobileMenu();
   const [activeTab, setActiveTab] = useState('all');
   const [showNewReport, setShowNewReport] = useState(false);
   const [viewingReport, setViewingReport] = useState<string | null>(null);
@@ -185,17 +187,18 @@ export default function ReportsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-warm-50">
+    <div className="min-h-screen bg-warm-50 overflow-x-hidden">
       <Sidebar user={{
         name: currentUser.name,
         role: therapistRoleLabels[currentUser.therapistRole!],
         organization: currentUser.organization,
       }} />
 
-      <main className="mr-64">
+      <main className="md:mr-64 pb-20 md:pb-0">
         <Header
           title="דוחות"
           subtitle={`${reports.length} דוחות בסה"כ`}
+          onMobileMenuToggle={toggleMobileMenu}
           actions={
             <QuickActionButton
               label="דוח חדש"
@@ -209,9 +212,9 @@ export default function ReportsPage() {
           }
         />
 
-        <div className="p-8">
+        <div className="p-4 sm:p-6 lg:p-8">
           {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
             <Card className="text-center">
               <div className="flex flex-col items-center">
                 <div className="w-10 h-10 rounded-lg bg-sage-100 flex items-center justify-center mb-3">
@@ -276,38 +279,40 @@ export default function ReportsPage() {
                 const patient = getPatient(report.patientId);
                 return (
                   <Card key={report.id} hover className="cursor-pointer">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-lg bg-sage-100 flex items-center justify-center">
-                          <svg className="w-6 h-6 text-sage-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-medium text-clinical-900">{getReportTypeLabel(report.reportType)}</h3>
-                            {getStatusBadge(report.status)}
+                    <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+                      <div className="flex items-center justify-between min-w-[500px] sm:min-w-0">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-lg bg-sage-100 flex items-center justify-center flex-shrink-0">
+                            <svg className="w-6 h-6 text-sage-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
                           </div>
-                          <p className="text-sm text-clinical-500">
-                            {patient ? `${patient.firstName} ${patient.lastName}` : 'מטופל'} • {new Intl.DateTimeFormat('he-IL', { dateStyle: 'medium' }).format(new Date(report.dateRange.start))} - {new Intl.DateTimeFormat('he-IL', { dateStyle: 'medium' }).format(new Date(report.dateRange.end))}
-                          </p>
-                          <p className="text-xs text-clinical-400 mt-1">
-                            נוצר: {new Intl.DateTimeFormat('he-IL', { dateStyle: 'medium' }).format(new Date(report.generatedAt))}
-                          </p>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="font-medium text-clinical-900">{getReportTypeLabel(report.reportType)}</h3>
+                              {getStatusBadge(report.status)}
+                            </div>
+                            <p className="text-sm text-clinical-500">
+                              {patient ? `${patient.firstName} ${patient.lastName}` : 'מטופל'} • {new Intl.DateTimeFormat('he-IL', { dateStyle: 'medium' }).format(new Date(report.dateRange.start))} - {new Intl.DateTimeFormat('he-IL', { dateStyle: 'medium' }).format(new Date(report.dateRange.end))}
+                            </p>
+                            <p className="text-xs text-clinical-400 mt-1">
+                              נוצר: {new Intl.DateTimeFormat('he-IL', { dateStyle: 'medium' }).format(new Date(report.generatedAt))}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => setViewingReport(report.id)}>
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => downloadReportAsPDF(report, patient)}>
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                          </svg>
-                        </Button>
+                        <div className="flex items-center gap-2 flex-shrink-0 mr-4">
+                          <Button variant="ghost" size="sm" onClick={() => setViewingReport(report.id)}>
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => downloadReportAsPDF(report, patient)}>
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </Card>
@@ -436,14 +441,16 @@ export default function ReportsPage() {
                     {selectedReport.content.goalsProgress.map((goal: any, index: number) => (
                       <div key={index} className="bg-blue-50 rounded-lg p-4 border border-blue-100">
                         <h4 className="text-sm font-semibold text-clinical-900 mb-2">{goal.goalDescription}</h4>
-                        <div className="grid grid-cols-2 gap-3 text-sm mb-2">
-                          <div>
-                            <p className="text-clinical-500 text-xs mb-1">מצב התחלתי</p>
-                            <p className="text-clinical-700">{goal.initialStatus}</p>
-                          </div>
-                          <div>
-                            <p className="text-clinical-500 text-xs mb-1">מצב נוכחי</p>
-                            <p className="text-clinical-700">{goal.currentStatus}</p>
+                        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+                          <div className="grid grid-cols-2 gap-3 text-sm mb-2 min-w-[280px]">
+                            <div>
+                              <p className="text-clinical-500 text-xs mb-1">מצב התחלתי</p>
+                              <p className="text-clinical-700">{goal.initialStatus}</p>
+                            </div>
+                            <div>
+                              <p className="text-clinical-500 text-xs mb-1">מצב נוכחי</p>
+                              <p className="text-clinical-700">{goal.currentStatus}</p>
+                            </div>
                           </div>
                         </div>
                         {goal.progressPercentage !== undefined && (
@@ -453,7 +460,7 @@ export default function ReportsPage() {
                               <span>{goal.progressPercentage}%</span>
                             </div>
                             <div className="w-full bg-clinical-200 rounded-full h-2">
-                              <div 
+                              <div
                                 className="bg-sage-500 h-2 rounded-full transition-all"
                                 style={{ width: `${goal.progressPercentage}%` }}
                               />
@@ -492,20 +499,24 @@ export default function ReportsPage() {
 
             {/* Report Metadata */}
             <div className="border-t border-sage-100 pt-4 space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-clinical-500">נוצר על ידי:</span>
-                <span className="text-clinical-900 font-medium">{currentUser.name}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-clinical-500">תאריך יצירה:</span>
-                <span className="text-clinical-900">{new Intl.DateTimeFormat('he-IL', { dateStyle: 'long', timeStyle: 'short' }).format(new Date(selectedReport.generatedAt))}</span>
-              </div>
-              {selectedReport.signedAt && (
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-clinical-500">נחתם בתאריך:</span>
-                  <span className="text-clinical-900">{new Intl.DateTimeFormat('he-IL', { dateStyle: 'long', timeStyle: 'short' }).format(new Date(selectedReport.signedAt))}</span>
+              <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+                <div className="min-w-[300px] space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-clinical-500 flex-shrink-0">נוצר על ידי:</span>
+                    <span className="text-clinical-900 font-medium">{currentUser.name}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-clinical-500 flex-shrink-0">תאריך יצירה:</span>
+                    <span className="text-clinical-900">{new Intl.DateTimeFormat('he-IL', { dateStyle: 'long', timeStyle: 'short' }).format(new Date(selectedReport.generatedAt))}</span>
+                  </div>
+                  {selectedReport.signedAt && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-clinical-500 flex-shrink-0">נחתם בתאריך:</span>
+                      <span className="text-clinical-900">{new Intl.DateTimeFormat('he-IL', { dateStyle: 'long', timeStyle: 'short' }).format(new Date(selectedReport.signedAt))}</span>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
 
             {/* Actions */}
@@ -515,6 +526,18 @@ export default function ReportsPage() {
           </div>
         )}
       </Modal>
+
+      {/* Mobile Bottom Navigation */}
+      <BottomNav />
     </div>
+  );
+}
+
+// Main export wraps content with MobileMenuProvider
+export default function ReportsPage() {
+  return (
+    <MobileMenuProvider>
+      <ReportsPageContent />
+    </MobileMenuProvider>
   );
 }
