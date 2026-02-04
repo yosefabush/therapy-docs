@@ -1,0 +1,62 @@
+[
+  {
+    "id": "goal-1",
+    "patientId": "patient-1",
+    "description": "שיפור איכות השינה וקביעת לוח זמנים עקבי לשינה",
+    "targetDate": "2025-03-01T00:00:00.000Z",
+    "status": "active",
+    "progress": 60,
+    "measurementCriteria": "שינה 7-8 שעות בלילה, 5+ לילות בשבוע",
+    "createdAt": "2024-01-15T00:00:00.000Z",
+    "updatedAt": "2024-12-20T00:00:00.000Z",
+    "createdBy": "user-1"
+  },
+  {
+    "id": "goal-2",
+    "patientId": "patient-1",
+    "description": "הגברת מעורבות חברתית והפחתת בידוד",
+    "targetDate": "2025-04-01T00:00:00.000Z",
+    "status": "active",
+    "progress": 40,
+    "measurementCriteria": "השתתפות ב-2+ פעילויות חברתיות בשבוע",
+    "createdAt": "2024-01-15T00:00:00.000Z",
+    "updatedAt": "2024-12-20T00:00:00.000Z",
+    "createdBy": "user-1"
+  },
+  {
+    "id": "goal-3",
+    "patientId": "patient-1",
+    "description": "השגת יציבות דיור",
+    "targetDate": "2025-06-01T00:00:00.000Z",
+    "status": "active",
+    "progress": 30,
+    "measurementCriteria": "הבטחת הסדר דיור יציב",
+    "createdAt": "2024-02-10T00:00:00.000Z",
+    "updatedAt": "2024-12-22T00:00:00.000Z",
+    "createdBy": "user-2"
+  },
+  {
+    "id": "goal-4",
+    "patientId": "patient-2",
+    "description": "הפחתת התנהגויות הימנעות הקשורות לחרדה",
+    "targetDate": "2025-03-15T00:00:00.000Z",
+    "status": "active",
+    "progress": 45,
+    "measurementCriteria": "השלמה מוצלחת של פריטים בהיררכיית החשיפה",
+    "createdAt": "2024-02-10T00:00:00.000Z",
+    "updatedAt": "2024-12-23T00:00:00.000Z",
+    "createdBy": "user-1"
+  },
+  {
+    "id": "goal-5",
+    "patientId": "patient-2",
+    "description": "ביסוס ניהול שגרה יומית אפקטיבי",
+    "targetDate": "2025-04-01T00:00:00.000Z",
+    "status": "active",
+    "progress": 20,
+    "measurementCriteria": "מעקב עקבי אחרי שגרות בוקר וערב 5+ ימים בשבוע",
+    "createdAt": "2024-12-24T00:00:00.000Z",
+    "updatedAt": "2024-12-24T00:00:00.000Z",
+    "createdBy": "user-3"
+  }
+]

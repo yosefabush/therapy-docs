@@ -1,0 +1,70 @@
+[
+  {
+    "id": "user-1",
+    "email": "dr.sarah.cohen@clinic.co.il",
+    "name": "שרה כהן",
+    "role": "therapist",
+    "therapistRole": "psychologist",
+    "licenseNumber": "PSY-2024-1234",
+    "organization": "מרכז הרמוניה לבריאות הנפש",
+    "createdAt": "2023-01-15T00:00:00.000Z",
+    "lastLogin": "2026-01-22T08:32:04.027Z",
+    "updatedAt": "2026-01-22T08:32:04.031Z"
+  },
+  {
+    "id": "user-2",
+    "email": "michael.levi@clinic.co.il",
+    "name": "מיכאל לוי, עו\"ס",
+    "role": "therapist",
+    "therapistRole": "social_worker",
+    "licenseNumber": "LCSW-2022-5678",
+    "organization": "מרכז הרמוניה לבריאות הנפש",
+    "createdAt": "2023-03-20T00:00:00.000Z",
+    "lastLogin": "2026-01-11T13:49:14.160Z",
+    "updatedAt": "2026-01-11T13:49:14.161Z"
+  },
+  {
+    "id": "user-3",
+    "email": "raya.zaoda@clinic.co.il",
+    "name": "רעיה זאודה",
+    "role": "therapist",
+    "therapistRole": "occupational_therapist",
+    "licenseNumber": "OT-2021-9012",
+    "organization": "מרכז הרמוניה לבריאות הנפש",
+    "createdAt": "2023-05-10T00:00:00.000Z",
+    "lastLogin": "2026-01-18T08:06:27.579Z",
+    "updatedAt": "2026-01-18T08:06:27.581Z"
+  },
+  {
+    "id": "user-4",
+    "email": "dr.david.mizrachi@clinic.co.il",
+    "name": "ד\"ר דוד מזרחי",
+    "role": "therapist",
+    "therapistRole": "psychiatrist",
+    "licenseNumber": "MD-2019-3456",
+    "organization": "מרכז הרמוניה לבריאות הנפש",
+    "createdAt": "2022-11-01T00:00:00.000Z",
+    "lastLogin": "2026-01-07T22:26:47.543Z"
+  },
+  {
+    "id": "user-5",
+    "email": "admin@clinic.co.il",
+    "name": "מנהל מערכת",
+    "role": "admin",
+    "organization": "מרכז הרמוניה לבריאות הנפש",
+    "createdAt": "2022-01-01T00:00:00.000Z",
+    "lastLogin": "2026-01-11T13:47:56.917Z",
+    "updatedAt": "2026-01-11T13:47:56.918Z"
+  },
+  {
+    "email": "yosef0525@gmail.com",
+    "name": "יוסף גטהון",
+    "role": "therapist",
+    "therapistRole": "psychologist",
+    "organization": "מרכז הרמוניה לבריאות הנפש",
+    "lastLogin": "2026-01-11T13:33:37.706Z",
+    "id": "user-1768137651476-i8sg5seci",
+    "createdAt": "2026-01-11T13:20:51.476Z",
+    "updatedAt": "2026-01-11T13:33:37.707Z"
+  }
+]

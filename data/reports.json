@@ -1,0 +1,39 @@
+[
+  {
+    "id": "report-1",
+    "patientId": "patient-1",
+    "reportType": "progress_summary",
+    "generatedBy": "user-1",
+    "generatedAt": "2024-12-15T00:00:00.000Z",
+    "dateRange": {
+      "start": "2024-10-01T00:00:00.000Z",
+      "end": "2024-12-15T00:00:00.000Z"
+    },
+    "content": {
+      "summary": "המטופלת הראתה שיפור יציב בתסמיני דיכאון לאורך תקופת הדיווח. איכות השינה השתפרה משמעותית עם יישום אסטרטגיות היגיינת שינה. מעורבות חברתית נותרה תחום מיקוד.",
+      "sessionsSummary": [
+        {
+          "date": "2024-12-20T00:00:00.000Z",
+          "therapistRole": "psychologist",
+          "sessionType": "individual_therapy",
+          "keyPoints": "טכניקות CBT, ארגון מחדש קוגניטיבי",
+          "progress": "המשך שיפור במצב הרוח"
+        }
+      ],
+      "goalsProgress": [
+        {
+          "goalDescription": "שיפור איכות השינה",
+          "initialStatus": "שינה 4-5 שעות, לוח זמנים לא סדיר",
+          "currentStatus": "שינה 6-7 שעות, יותר עקבית",
+          "progressPercentage": 60,
+          "notes": "תגובה טובה להתערבויות היגיינת שינה"
+        }
+      ],
+      "recommendations": "המשך תוכנית הטיפול הנוכחית. שקילת טיפול קבוצתי למטרות מעורבות חברתית.",
+      "clinicalImpressions": "הפרוגנוזה חיובית עם המשך מעורבות בטיפול."
+    },
+    "status": "finalized",
+    "signedBy": "user-1",
+    "signedAt": "2024-12-15T14:00:00.000Z"
+  }
+]

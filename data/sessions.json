@@ -1,0 +1,324 @@
+[
+  {
+    "id": "session-1",
+    "patientId": "patient-1",
+    "therapistId": "user-1",
+    "therapistRole": "psychologist",
+    "sessionType": "individual_therapy",
+    "scheduledAt": "2024-12-20T08:00:00.000Z",
+    "startedAt": "2024-12-20T08:02:00.000Z",
+    "endedAt": "2024-12-20T08:55:00.000Z",
+    "duration": 53,
+    "status": "completed",
+    "location": "in_person",
+    "notes": {
+      "chiefComplaint": "המשך תחושות עצב ואנרגיה נמוכה",
+      "subjective": "המטופלת מדווחת על שיפור בדפוסי השינה מאז המפגש האחרון. עדיין חווה עייפות בוקר אך מסוגלת להשלים פעילויות יומיות. ציינה כמה אינטראקציות חברתיות חיוביות השבוע.",
+      "objective": "המטופלת נראתה מטופחת עם קשר עין משופר בהשוואה למפגשים קודמים. דיבור בקצב ובריתמוס תקינים. אפקט תואם למצב רוח מדווח (4/10). לא נצפה פיגור פסיכומוטורי.",
+      "assessment": "המטופלת מראה שיפור הדרגתי בתסמיני דיכאון. התערבויות היגיינת שינה נראות אפקטיביות. נדרשת המשך עבודת CBT לעיוותים קוגניטיביים.",
+      "plan": "המשך מפגשי CBT שבועיים. התמקדות בהפעלה התנהגותית ואתגור מחשבות אוטומטיות שליליות. מעקב על היענות לטיפול תרופתי עם הפסיכיאטר.",
+      "interventionsUsed": [
+        "ארגון מחדש קוגניטיבי",
+        "הפעלה התנהגותית",
+        "תרגיל מיינדפולנס"
+      ],
+      "progressTowardGoals": "מטרה 1 (שיפור שינה): 60% התקדמות. מטרה 2 (מעורבות חברתית): 40% התקדמות.",
+      "riskAssessment": {
+        "suicidalIdeation": "none",
+        "homicidalIdeation": "none",
+        "selfHarm": "history",
+        "substanceUse": "none",
+        "safetyPlanReviewed": false
+      },
+      "homework": "השלמת יומן מחשבות יומי. השתתפות בפעילות חברתית אחת.",
+      "nextSessionPlan": "סקירת יומן מחשבות. הכנסת תכנון פעילויות."
+    },
+    "createdAt": "2024-12-20T00:00:00.000Z",
+    "updatedAt": "2026-01-24T21:21:05.343Z",
+    "signedAt": "2024-12-20T09:30:00.000Z",
+    "signedBy": "user-1",
+    "aiSummary": {
+      "content": "**סיכום מפגש קליני**\n\nהמטופל/ת הציג/ה סימפטומים של חרדה ברמה בינונית במהלך המפגש. דפוסי חשיבה שנצפו כוללים שיח עצמי שלילי וחשיבה קטסטרופלית, במיוחד סביב מתחים הקשורים לעבודה.\n\n**תצפיות עיקריות:**\n- המטופל/ת הפגין/ה תובנה לגבי טריגרים לחרדה\n- תרגול מוצלח של טכניקות הארקה במהלך המפגש\n- שיעורי בית מהמפגש הקודם הושלמו חלקית\n\n**התרשמות קלינית:**\nהמטופל/ת מראה התקדמות הדרגתית בזיהוי ואתגור מחשבות אוטומטיות שליליות. התערבויות CBT ממשיכות להיות מתאימות לבעיות המוצגות.\n\n**צעדים הבאים:**\nהמשך עבודה על ארגון מחדש קוגניטיבי; מתן יומן מחשבות למעקב אחר אירועי חרדה.",
+      "generatedAt": "2026-01-24T21:21:02.416Z",
+      "mode": "mock",
+      "model": "mock-v1",
+      "savedAt": "2026-01-24T21:21:05.340Z"
+    }
+  },
+  {
+    "id": "session-2",
+    "patientId": "patient-1",
+    "therapistId": "user-2",
+    "therapistRole": "social_worker",
+    "sessionType": "individual_therapy",
+    "scheduledAt": "2024-12-22T12:00:00.000Z",
+    "startedAt": "2024-12-22T12:00:00.000Z",
+    "endedAt": "2024-12-22T12:50:00.000Z",
+    "duration": 50,
+    "status": "completed",
+    "location": "telehealth",
+    "notes": {
+      "chiefComplaint": "לחץ הקשור למצב הדיור",
+      "subjective": "המטופלת הביעה דאגה לגבי חידוש החוזה הקרוב. מדווחת על לחץ כלכלי המשפיע על מצב הרוח. חקרה משאבים קהילתיים.",
+      "objective": "המטופלת מעורבת ומבטאת את עצמה היטב. הפגינה כישורי פתרון בעיות בעת דיון באפשרויות. נראתה חרדה בעת דיון בענייני כספים.",
+      "assessment": "גורמי לחץ סביבתיים תורמים לתסמיני דיכאון. המטופלת מפגינה חוסן ונכונות לגשת למשאבים.",
+      "plan": "חיבור לתוכניות סיוע בדיור. סקירת תקציב ומשאבים כלכליים. תיאום עם פסיכולוגיה לטיפול משולב.",
+      "interventionsUsed": [
+        "חיבור למשאבים",
+        "טיפול בפתרון בעיות",
+        "תיאום טיפול"
+      ],
+      "progressTowardGoals": "מטרה 3 (יציבות דיור): 30% התקדמות - חוקרת אפשרויות באופן פעיל.",
+      "homework": "יצירת קשר עם רשות הדיור להגשת בקשה. יצירת גיליון תקציב חודשי.",
+      "nextSessionPlan": "מעקב על מצב בקשת הדיור. סקירת תקציב."
+    },
+    "createdAt": "2024-12-22T00:00:00.000Z",
+    "updatedAt": "2026-01-24T22:26:03.296Z",
+    "signedAt": "2024-12-22T13:30:00.000Z",
+    "signedBy": "user-2",
+    "aiSummary": {
+      "content": "**סיכום מפגש עבודה סוציאלית**\n\nבוצעה הערכה פסיכו-סוציאלית מקיפה המתייחסת לצרכים ולמשאבים הנוכחיים של המטופל/ת.\n\n**תחומים שטופלו:**\n- יציבות דיור: יציב, אין חששות נוכחיים\n- משאבים כלכליים: חובר לתוכניות סיוע קהילתיות\n- תמיכה משפחתית: מעורבות משפחתית בינונית\n- גישה לטיפול: תואם עם הצוות הרפואי\n\n**התערבויות:**\nסופקו שירותי ניהול מקרה כולל חיבור למשאבים וסנגור לבקשות קצבאות.\n\n**תוכנית:**\nמעקב אחר בקשות קצבאות תלויות ועומדות. המשך תיאום טיפול עם צוות הטיפול.",
+      "generatedAt": "2026-01-24T22:25:59.107Z",
+      "mode": "mock",
+      "model": "mock-v1",
+      "savedAt": "2026-01-24T22:26:03.294Z"
+    }
+  },
+  {
+    "id": "session-3",
+    "patientId": "patient-2",
+    "therapistId": "user-1",
+    "therapistRole": "psychologist",
+    "sessionType": "individual_therapy",
+    "scheduledAt": "2024-12-23T09:00:00.000Z",
+    "startedAt": "2024-12-23T09:05:00.000Z",
+    "endedAt": "2024-12-23T09:55:00.000Z",
+    "duration": 50,
+    "status": "completed",
+    "location": "in_person",
+    "notes": {
+      "chiefComplaint": "חרדה מוגברת לקראת מצגת בעבודה",
+      "subjective": "המטופל מדווח על חרדת ציפייה משמעותית לקראת מצגת קרובה. נמנע מהכנה. שינה מופרעת ב-3 הלילות האחרונים.",
+      "objective": "המטופל נראה חסר מנוחה, מתפתל לאורך כל המפגש. דיבור מעט לחוץ. דיווח על מתח שרירים בכתפיים ובצוואר.",
+      "assessment": "תסמיני חרדה מסלימים בתגובה לגורם לחץ ספציפי. התנהגות הימנעותית מחזקת את מעגל החרדה.",
+      "plan": "יישום היררכיית חשיפה לחרדת מצגות. המשך אימון הרפיה. שקילת התאמת תרופות לטווח קצר עם פסיכיאטריה.",
+      "interventionsUsed": [
+        "תכנון חשיפה",
+        "הרפיית שרירים מתקדמת",
+        "ניתוק קוגניטיבי"
+      ],
+      "progressTowardGoals": "מטרה 1 (הפחתת הימנעות): נסיגה השבוע, יש לטפל.",
+      "riskAssessment": {
+        "suicidalIdeation": "none",
+        "homicidalIdeation": "none",
+        "selfHarm": "none",
+        "substanceUse": "none",
+        "safetyPlanReviewed": false
+      },
+      "homework": "תרגול טכניקת הרפיה יומית. התחלת הכנת המצגת בצעדים קטנים.",
+      "nextSessionPlan": "סקירת התקדמות בחשיפה. תרגול חלקי מצגת."
+    },
+    "createdAt": "2024-12-23T00:00:00.000Z",
+    "updatedAt": "2024-12-23T00:00:00.000Z",
+    "signedAt": "2024-12-23T10:30:00.000Z",
+    "signedBy": "user-1"
+  },
+  {
+    "id": "session-4",
+    "patientId": "patient-2",
+    "therapistId": "user-3",
+    "therapistRole": "occupational_therapist",
+    "sessionType": "evaluation",
+    "scheduledAt": "2024-12-24T07:00:00.000Z",
+    "startedAt": "2024-12-24T07:00:00.000Z",
+    "endedAt": "2024-12-24T08:00:00.000Z",
+    "duration": 60,
+    "status": "completed",
+    "location": "in_person",
+    "notes": {
+      "chiefComplaint": "קושי בניהול שגרה יומית עקב חרדה",
+      "subjective": "המטופל מדווח על קושי לשמור על לוח זמנים בעבודה ושגרות טיפול עצמי. שגרות בוקר מאתגרות במיוחד. מרגיש מוצף ממשימות.",
+      "objective": "הושלמה הערכת COPM. זוהו בעיות ביצוע תעסוקתי מרכזיות בהכנה לעבודה, ניהול זמן ופעילויות פנאי.",
+      "assessment": "חרדה משפיעה משמעותית על ביצוע תעסוקתי במספר תחומי חיים. אתגרים בתפקודים ניהוליים בולטים ביזימת משימות.",
+      "plan": "פיתוח שגרה יומית מובנית. הכנסת שינויים סביבתיים לסביבת העבודה. טיפול באסטרטגיות ניהול זמן.",
+      "interventionsUsed": [
+        "הערכת COPM",
+        "ניתוח פעילות",
+        "תכנון שינויים סביבתיים"
+      ],
+      "progressTowardGoals": "נקבע קו בסיס להתערבות ריפוי בעיסוק.",
+      "homework": "מעקב אחר פעילויות יומיות ורמות אנרגיה באמצעות יומן שסופק.",
+      "nextSessionPlan": "סקירת יומן פעילות. התחלת בניית שגרה."
+    },
+    "createdAt": "2024-12-24T00:00:00.000Z",
+    "updatedAt": "2026-01-26T21:10:49.102Z",
+    "signedAt": "2024-12-24T09:00:00.000Z",
+    "signedBy": "user-3",
+    "aiSummary": {
+      "content": "**סיכום מפגש ריפוי בעיסוק**\n\nהמפגש התמקד בביצועים תפקודיים בפעילויות חיי היום-יום ובמשימות הקשורות לעבודה.\n\n**תחומים שנבדקו:**\n- ביצוע ADL: עצמאי ב-ADL בסיסי, דורש תמיכה ב-IADL\n- מיומנויות מוטוריקה עדינה: בגבולות תפקודיים\n- תפקוד קוגניטיבי: צוינו קשיי קשב קלים\n- מוכנות לעבודה: מתקדם לעבר יעדים תעסוקתיים\n\n**התערבויות שהופעלו:**\n- אסטרטגיות התאמת פעילות לשימור אנרגיה\n- הדרכה על ציוד מותאם\n- תרגילי שיקום קוגניטיבי\n\n**התקדמות:**\nהמטופל/ת מפגין/ה השלמת משימות משופרת עם אסטרטגיות מפצות. המשך התמקדות בפיתוח מיומנויות הקשורות לעבודה.",
+      "generatedAt": "2026-01-26T21:10:04.637Z",
+      "mode": "mock",
+      "model": "mock-v1",
+      "savedAt": "2026-01-26T21:10:49.099Z"
+    }
+  },
+  {
+    "id": "session-5",
+    "patientId": "patient-1",
+    "therapistId": "user-4",
+    "therapistRole": "psychiatrist",
+    "sessionType": "follow_up",
+    "scheduledAt": "2024-12-26T13:00:00.000Z",
+    "startedAt": "2024-12-26T13:05:00.000Z",
+    "endedAt": "2024-12-26T13:30:00.000Z",
+    "duration": 25,
+    "status": "completed",
+    "location": "telehealth",
+    "notes": {
+      "chiefComplaint": "מעקב תרופות",
+      "subjective": "המטופלת מדווחת על סבילות טובה לתרופות הנוכחיות. אין תופעות לוואי משמעותיות. מצב הרוח יציב יותר בשבועיים האחרונים.",
+      "objective": "בדיקת מצב נפשי בטווח התקין. אין סימנים לתופעות לוואי של תרופות. ציון PHQ-9: 12 (שיפור מ-18).",
+      "assessment": "תגובה חיובית למשטר התרופות הנוכחי. תסמיני דיכאון מראים שיפור.",
+      "plan": "המשך תרופות נוכחיות: סרטרלין 100 מ\"ג יומי. מעקב בעוד 4 שבועות או מוקדם יותר אם נדרש.",
+      "interventionsUsed": [
+        "ניהול תרופות",
+        "מתן PHQ-9"
+      ],
+      "medications": [
+        {
+          "name": "סרטרלין",
+          "dosage": "100 מ\"ג",
+          "frequency": "יומי, בבוקר",
+          "prescribedBy": "ד\"ר דוד מזרחי",
+          "sideEffects": "בחילה קלה ראשונית, חלפה"
+        }
+      ],
+      "nextSessionPlan": "מעקב תרופות שגרתי."
+    },
+    "createdAt": "2024-12-26T00:00:00.000Z",
+    "updatedAt": "2024-12-26T00:00:00.000Z",
+    "signedAt": "2024-12-26T14:00:00.000Z",
+    "signedBy": "user-4"
+  },
+  {
+    "id": "session-6",
+    "patientId": "patient-3",
+    "therapistId": "user-1",
+    "therapistRole": "psychologist",
+    "sessionType": "individual_therapy",
+    "scheduledAt": "2024-12-27T11:00:00.000Z",
+    "status": "scheduled",
+    "duration": 50,
+    "location": "in_person",
+    "notes": {
+      "subjective": "",
+      "objective": "",
+      "assessment": "",
+      "plan": "",
+      "interventionsUsed": []
+    },
+    "createdAt": "2024-12-20T00:00:00.000Z",
+    "updatedAt": "2024-12-20T00:00:00.000Z"
+  },
+  {
+    "patientId": "patient-1",
+    "therapistId": "user-1",
+    "therapistRole": "psychologist",
+    "sessionType": "individual_therapy",
+    "scheduledAt": "2026-01-07T23:44:00.000Z",
+    "duration": 50,
+    "status": "scheduled",
+    "location": "in_person",
+    "notes": {
+      "subjective": "",
+      "objective": "",
+      "assessment": "",
+      "plan": "",
+      "interventionsUsed": []
+    },
+    "id": "session-1767829402884-8jjhhuu2h",
+    "createdAt": "2026-01-07T23:43:22.884Z",
+    "updatedAt": "2026-01-07T23:43:22.884Z"
+  },
+  {
+    "patientId": "patient-2",
+    "therapistId": "user-1",
+    "therapistRole": "psychologist",
+    "sessionType": "individual_therapy",
+    "scheduledAt": "2026-01-11T08:28:00.000Z",
+    "duration": 30,
+    "status": "no_show",
+    "location": "in_person",
+    "notes": {
+      "subjective": "",
+      "objective": "",
+      "assessment": "",
+      "plan": "",
+      "interventionsUsed": []
+    },
+    "id": "session-1768119970495-mf6i137ei",
+    "createdAt": "2026-01-11T08:26:10.495Z",
+    "updatedAt": "2026-01-11T08:49:37.473Z"
+  },
+  {
+    "patientId": "patient-1",
+    "therapistId": "user-1",
+    "therapistRole": "psychologist",
+    "sessionType": "individual_therapy",
+    "scheduledAt": "2026-01-11T08:50:06.232Z",
+    "duration": 50,
+    "status": "no_show",
+    "location": "in_person",
+    "notes": {
+      "subjective": "",
+      "objective": "",
+      "assessment": "",
+      "plan": "",
+      "interventionsUsed": []
+    },
+    "id": "session-1768121227649-xq1px0xas",
+    "createdAt": "2026-01-11T08:47:07.649Z",
+    "updatedAt": "2026-01-11T08:59:01.278Z"
+  },
+  {
+    "patientId": "patient-2",
+    "therapistId": "user-1",
+    "therapistRole": "psychologist",
+    "sessionType": "follow_up",
+    "scheduledAt": "2026-01-12T08:20:00.000Z",
+    "duration": 30,
+    "status": "no_show",
+    "location": "in_person",
+    "notes": {
+      "subjective": "",
+      "objective": "",
+      "assessment": "",
+      "plan": "",
+      "interventionsUsed": []
+    },
+    "id": "session-1768205848750-9wm7fcf9d",
+    "createdAt": "2026-01-12T08:17:28.750Z",
+    "updatedAt": "2026-01-12T11:55:30.984Z"
+  },
+  {
+    "patientId": "patient-1768139766533-9z7e2bl3x",
+    "therapistId": "user-3",
+    "therapistRole": "occupational_therapist",
+    "sessionType": "individual_therapy",
+    "scheduledAt": "2026-01-12T20:54:00.000Z",
+    "duration": 30,
+    "status": "in_progress",
+    "location": "in_person",
+    "notes": {
+      "subjective": "",
+      "objective": "",
+      "assessment": "",
+      "plan": "",
+      "interventionsUsed": []
+    },
+    "id": "session-1768251200628-0w9blvung",
+    "createdAt": "2026-01-12T20:53:20.628Z",
+    "updatedAt": "2026-01-12T20:54:14.744Z",
+    "startedAt": "2026-01-12T20:54:14.640Z"
+  }
+]

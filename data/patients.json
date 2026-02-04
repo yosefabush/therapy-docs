@@ -1,0 +1,131 @@
+[
+  {
+    "id": "patient-1",
+    "idNumber": "012345678",
+    "encryptedData": "encrypted-patient-data-1",
+    "firstName": "אביגיל",
+    "lastName": "ברקוביץ",
+    "dateOfBirth": "1985-03-15",
+    "gender": "female",
+    "primaryDiagnosis": "הפרעת דיכאון מז'ורי, חוזרת",
+    "referralSource": "רופא משפחה",
+    "insuranceProvider": "כללית",
+    "createdAt": "2024-01-10T00:00:00.000Z",
+    "updatedAt": "2026-01-07T22:26:47.543Z",
+    "assignedTherapists": [
+      "user-1",
+      "user-2",
+      "user-4"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "patient-2",
+    "idNumber": "023456789",
+    "encryptedData": "encrypted-patient-data-2",
+    "firstName": "גל",
+    "lastName": "דוידוב",
+    "dateOfBirth": "1992-07-22",
+    "gender": "male",
+    "primaryDiagnosis": "הפרעת חרדה כללית",
+    "referralSource": "פנייה עצמית",
+    "insuranceProvider": "מכבי",
+    "createdAt": "2024-02-05T00:00:00.000Z",
+    "updatedAt": "2026-01-07T22:26:47.543Z",
+    "assignedTherapists": [
+      "user-1",
+      "user-3"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "patient-3",
+    "idNumber": "034567890",
+    "encryptedData": "encrypted-patient-data-3",
+    "firstName": "ורד",
+    "lastName": "זהבי",
+    "dateOfBirth": "1978-11-30",
+    "gender": "female",
+    "primaryDiagnosis": "הפרעת דחק פוסט-טראומטית (PTSD)",
+    "referralSource": "מרכז בריאות קהילתי",
+    "insuranceProvider": "מכבי",
+    "createdAt": "2024-03-12T00:00:00.000Z",
+    "updatedAt": "2026-01-07T23:16:40.170Z",
+    "assignedTherapists": [
+      "user-1",
+      "user-2"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "patient-4",
+    "idNumber": "045678901",
+    "encryptedData": "encrypted-patient-data-4",
+    "firstName": "חיים",
+    "lastName": "טל",
+    "dateOfBirth": "2010-05-18",
+    "gender": "male",
+    "primaryDiagnosis": "הפרעת קשב וריכוז (ADHD), סוג משולב",
+    "referralSource": "יועצת בית ספר",
+    "insuranceProvider": "מאוחדת",
+    "createdAt": "2024-04-01T00:00:00.000Z",
+    "updatedAt": "2026-01-07T22:26:47.543Z",
+    "assignedTherapists": [
+      "user-3",
+      "user-4"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "patient-5",
+    "idNumber": "056789012",
+    "encryptedData": "encrypted-patient-data-5",
+    "firstName": "יוסי",
+    "lastName": "כהן",
+    "dateOfBirth": "1965-09-08",
+    "gender": "male",
+    "primaryDiagnosis": "הפרעה דו-קוטבית סוג II",
+    "referralSource": "שחרור מאשפוז",
+    "insuranceProvider": "כללית",
+    "createdAt": "2024-02-20T00:00:00.000Z",
+    "updatedAt": "2026-01-07T22:26:47.543Z",
+    "assignedTherapists": [
+      "user-1",
+      "user-4"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "patient-1767827501417-980qqb4tp",
+    "idNumber": "067890123",
+    "encryptedData": "encrypted-Test-User",
+    "firstName": "Test",
+    "lastName": "User",
+    "dateOfBirth": "1995-05-15",
+    "gender": "male",
+    "assignedTherapists": [
+      "user-1"
+    ],
+    "status": "active",
+    "createdAt": "2026-01-07T23:11:41.417Z",
+    "updatedAt": "2026-01-07T23:11:41.417Z"
+  },
+  {
+    "id": "patient-1768139766533-9z7e2bl3x",
+    "idNumber": "078901234",
+    "encryptedData": "encrypted-דוד-דוידי",
+    "firstName": "דוד",
+    "lastName": "דוידי",
+    "dateOfBirth": "2008-01-11",
+    "gender": "female",
+    "primaryDiagnosis": "התמכרות לסמים",
+    "referralSource": "רופא משפחה",
+    "insuranceProvider": "כללית",
+    "assignedTherapists": [
+      "user-3"
+    ],
+    "status": "active",
+    "createdAt": "2026-01-11T13:56:06.533Z",
+    "updatedAt": "2026-01-11T13:56:06.533Z"
+  }
+]
