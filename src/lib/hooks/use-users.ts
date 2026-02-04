@@ -5,6 +5,7 @@ import { User } from '@/types';
 import { apiClient } from '@/lib/api/client';
 
 const AUTH_STORAGE_KEY = 'therapydocs_auth_user';
+const AUTH_CHANGE_EVENT = 'therapydocs_auth_change';
 
 export function useUsers() {
   const [users, setUsers] = useState<User[]>([]);
@@ -72,12 +73,18 @@ export function storeAuthUser(userId: string, rememberMe: boolean): void {
     sessionStorage.setItem(AUTH_STORAGE_KEY, data);
     localStorage.removeItem(AUTH_STORAGE_KEY);
   }
+
+  // Notify listeners that auth changed
+  window.dispatchEvent(new CustomEvent(AUTH_CHANGE_EVENT, { detail: { userId } }));
 }
 
 // Clear user authentication
 export function clearAuthUser(): void {
   localStorage.removeItem(AUTH_STORAGE_KEY);
   sessionStorage.removeItem(AUTH_STORAGE_KEY);
+
+  // Notify listeners that auth changed
+  window.dispatchEvent(new CustomEvent(AUTH_CHANGE_EVENT, { detail: { userId: null } }));
 }
 
 // Check if user is authenticated
@@ -127,6 +134,16 @@ export function useCurrentUser() {
 
   useEffect(() => {
     fetchCurrentUser();
+
+    // Listen for auth changes (login/logout)
+    const handleAuthChange = () => {
+      fetchCurrentUser();
+    };
+
+    window.addEventListener(AUTH_CHANGE_EVENT, handleAuthChange);
+    return () => {
+      window.removeEventListener(AUTH_CHANGE_EVENT, handleAuthChange);
+    };
   }, [fetchCurrentUser]);
 
   const logout = useCallback(() => {

@@ -3,6 +3,7 @@
 import React, { createContext, useContext, ReactNode, useState, useEffect, useCallback } from 'react';
 import { Session } from '@/types';
 import { SessionReminder } from '@/components/sessions/SessionReminder';
+import { useCurrentUser } from '@/lib/hooks/use-users';
 
 interface SessionReminderContextValue {
   upcomingSession: Session | null;
@@ -29,38 +30,20 @@ const CHECK_INTERVAL_MS = 30000;
 const GRACE_PERIOD_MINUTES = 30;
 
 export function SessionReminderProvider({ children }: SessionReminderProviderProps) {
+  const { user: currentUser, loading: userLoading } = useCurrentUser();
   const [sessions, setSessions] = useState<Session[]>([]);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [upcomingSession, setUpcomingSession] = useState<Session | null>(null);
   const [isReminderVisible, setIsReminderVisible] = useState(false);
   const [dismissedSessionIds, setDismissedSessionIds] = useState<Set<string>>(new Set());
-  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Fetch current user on mount
+  // Fetch sessions only when user is logged in
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await fetch('/api/users');
-        const data = await response.json();
-        if (data.data && data.data.length > 0) {
-          setCurrentUserId(data.data[0].id);
-        }
-        setIsInitialized(true);
-      } catch (error) {
-        console.error('Failed to fetch user:', error);
-        setIsInitialized(true);
-      }
-    };
-    fetchUser();
-  }, []);
-
-  // Fetch sessions when user is available
-  useEffect(() => {
-    if (!currentUserId) return;
+    // Don't fetch if still loading or no logged-in user
+    if (userLoading || !currentUser?.id) return;
 
     const fetchSessions = async () => {
       try {
-        const response = await fetch(`/api/sessions?therapistId=${currentUserId}`);
+        const response = await fetch(`/api/sessions?therapistId=${currentUser.id}`);
         const data = await response.json();
         if (data.data) {
           setSessions(data.data);
@@ -73,7 +56,7 @@ export function SessionReminderProvider({ children }: SessionReminderProviderPro
     fetchSessions();
     const intervalId = setInterval(fetchSessions, CHECK_INTERVAL_MS);
     return () => clearInterval(intervalId);
-  }, [currentUserId]);
+  }, [userLoading, currentUser?.id]);
 
   // Check for upcoming sessions
   const isSessionUpcoming = useCallback((session: Session): boolean => {
@@ -158,8 +141,8 @@ export function SessionReminderProvider({ children }: SessionReminderProviderPro
     <SessionReminderContext.Provider value={contextValue}>
       {children}
 
-      {/* Global Session Reminder Modal - only render when initialized */}
-      {isInitialized && upcomingSession && (
+      {/* Global Session Reminder Modal - only render when user is logged in */}
+      {!userLoading && currentUser && upcomingSession && (
         <SessionReminder
           session={upcomingSession}
           isOpen={isReminderVisible}
