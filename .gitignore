@@ -48,5 +48,8 @@ test-results/
 # # Local data files
 # /data
 
+# Runtime-generated audit log (PHI access records) — must not be committed
+data/audit-log.json
+
 # MCP Configuration
 .mcp.json

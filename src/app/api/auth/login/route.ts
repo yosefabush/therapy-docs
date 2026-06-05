@@ -8,6 +8,7 @@ import {
   isHashedPassword,
   checkRateLimit,
 } from '@/lib/security';
+import { attachSessionCookie } from '@/lib/auth/session';
 import { logger } from '@/lib/logger';
 
 interface AuthCredentials {
@@ -84,7 +85,7 @@ export async function POST(request: NextRequest) {
 
     await userRepository.update(user.id, { lastLogin: new Date() });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       user: {
         id: user.id,
@@ -95,6 +96,14 @@ export async function POST(request: NextRequest) {
         organization: user.organization,
       },
       rememberMe,
+    });
+
+    // Issue an httpOnly, signed session cookie used for server-side
+    // authorization on subsequent API requests.
+    return attachSessionCookie(response, {
+      sub: user.id,
+      role: user.role,
+      therapistRole: user.therapistRole,
     });
   } catch (error) {
     logger.error('Login error:', error);

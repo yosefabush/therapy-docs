@@ -7,29 +7,16 @@
 
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
-import { SignJWT, jwtVerify, type JWTPayload } from 'jose';
-
-const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+import { requireSecret } from '@/lib/env';
+import {
+  signSessionToken,
+  verifySessionToken as verifyToken,
+  type SessionPayload,
+} from '@/lib/auth/jwt';
 
 // ---------------------------------------------------------------------------
 // Key management
 // ---------------------------------------------------------------------------
-
-const DEV_FALLBACK_KEY = 'dev-only-insecure-key-change-me-1234567890';
-
-function requireSecret(name: string): string {
-  const value = process.env[name];
-  if (value && value.length > 0) {
-    return value;
-  }
-  if (IS_PRODUCTION) {
-    throw new Error(
-      `Missing required environment variable "${name}". Refusing to use insecure defaults in production.`
-    );
-  }
-  // Development convenience only – never reached in production (guard above).
-  return DEV_FALLBACK_KEY;
-}
 
 // Derive a stable 32-byte key from the configured secret so the secret length
 // does not need to be exactly 32 characters.
@@ -140,39 +127,21 @@ export function sanitizeInput(input: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// Session tokens (JWT via jose)
+// Session tokens (JWT) — see src/lib/auth/jwt.ts for the edge-safe impl shared
+// with middleware. Re-exported here for backwards compatibility.
 // ---------------------------------------------------------------------------
 
-const JWT_ALG = 'HS256';
-
-function getJwtKey(): Uint8Array {
-  return new TextEncoder().encode(requireSecret('JWT_SECRET'));
-}
-
 export async function createSessionToken(
-  payload: JWTPayload,
+  payload: SessionPayload,
   expiresIn: string = '8h'
 ): Promise<string> {
-  return new SignJWT(payload)
-    .setProtectedHeader({ alg: JWT_ALG })
-    .setIssuedAt()
-    .setExpirationTime(expiresIn)
-    .sign(getJwtKey());
+  return signSessionToken(payload, expiresIn);
 }
 
-// Verify a session token's signature, expiration and claims. Returns the
-// decoded payload when valid, or null when the token is invalid/expired.
 export async function verifySessionToken(
   token: string
-): Promise<JWTPayload | null> {
-  try {
-    const { payload } = await jwtVerify(token, getJwtKey(), {
-      algorithms: [JWT_ALG],
-    });
-    return payload;
-  } catch {
-    return null;
-  }
+): Promise<SessionPayload | null> {
+  return verifyToken(token);
 }
 
 // ---------------------------------------------------------------------------

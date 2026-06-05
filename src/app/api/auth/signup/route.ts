@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { userRepository } from '@/lib/data/repositories';
 import { readJsonFile, writeJsonFile } from '@/lib/data/json-store';
 import { hashPassword, checkRateLimit } from '@/lib/security';
+import { attachSessionCookie } from '@/lib/auth/session';
 import { logger } from '@/lib/logger';
 
 interface AuthCredentials {
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
     });
     await writeJsonFile('auth-credentials.json', credentials);
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       user: {
         id: newUser.id,
@@ -80,6 +81,12 @@ export async function POST(request: NextRequest) {
         therapistRole: newUser.therapistRole,
         organization: newUser.organization,
       },
+    });
+
+    return attachSessionCookie(response, {
+      sub: newUser.id,
+      role: newUser.role,
+      therapistRole: newUser.therapistRole,
     });
   } catch (error) {
     logger.error('Signup error:', error);

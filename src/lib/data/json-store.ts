@@ -80,16 +80,40 @@ export async function readJsonFile<T>(filename: string): Promise<T[]> {
   }
 }
 
+// Per-file write lock: serialize concurrent writes to the same file within the
+// process so a read-modify-write from one request cannot clobber another's.
+// (For multi-instance deployments this must move to the database layer.)
+const writeLocks = new Map<string, Promise<void>>();
+
+async function withWriteLock(
+  filename: string,
+  task: () => Promise<void>
+): Promise<void> {
+  const previous = writeLocks.get(filename) ?? Promise.resolve();
+  const current = previous.catch(() => {}).then(task);
+  writeLocks.set(
+    filename,
+    current.finally(() => {
+      if (writeLocks.get(filename) === current) {
+        writeLocks.delete(filename);
+      }
+    })
+  );
+  return current;
+}
+
 export async function writeJsonFile<T>(filename: string, data: T[]): Promise<void> {
-  await ensureDataDir();
-  const filePath = path.join(WRITABLE_DIR, filename);
-  const tempPath = `${filePath}.tmp`;
+  return withWriteLock(filename, async () => {
+    await ensureDataDir();
+    const filePath = path.join(WRITABLE_DIR, filename);
+    const tempPath = `${filePath}.tmp`;
 
-  logger.debug(`[json-store] Writing file: ${filePath} (${data.length} items)`);
+    logger.debug(`[json-store] Writing file: ${filePath} (${data.length} items)`);
 
-  // Atomic write: write to temp file, then rename
-  await fs.writeFile(tempPath, JSON.stringify(data, null, 2), 'utf-8');
-  await fs.rename(tempPath, filePath);
+    // Atomic write: write to temp file, then rename
+    await fs.writeFile(tempPath, JSON.stringify(data, null, 2), 'utf-8');
+    await fs.rename(tempPath, filePath);
+  });
 }
 
 export async function fileExists(filename: string): Promise<boolean> {

@@ -69,18 +69,18 @@ describe('hashForSearch (keyed HMAC)', () => {
 
 describe('session tokens (JWT)', () => {
   it('signs and verifies a valid token', async () => {
-    const token = await createSessionToken({ sub: 'user-1' });
+    const token = await createSessionToken({ sub: 'user-1', role: 'therapist' });
     const payload = await verifySessionToken(token);
     expect(payload?.sub).toBe('user-1');
   });
 
   it('returns null for a tampered token', async () => {
-    const token = await createSessionToken({ sub: 'user-1' });
+    const token = await createSessionToken({ sub: 'user-1', role: 'therapist' });
     expect(await verifySessionToken(token + 'tamper')).toBeNull();
   });
 
   it('returns null for an expired token', async () => {
-    const token = await createSessionToken({ sub: 'user-1' }, '0s');
+    const token = await createSessionToken({ sub: 'user-1', role: 'therapist' }, '0s');
     await new Promise((r) => setTimeout(r, 1100));
     expect(await verifySessionToken(token)).toBeNull();
   });
