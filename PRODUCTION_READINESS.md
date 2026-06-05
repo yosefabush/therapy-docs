@@ -9,13 +9,20 @@ work required before a full production / HIPAA-compliant launch.
 - **Server-side authorization.** Login/signup now issue an httpOnly, signed
   **JWT session cookie**; `src/proxy.ts` (Next 16's middleware convention)
   enforces authentication on every `/api` route except the public
-  auth/health/seed/swagger endpoints. Patient routes are scoped server-side to
-  the authenticated therapist (admins see all), with assignment-based access
-  returning 401/403/404. Identity is derived from the verified session, never
-  from client-supplied parameters. Added `/api/auth/logout` and `/api/auth/me`.
-- **Audit logging.** PHI access (list/read/create/update/delete on patients) is
-  recorded via an append-only audit log (`src/lib/audit.ts`); the runtime file
-  is gitignored.
+  auth/health/seed/swagger endpoints. **All** resource routes — patients,
+  sessions, reports, treatment-goals, voice-recordings, their `[id]` routes,
+  the patient sub-routes (sessions/goals/reports/insights), and session
+  summaries — are scoped server-side via a shared `canAccessPatient` /
+  `filterByPatientAccess` helper: a therapist may only touch records for
+  patients they are assigned to (admins are unrestricted), returning
+  401/403/404. Identity is derived from the verified session, never from
+  client-supplied parameters. The `/api/users` directory is sanitized
+  (no email/license) and `/api/users/[id]` is self-only unless admin.
+  Destructive seed reset is blocked in production. Added `/api/auth/logout`
+  and `/api/auth/me`.
+- **Audit logging.** PHI access (read/create/update/delete across patients,
+  sessions, reports, and recordings) is recorded via an append-only audit log
+  (`src/lib/audit.ts`); the runtime file is gitignored.
 - **Concurrency-safe writes.** The JSON store serializes writes per file to
   prevent lost updates from interleaved read-modify-write requests.
 - **Password hashing (bcrypt).** Signup now stores bcrypt hashes (cost 12);
@@ -75,6 +82,3 @@ These items need provisioning that cannot be done from the codebase alone:
 5. **Distributed rate limiting** (Redis) for multi-instance deployments.
 6. **Secret hygiene.** Rotate any API keys that were previously committed and
    confirm they are purged from git history.
-7. **Extend authorization & auditing** to the remaining resource routes
-   (sessions, reports, goals, voice recordings) following the pattern now
-   established for patients.
