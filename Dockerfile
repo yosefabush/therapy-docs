@@ -3,7 +3,9 @@
 # ---- Dependencies ----
 FROM node:20-alpine AS deps
 WORKDIR /app
+# Prisma schema is needed so the postinstall `prisma generate` can run.
 COPY package.json package-lock.json ./
+COPY prisma ./prisma
 RUN npm ci
 
 # ---- Builder ----
@@ -12,7 +14,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 # Build produces a self-contained server in .next/standalone (output: 'standalone').
-# No secrets are needed at build time — they are only required at request time.
+# No secrets/DATABASE_URL are needed at build time — they are only used at request time.
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
@@ -33,10 +35,18 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 
-# Bundled seed data lives in /app/seed-data; the entrypoint copies any missing
-# files into /app/data on startup. This means a fresh persistent volume mounted
-# at /app/data is seeded automatically (including auth-credentials.json), so the
-# demo users work and runtime data survives restarts.
+# Prisma client + query engine and the migration files / CLI deps, used by the
+# entrypoint to run `prisma migrate deploy` and (optionally) seed at startup.
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/scripts ./scripts
+
+# Bundled seed data lives in /app/seed-data; for the JSON-file backend the
+# entrypoint copies any missing files into /app/data on startup (so a fresh
+# volume gets the demo dataset). When DATABASE_URL is set the entrypoint runs
+# migrations instead and seeds the database on first run.
 COPY --from=builder /app/data ./seed-data
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh \

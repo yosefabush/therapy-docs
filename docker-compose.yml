@@ -1,0 +1,44 @@
+# Self-hosted stack: the app + a PostgreSQL database.
+#
+#   1. Create a .env file next to this one with:
+#        JWT_SECRET=...        ENCRYPTION_KEY=...      SEARCH_HASH_KEY=...
+#        POSTGRES_PASSWORD=... (and optionally DEEPGRAM_API_KEY=...)
+#      Generate secrets with:  openssl rand -base64 48
+#   2. docker compose up --build
+#
+# On startup the app runs `prisma migrate deploy` and seeds the database from
+# the bundled JSON dataset on first run. Data persists in the `db_data` volume.
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: therapydocs
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-in-production}
+      POSTGRES_DB: therapydocs
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U therapydocs']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://therapydocs:${POSTGRES_PASSWORD:-change-me-in-production}@db:5432/therapydocs?schema=public
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?set ENCRYPTION_KEY in .env}
+      SEARCH_HASH_KEY: ${SEARCH_HASH_KEY:?set SEARCH_HASH_KEY in .env}
+      DEEPGRAM_API_KEY: ${DEEPGRAM_API_KEY:-}
+    ports:
+      - '3000:3000'
+
+volumes:
+  db_data:
