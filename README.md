@@ -1,225 +1,211 @@
-# TherapyDocs - Clinical Documentation System
+# TherapyDocs — Clinical Documentation System
 
-A modern, HIPAA-compliant therapy documentation system built with Next.js 16, designed for mental health professionals, clinics, and health insurance funds.
+A modern, HIPAA-oriented therapy documentation system built with **Next.js 16**, for mental health professionals, clinics, and health insurance funds. The UI is Hebrew (RTL).
 
-![TherapyDocs](https://img.shields.io/badge/Version-1.0.0-sage)
+![Version](https://img.shields.io/badge/Version-1.0.0-sage)
+![Next.js](https://img.shields.io/badge/Next.js-16-black)
 ![License](https://img.shields.io/badge/License-MIT-blue)
-![HIPAA](https://img.shields.io/badge/HIPAA-Compliant-green)
+![HIPAA](https://img.shields.io/badge/HIPAA-oriented-green)
 
 ## 🌟 Overview
 
-TherapyDocs revolutionizes how therapists document and manage treatment sessions. Built with a calming, professional aesthetic specifically designed for healthcare environments, it combines beautiful design with powerful AI-enhanced features.
+TherapyDocs streamlines how therapists document and manage treatment sessions. It pairs a calm, professional medical aesthetic with AI-assisted documentation, server-side access control, and a pluggable storage backend (PostgreSQL or a built-in JSON store for demos).
+
+> 📘 **New here?** A full step-by-step usage guide for therapists lives at **`/guide`** (also linked from the login page).
+> 🚀 **Deploying?** See **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
+> ✅ **Production status & remaining work:** see **[PRODUCTION_READINESS.md](./PRODUCTION_READINESS.md)**.
 
 ## ✨ Key Features
 
 ### 🏥 Multi-Disciplinary Support
-- **Role-Based Templates**: Customized documentation templates for different therapist types:
-  - Psychologists
-  - Psychiatrists  
-  - Social Workers
-  - Occupational Therapists
-  - Speech Therapists
-  - Family Therapists
-  - Art & Music Therapists
-  - And more...
+- **Role-Based Templates** for psychologists, psychiatrists, social workers, occupational therapists, speech therapists, family therapists, art & music therapists, and more (`src/lib/templates.ts`).
 
 ### 📝 Session Documentation
-- **SOAP Notes**: Structured documentation with Subjective, Objective, Assessment, and Plan sections
-- **Risk Assessment**: Built-in suicide/homicide ideation screening with safety plan tracking
-- **Voice Recording**: Record session notes and get AI-powered transcription (Revolutionary Feature)
-- **Intervention Tracking**: Document therapeutic interventions used in each session
-- **Digital Signatures**: Secure e-signature for completed documentation
+- **SOAP Notes** (Subjective, Objective, Assessment, Plan)
+- **Risk Assessment** screening with safety-plan tracking
+- **Voice Recording + Transcription** with speaker diarization (Deepgram)
+- **Intervention Tracking** and **digital signatures**
 
 ### 👥 Patient Management
-- Comprehensive patient profiles with encrypted PHI
-- Multi-therapist assignment (care teams)
-- Treatment goal tracking with progress visualization
-- Insurance and referral source tracking
-- Document management
+- Patient profiles, multi-therapist care teams, treatment-goal tracking, insurance/referral tracking
 
-### 📊 AI-Enhanced Features (Revolutionary)
-- **Intelligent Summarization**: AI generates session summaries tailored to therapist role
-- **Pattern Recognition**: Automatic detection of:
-  - Mood trends across sessions
-  - Risk escalation patterns
-  - Treatment engagement levels
-- **Predictive Insights**: Proactive alerts for clinical attention
-- **Voice-to-Text**: Transcribe voice notes into structured documentation
+### 📊 AI-Enhanced Features
+- Role-tailored **session summaries**, **pattern recognition** (mood/risk/engagement), **predictive insights**, **voice-to-text**
 
 ### 📋 Report Generation
-- **Progress Summaries**: Track patient improvement over time
-- **Discharge Summaries**: Comprehensive end-of-treatment reports
-- **Insurance Reports**: Format documentation for billing/authorization
-- **Multidisciplinary Reports**: Synthesize notes from entire care team
-- **AI-Assisted Writing**: Generate report drafts automatically
+- Progress, discharge, insurance, and multidisciplinary reports with AI-assisted drafting and PDF export
 
 ### 🔒 Security & Compliance
-- **HIPAA Compliant**: Built with healthcare privacy in mind
-- **Data Encryption**: All PHI encrypted at rest and in transit
-- **Audit Logging**: Complete trail of data access
-- **Role-Based Access**: Granular permissions system
-- **Secure Authentication**: JWT-based auth with session management
+- **bcrypt** password hashing (cost 12), **AES-256-GCM** PHI encryption, **HMAC-SHA256** searchable hashing
+- **Signed JWT session cookies** (httpOnly) via `jose`, verified in middleware
+- **Server-side authorization** — therapists can only access their own patients (admins unrestricted)
+- **Audit logging** of PHI access, **rate limiting** on auth, **security headers** (HSTS, X-Frame-Options, …)
+- **Fail-closed secrets**: the app refuses insecure defaults in production
 
 ## 🛠 Technology Stack
 
-- **Framework**: Next.js 16 (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS with custom medical theme
-- **State Management**: React Hooks
-- **Form Handling**: Native React forms with Zod validation
-- **Authentication**: JWT with bcrypt password hashing
-- **Encryption**: Custom encryption utilities (production: use AWS KMS/Azure Key Vault)
+- **Framework**: Next.js 16 (App Router) · **Language**: TypeScript
+- **Styling**: Tailwind CSS (custom medical theme), Hebrew RTL (Heebo / David Libre)
+- **Validation**: Zod · **Auth**: JWT (`jose`) + bcrypt
+- **Crypto**: Node `crypto` (AES-256-GCM, scrypt, HMAC)
+- **Database**: PostgreSQL via **Prisma** — with an automatic JSON-file fallback for local/demo
+- **Testing**: Vitest (unit) + Playwright (e2e) · **Lint**: ESLint v9 flat config
+- **Deployment**: Vercel, any Node host, or Docker / Docker Compose
 
 ## 📁 Project Structure
 
 ```
 therapy-docs/
+├── prisma/
+│   ├── schema.prisma           # DB schema (used when DATABASE_URL is set)
+│   └── migrations/             # SQL migrations
 ├── src/
-│   ├── app/                    # Next.js App Router pages
-│   │   ├── page.tsx           # Dashboard
-│   │   ├── patients/          # Patient management
-│   │   ├── sessions/          # Session documentation
-│   │   ├── reports/           # Report generation
-│   │   └── insights/          # AI insights
-│   ├── components/
-│   │   ├── ui/                # Reusable UI components
-│   │   ├── layout/            # Layout components (Sidebar, Header)
-│   │   ├── patients/          # Patient-specific components
-│   │   ├── sessions/          # Session-specific components
-│   │   └── reports/           # Report-specific components
+│   ├── app/                    # Next.js App Router
+│   │   ├── page.tsx            # Dashboard
+│   │   ├── login/ signup/      # Auth pages
+│   │   ├── guide/              # Step-by-step usage guide (public)
+│   │   ├── patients/ sessions/ reports/ insights/ settings/ help/
+│   │   ├── error.tsx · not-found.tsx · global-error.tsx
+│   │   └── api/                # Route handlers (auth, patients, sessions, health, …)
+│   ├── components/             # ui / layout / feature components
 │   ├── lib/
-│   │   ├── mock-data.ts       # Sample data for demo
-│   │   ├── security.ts        # Encryption utilities
-│   │   ├── templates.ts       # Session templates by role
-│   │   └── ai-features.ts     # AI summarization & insights
-│   └── types/
-│       └── index.ts           # TypeScript type definitions
-├── public/                     # Static assets
-├── tailwind.config.ts         # Tailwind configuration
+│   │   ├── security.ts         # AES-256-GCM, bcrypt, HMAC, JWT helpers
+│   │   ├── env.ts · logger.ts · audit.ts
+│   │   ├── auth/               # session cookie + edge-safe JWT
+│   │   └── data/
+│   │       ├── json-store.ts   # JSON file backend (fallback)
+│   │       ├── prisma.ts        # Prisma client + USE_PRISMA flag
+│   │       ├── import-json.ts   # load data/*.json into Postgres
+│   │       └── repositories/   # JSON + Prisma repos, selected by backend
+│   ├── proxy.ts                # auth middleware (Next 16 convention)
+│   └── types/index.ts
+├── scripts/
+│   ├── capture-screenshots.mjs # regenerate /guide screenshots
+│   └── db-import.mjs           # seed Postgres from data/*.json
+├── data/                       # JSON dataset / demo seed
+├── Dockerfile · docker-compose.yml · docker-entrypoint.sh
+├── DEPLOYMENT.md · PRODUCTION_READINESS.md
 └── package.json
 ```
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-
-- Node.js 18+ 
-- npm or yarn
+- **Node.js 20.9+**
+- (Optional) PostgreSQL — only if you want database-backed persistence
 
 ### Installation
 
 ```bash
-# Clone the repository
-git clone https://github.com/your-org/therapy-docs.git
+git clone https://github.com/yosefabush/therapy-docs.git
 cd therapy-docs
+npm install                 # runs `prisma generate` automatically
 
-# Install dependencies
-npm install
+cp .env.example .env.local  # then fill in values (see below)
 
-# Set up environment variables
-cp .env.example .env.local
-# Edit .env.local with your configuration
-
-# Run development server
-npm run dev
+npm run dev                 # http://localhost:3000
 ```
 
-### Environment Variables
+In development the app works with **no configuration** (it uses the JSON store and dev-only secret fallbacks).
+
+### Demo credentials
+| Email | Password | Role |
+|-------|----------|------|
+| `dr.sarah.cohen@clinic.co.il` | `password123` | Psychologist (5 patients) |
+| `admin@clinic.co.il` | `admin123` | Admin (sees all) |
+
+### Environment variables
 
 ```env
-# Encryption (use proper key management in production)
-ENCRYPTION_KEY=your-32-character-encryption-key
+# Required in PRODUCTION (the app refuses insecure defaults when NODE_ENV=production).
+# Generate each with: openssl rand -base64 48
+JWT_SECRET=...
+ENCRYPTION_KEY=...
+SEARCH_HASH_KEY=...
 
-# Database (configure for your setup)
-DATABASE_URL=postgresql://...
+# Optional — when set, all data is stored in Postgres (via Prisma);
+# when unset, the JSON file store is used.
+DATABASE_URL=postgresql://user:pass@host:5432/therapydocs?schema=public
 
-# Authentication
-JWT_SECRET=your-jwt-secret
+# Optional — server-side audio transcription
+DEEPGRAM_API_KEY=...
+
+# Optional — verbose logs
+DEBUG_LOGGING=false
 ```
+
+> ⚠️ If a required secret is missing in production, **login returns HTTP 500** by design. Check logs for `Missing required environment variable`.
+
+## 📜 Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `npm run dev` | Start the dev server |
+| `npm run build` | Production build (`prisma generate && next build`) |
+| `npm run start` | Start the production server |
+| `npm run lint` | ESLint (flat config) |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm test` | Unit tests (Vitest) |
+| `npm run test:e2e` | End-to-end tests (Playwright) |
+| `npm run db:migrate` | Apply Prisma migrations (`prisma migrate deploy`) |
+| `npm run db:seed` | Import `data/*.json` into Postgres (idempotent) |
+
+## 🗄️ Database (optional but recommended)
+
+The storage backend is chosen automatically:
+
+- **`DATABASE_URL` set →** PostgreSQL via Prisma. All data — users, credentials, patients/sessions/etc., and the audit log — persists across deploys and instances.
+- **unset →** JSON file store under `data/` (great for local dev and demos; on Vercel this is ephemeral `/tmp`).
+
+To use Postgres:
+
+```bash
+export DATABASE_URL=postgresql://user:pass@host:5432/therapydocs?schema=public
+npm run db:migrate   # create tables
+npm run db:seed      # load the demo dataset (optional)
+```
+
+## 🐳 Deployment
+
+The app runs on Vercel, any Node host, or in a container. Full instructions in **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
+
+**Docker Compose (app + Postgres):**
+```bash
+# create .env with JWT_SECRET, ENCRYPTION_KEY, SEARCH_HASH_KEY, POSTGRES_PASSWORD
+docker compose up --build
+```
+The container runs migrations on startup and seeds the database on first run; data persists in the `db_data` volume.
+
+**Vercel:** set `JWT_SECRET`, `ENCRYPTION_KEY`, `SEARCH_HASH_KEY` (and `DATABASE_URL` for persistence) in Project → Settings → Environment Variables, then redeploy. Without `DATABASE_URL`, data lives in ephemeral `/tmp` and resets on each deploy.
 
 ## 📱 Pages Overview
 
-### Dashboard (`/`)
-- Today's schedule at a glance
-- Quick stats (sessions, patients, pending documentation)
-- AI insights and alerts
-- Recent activity feed
+| Route | Description |
+|-------|-------------|
+| `/` | Dashboard — schedule, stats, AI alerts, recent activity |
+| `/patients`, `/patients/[id]` | Patient list & full clinical file |
+| `/sessions`, `/sessions/[id]` | Session list & SOAP documentation, recording, AI summary, risk |
+| `/reports` | Generate and export reports |
+| `/insights` | Cross-session AI insights |
+| `/settings`, `/help` | Profile/preferences and support |
+| `/guide` | Public step-by-step usage guide (with screenshots) |
+| `/login`, `/signup` | Authentication |
+| `/api/health` | Liveness/readiness probe |
 
-### Patients (`/patients`)
-- Patient list with search and filters
-- Create new patient records
-- View patient details and history
+## 🎨 Design
 
-### Patient Detail (`/patients/[id]`)
-- Overview with treatment progress
-- Session history
-- Treatment goals with tracking
-- Report generation
-- Document management
+A **refined medical aesthetic**: calming sage greens with warm neutrals (`sage-*`, `warm-*`, `clinical-*`), soft shadows, rounded corners, subtle animations, Hebrew RTL with the Heebo and David Libre typefaces, and accessible contrast.
 
-### Sessions (`/sessions`)
-- Upcoming and completed sessions
-- Filter by date and status
-- Pending signature queue
+## 🔒 Security Notes
 
-### Session Detail (`/sessions/[id]`)
-- Full SOAP documentation
-- AI-generated summary
-- Risk assessment display
-- Digital signature workflow
+Implemented: bcrypt password hashing, AES-256-GCM encryption utilities, HMAC search hashing, signed httpOnly JWT sessions verified in middleware, server-side per-therapist authorization, audit logging, auth rate limiting, security headers, and fail-closed secret handling.
 
-## 🎨 Design Philosophy
-
-The design follows a **Refined Medical Aesthetic**:
-
-- **Color Palette**: Calming sage greens with warm neutrals
-- **Typography**: Crimson Pro for headings, DM Sans for body text
-- **Components**: Soft shadows, rounded corners, subtle animations
-- **Accessibility**: High contrast ratios, keyboard navigation support
-
-## 🔐 Security Considerations
-
-### For Production Deployment
-
-1. **Encryption Keys**: Use AWS KMS, Azure Key Vault, or similar HSM
-2. **Database**: Use encrypted PostgreSQL with row-level security
-3. **Authentication**: Implement MFA and session timeout
-4. **Audit Logs**: Store in immutable, tamper-evident system
-5. **Network**: Use TLS 1.3, implement rate limiting
-6. **Backups**: Encrypted backups with tested restore procedures
-
-### HIPAA Compliance Checklist
-
-- [ ] BAA with hosting provider
-- [ ] Encryption at rest and in transit
-- [ ] Access controls and audit logging
-- [ ] Automatic session timeout
-- [ ] Data backup and recovery plan
-- [ ] Employee training documentation
-- [ ] Incident response procedures
-
-## 🔮 Future Enhancements
-
-- [ ] Real-time voice transcription with live editing
-- [ ] Treatment plan AI recommendations
-- [ ] Integration with EHR systems (Epic, Cerner)
-- [ ] Patient portal for homework/self-assessments
-- [ ] Telehealth video integration
-- [ ] Insurance eligibility verification
-- [ ] Automated appointment reminders
-- [ ] Outcome measurement tracking (PHQ-9, GAD-7)
-- [ ] Mobile app for on-the-go documentation
+**Still required for full production / HIPAA** (see `PRODUCTION_READINESS.md`): managed secret storage + key rotation (KMS), object storage for audio, distributed rate limiting (Redis), connection pooling, a signed BAA with the hosting provider, and TLS termination in front of the app.
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Designed with input from practicing mental health professionals
-- Built with accessibility and usability as top priorities
-- Inspired by the need for better clinical documentation tools
+MIT — see [LICENSE](LICENSE).
 
 ---
 
-**Note**: This is a demonstration application. For production healthcare use, ensure compliance with all applicable regulations (HIPAA, HITECH, state laws) and engage appropriate security and compliance reviews.
+**Note**: This started as a demonstration application and has been hardened substantially. For production healthcare use, complete the remaining items in `PRODUCTION_READINESS.md` and engage appropriate security and compliance reviews (HIPAA, HITECH, state laws).
