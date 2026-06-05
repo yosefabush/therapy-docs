@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { reportRepository } from '@/lib/data/repositories';
 import { seedIfEmpty } from '@/lib/data/seed';
+import {
+  getSession,
+  canAccessPatient,
+  filterByPatientAccess,
+  unauthorized,
+  forbidden,
+} from '@/lib/auth/authz';
+import { logger } from '@/lib/logger';
 import { z } from 'zod';
 
 const createReportSchema = z.object({
@@ -27,27 +35,41 @@ const createReportSchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     await seedIfEmpty();
+    const session = await getSession();
+    if (!session) return unauthorized();
+
     const { searchParams } = new URL(request.url);
     const patientId = searchParams.get('patientId');
 
     let reports;
     if (patientId) {
+      if (!(await canAccessPatient(session, patientId))) return forbidden();
       reports = await reportRepository.findByPatient(patientId);
     } else {
-      reports = await reportRepository.findAll();
+      reports = await filterByPatientAccess(
+        session,
+        await reportRepository.findAll()
+      );
     }
 
     return NextResponse.json({ data: reports });
   } catch (error) {
-    console.error('Error fetching reports:', error);
+    logger.error('Error fetching reports:', error);
     return NextResponse.json({ error: 'Failed to fetch reports' }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await getSession();
+    if (!session) return unauthorized();
+
     const body = await request.json();
     const validatedData = createReportSchema.parse(body);
+
+    if (!(await canAccessPatient(session, validatedData.patientId))) {
+      return forbidden();
+    }
 
     const report = await reportRepository.create({
       ...validatedData,
@@ -62,7 +84,7 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Validation error', details: error.errors }, { status: 400 });
     }
-    console.error('Error creating report:', error);
+    logger.error('Error creating report:', error);
     return NextResponse.json({ error: 'Failed to create report' }, { status: 500 });
   }
 }

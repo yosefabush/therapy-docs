@@ -219,8 +219,18 @@ export default function LoginPage() {
           </CardFooter>
         </Card>
 
-        {/* Demo credentials hint */}
+        {/* Guide link */}
         <div className="mt-6 text-center">
+          <Link
+            href="/guide"
+            className="text-sm text-sage-600 font-medium hover:text-sage-700 hover:underline transition-colors"
+          >
+            חדשים כאן? קראו את מדריך השימוש
+          </Link>
+        </div>
+
+        {/* Demo credentials hint */}
+        <div className="mt-3 text-center">
           <p className="text-xs text-clinical-400">
             לצורך הדגמה: dr.sarah.cohen@clinic.co.il / password123
           </p>

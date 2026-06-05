@@ -1,5 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { treatmentGoalRepository } from '@/lib/data/repositories';
+import {
+  getSession,
+  canAccessPatient,
+  unauthorized,
+  forbidden,
+  notFound,
+} from '@/lib/auth/authz';
+import { logger } from '@/lib/logger';
+import type { TreatmentGoal } from '@/types';
+
+async function authorizeGoal(
+  id: string
+): Promise<{ goal: TreatmentGoal } | { error: NextResponse }> {
+  const session = await getSession();
+  if (!session) return { error: unauthorized() };
+
+  const goal = await treatmentGoalRepository.findById(id);
+  if (!goal) return { error: notFound('Goal not found') };
+
+  if (!(await canAccessPatient(session, goal.patientId))) {
+    return { error: forbidden() };
+  }
+  return { goal };
+}
 
 export async function GET(
   request: NextRequest,
@@ -7,15 +31,12 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const goal = await treatmentGoalRepository.findById(id);
+    const result = await authorizeGoal(id);
+    if ('error' in result) return result.error;
 
-    if (!goal) {
-      return NextResponse.json({ error: 'Goal not found' }, { status: 404 });
-    }
-
-    return NextResponse.json({ data: goal });
+    return NextResponse.json({ data: result.goal });
   } catch (error) {
-    console.error('Error fetching goal:', error);
+    logger.error('Error fetching goal:', error);
     return NextResponse.json({ error: 'Failed to fetch goal' }, { status: 500 });
   }
 }
@@ -26,16 +47,15 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
+    const result = await authorizeGoal(id);
+    if ('error' in result) return result.error;
+
     const body = await request.json();
     const goal = await treatmentGoalRepository.update(id, body);
 
-    if (!goal) {
-      return NextResponse.json({ error: 'Goal not found' }, { status: 404 });
-    }
-
     return NextResponse.json({ data: goal });
   } catch (error) {
-    console.error('Error updating goal:', error);
+    logger.error('Error updating goal:', error);
     return NextResponse.json({ error: 'Failed to update goal' }, { status: 500 });
   }
 }
@@ -46,15 +66,14 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
+    const result = await authorizeGoal(id);
+    if ('error' in result) return result.error;
+
     const deleted = await treatmentGoalRepository.delete(id);
 
-    if (!deleted) {
-      return NextResponse.json({ error: 'Goal not found' }, { status: 404 });
-    }
-
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: deleted });
   } catch (error) {
-    console.error('Error deleting goal:', error);
+    logger.error('Error deleting goal:', error);
     return NextResponse.json({ error: 'Failed to delete goal' }, { status: 500 });
   }
 }

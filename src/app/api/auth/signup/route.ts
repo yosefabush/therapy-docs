@@ -1,6 +1,10 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { userRepository } from '@/lib/data/repositories';
 import { readJsonFile, writeJsonFile } from '@/lib/data/json-store';
+import { hashPassword, checkRateLimit } from '@/lib/security';
+import { attachSessionCookie } from '@/lib/auth/session';
+import { logger } from '@/lib/logger';
 
 interface AuthCredentials {
   id: string;
@@ -8,21 +12,38 @@ interface AuthCredentials {
   password: string;
 }
 
-export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const { name, email, password } = body;
+const signupSchema = z.object({
+  name: z.string().trim().min(2, 'שם קצר מדי'),
+  email: z.string().email(),
+  password: z.string().min(8, 'הסיסמה חייבת להכיל לפחות 8 תווים'),
+});
 
-    if (!name || !email || !password) {
+function clientIp(request: NextRequest): string {
+  const forwarded = request.headers.get('x-forwarded-for');
+  return forwarded?.split(',')[0]?.trim() || 'unknown';
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    if (!checkRateLimit(`signup:${clientIp(request)}`, 5, 60_000)) {
       return NextResponse.json(
-        { error: 'נא למלא את כל השדות' },
+        { error: 'יותר מדי בקשות. אנא נסה שוב בעוד מספר דקות.' },
+        { status: 429 }
+      );
+    }
+
+    const parsed = signupSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message ?? 'נא למלא את כל השדות' },
         { status: 400 }
       );
     }
 
-    // Check if email already exists
-    const existingUser = await userRepository.findByEmail(email.toLowerCase());
+    const { name, password } = parsed.data;
+    const email = parsed.data.email.toLowerCase();
 
+    const existingUser = await userRepository.findByEmail(email);
     if (existingUser) {
       return NextResponse.json(
         { error: 'כתובת אימייל זו כבר רשומה במערכת.' },
@@ -30,9 +51,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create the user in users.json
     const newUser = await userRepository.create({
-      email: email.toLowerCase(),
+      email,
       name,
       role: 'therapist',
       therapistRole: 'psychologist', // Default role
@@ -40,17 +60,18 @@ export async function POST(request: Request) {
       lastLogin: new Date(),
     });
 
-    // Store credentials in auth-credentials.json
-    const credentials = await readJsonFile<AuthCredentials>('auth-credentials.json');
+    // Store a bcrypt hash of the password, never the plaintext.
+    const credentials = await readJsonFile<AuthCredentials>(
+      'auth-credentials.json'
+    );
     credentials.push({
       id: newUser.id,
-      email: email.toLowerCase(),
-      password: password, // In production, this should be hashed
+      email,
+      password: await hashPassword(password),
     });
     await writeJsonFile('auth-credentials.json', credentials);
 
-    // Return success with user data
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       user: {
         id: newUser.id,
@@ -61,8 +82,14 @@ export async function POST(request: Request) {
         organization: newUser.organization,
       },
     });
+
+    return attachSessionCookie(response, {
+      sub: newUser.id,
+      role: newUser.role,
+      therapistRole: newUser.therapistRole,
+    });
   } catch (error) {
-    console.error('Signup error:', error);
+    logger.error('Signup error:', error);
     return NextResponse.json(
       { error: 'אירעה שגיאה בהרשמה' },
       { status: 500 }

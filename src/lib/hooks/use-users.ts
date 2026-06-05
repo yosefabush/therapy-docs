@@ -83,6 +83,11 @@ export function clearAuthUser(): void {
   localStorage.removeItem(AUTH_STORAGE_KEY);
   sessionStorage.removeItem(AUTH_STORAGE_KEY);
 
+  // Also clear the server-side httpOnly session cookie (fire-and-forget).
+  if (typeof window !== 'undefined') {
+    fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+  }
+
   // Notify listeners that auth changed
   window.dispatchEvent(new CustomEvent(AUTH_CHANGE_EVENT, { detail: { userId: null } }));
 }

@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+        env:
+          # Provide non-secret placeholder values so the production build can
+          # initialise. Real secrets are injected by the deployment platform.
+          ENCRYPTION_KEY: ci-placeholder-encryption-key
+          JWT_SECRET: ci-placeholder-jwt-secret
+          SEARCH_HASH_KEY: ci-placeholder-search-key

@@ -1,5 +1,6 @@
 import { promises as fs } from 'fs';
 import path from 'path';
+import { logger } from '@/lib/logger';
 
 // On Vercel (serverless), use /tmp for writable storage
 // In development, use local data/ directory
@@ -7,8 +8,8 @@ const isVercel = process.env.VERCEL === '1';
 const WRITABLE_DIR = isVercel ? '/tmp/data' : path.join(process.cwd(), 'data');
 const BUNDLED_DATA_DIR = path.join(process.cwd(), 'data');
 
-// Log environment detection on module load
-console.log('[json-store] Environment detection:', {
+// Log environment detection on module load (debug-only).
+logger.debug('[json-store] Environment detection:', {
   isVercel,
   VERCEL_ENV: process.env.VERCEL,
   WRITABLE_DIR,
@@ -35,18 +36,18 @@ async function ensureFileFromBundled(filename: string): Promise<void> {
 
   try {
     await fs.access(writablePath);
-    console.log(`[json-store] File already exists in /tmp: ${filename}`);
+    logger.debug(`[json-store] File already exists in /tmp: ${filename}`);
     initializedFiles.add(filename);
   } catch {
     // File doesn't exist in /tmp, try to copy from bundled
     try {
       const bundledData = await fs.readFile(bundledPath, 'utf-8');
       await fs.writeFile(writablePath, bundledData, 'utf-8');
-      console.log(`[json-store] Copied bundled data to /tmp: ${filename}`);
+      logger.debug(`[json-store] Copied bundled data to /tmp: ${filename}`);
       initializedFiles.add(filename);
     } catch (error) {
       // Bundled file doesn't exist either, that's ok
-      console.log(`[json-store] No bundled data for: ${filename}`, error);
+      logger.debug(`[json-store] No bundled data for: ${filename}`, error);
       initializedFiles.add(filename);
     }
   }
@@ -79,16 +80,40 @@ export async function readJsonFile<T>(filename: string): Promise<T[]> {
   }
 }
 
+// Per-file write lock: serialize concurrent writes to the same file within the
+// process so a read-modify-write from one request cannot clobber another's.
+// (For multi-instance deployments this must move to the database layer.)
+const writeLocks = new Map<string, Promise<void>>();
+
+async function withWriteLock(
+  filename: string,
+  task: () => Promise<void>
+): Promise<void> {
+  const previous = writeLocks.get(filename) ?? Promise.resolve();
+  const current = previous.catch(() => {}).then(task);
+  writeLocks.set(
+    filename,
+    current.finally(() => {
+      if (writeLocks.get(filename) === current) {
+        writeLocks.delete(filename);
+      }
+    })
+  );
+  return current;
+}
+
 export async function writeJsonFile<T>(filename: string, data: T[]): Promise<void> {
-  await ensureDataDir();
-  const filePath = path.join(WRITABLE_DIR, filename);
-  const tempPath = `${filePath}.tmp`;
+  return withWriteLock(filename, async () => {
+    await ensureDataDir();
+    const filePath = path.join(WRITABLE_DIR, filename);
+    const tempPath = `${filePath}.tmp`;
 
-  console.log(`[json-store] Writing file: ${filePath} (${data.length} items)`);
+    logger.debug(`[json-store] Writing file: ${filePath} (${data.length} items)`);
 
-  // Atomic write: write to temp file, then rename
-  await fs.writeFile(tempPath, JSON.stringify(data, null, 2), 'utf-8');
-  await fs.rename(tempPath, filePath);
+    // Atomic write: write to temp file, then rename
+    await fs.writeFile(tempPath, JSON.stringify(data, null, 2), 'utf-8');
+    await fs.rename(tempPath, filePath);
+  });
 }
 
 export async function fileExists(filename: string): Promise<boolean> {

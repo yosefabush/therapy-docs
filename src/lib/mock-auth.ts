@@ -79,8 +79,8 @@ export function mockLogin(credentials: LoginCredentials): AuthResult {
     };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { password, ...userWithoutPassword } = user;
+  const { password: _pw, ...userWithoutPassword } = user;
+  void _pw;
   return {
     success: true,
     user: userWithoutPassword,
@@ -113,8 +113,8 @@ export function mockSignup(data: SignupData): AuthResult {
 
   registeredUsers.push(newUser);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { password, ...userWithoutPassword } = newUser;
+  const { password: _pw, ...userWithoutPassword } = newUser;
+  void _pw;
   return {
     success: true,
     user: userWithoutPassword,

@@ -1,4 +1,5 @@
 import { writeJsonFile, fileExists } from './json-store';
+import { logger } from '@/lib/logger';
 import {
   mockUsers,
   mockPatients,
@@ -24,7 +25,7 @@ export async function seedIfEmpty(): Promise<boolean> {
   await writeJsonFile('reports.json', mockReports);
   await writeJsonFile('voice-recordings.json', []);
 
-  console.log('Database seeded with mock data');
+  logger.debug('Database seeded with mock data');
   return true;
 }
 
@@ -35,5 +36,5 @@ export async function resetData(): Promise<void> {
   await writeJsonFile('treatment-goals.json', mockTreatmentGoals);
   await writeJsonFile('reports.json', mockReports);
   await writeJsonFile('voice-recordings.json', []);
-  console.log('Database reset to mock data');
+  logger.debug('Database reset to mock data');
 }

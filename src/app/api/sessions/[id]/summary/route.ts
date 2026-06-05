@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sessionRepository } from '@/lib/data/repositories/session.repository';
 import { generateSessionSummaryAI, getAIConfig } from '@/lib/ai';
+import {
+  getSession,
+  canAccessPatient,
+  unauthorized,
+  forbidden,
+} from '@/lib/auth/authz';
+import { logger } from '@/lib/logger';
 import type { AISummary } from '@/types';
 
 interface SummaryRequest {
@@ -48,6 +55,8 @@ export async function POST(
 ): Promise<NextResponse<SummaryResponse>> {
   try {
     const { id } = await params;
+    const auth = await getSession();
+    if (!auth) return unauthorized();
 
     // 1. Fetch the session
     const session = await sessionRepository.findById(id);
@@ -58,6 +67,7 @@ export async function POST(
         { status: 404 }
       );
     }
+    if (!(await canAccessPatient(auth, session.patientId))) return forbidden();
 
     // 2. Validate session has notes to summarize
     // Note: Session.notes is a required field per types/index.ts
@@ -89,7 +99,7 @@ export async function POST(
 
     // 5. Check for generation errors
     if (result.error) {
-      console.error(`Summary generation failed for session ${id}:`, result.error);
+      logger.error(`Summary generation failed for session ${id}:`, result.error);
       return NextResponse.json(
         { error: `Summary generation failed: ${result.error}` },
         { status: 500 }
@@ -108,7 +118,7 @@ export async function POST(
     });
 
   } catch (error) {
-    console.error('Error in summary generation:', error);
+    logger.error('Error in summary generation:', error);
     return NextResponse.json(
       { error: 'Failed to generate summary' },
       { status: 500 }
@@ -128,6 +138,8 @@ export async function GET(
 ): Promise<NextResponse> {
   try {
     const { id } = await params;
+    const auth = await getSession();
+    if (!auth) return unauthorized();
 
     // Verify session exists
     const session = await sessionRepository.findById(id);
@@ -137,6 +149,7 @@ export async function GET(
         { status: 404 }
       );
     }
+    if (!(await canAccessPatient(auth, session.patientId))) return forbidden();
 
     const config = getAIConfig();
 
@@ -150,7 +163,7 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('Error fetching summary config:', error);
+    logger.error('Error fetching summary config:', error);
     return NextResponse.json(
       { error: 'Failed to fetch configuration' },
       { status: 500 }
@@ -173,6 +186,8 @@ export async function PATCH(
 ): Promise<NextResponse> {
   try {
     const { id } = await params;
+    const auth = await getSession();
+    if (!auth) return unauthorized();
     const body: SaveSummaryRequest = await request.json();
 
     // Validate required fields
@@ -191,6 +206,7 @@ export async function PATCH(
         { status: 404 }
       );
     }
+    if (!(await canAccessPatient(auth, session.patientId))) return forbidden();
 
     // Build aiSummary object
     const aiSummary: AISummary = {
@@ -215,7 +231,7 @@ export async function PATCH(
     });
 
   } catch (error) {
-    console.error('Error saving summary:', error);
+    logger.error('Error saving summary:', error);
     return NextResponse.json(
       { error: 'Failed to save summary' },
       { status: 500 }
