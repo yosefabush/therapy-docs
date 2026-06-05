@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { voiceRecordingRepository } from '@/lib/data/repositories';
 import { seedIfEmpty } from '@/lib/data/seed';
+import {
+  getSession,
+  canAccessPatient,
+  filterByPatientAccess,
+  unauthorized,
+  forbidden,
+} from '@/lib/auth/authz';
+import { logger } from '@/lib/logger';
 import { z } from 'zod';
 
 const speakerUtteranceSchema = z.object({
@@ -33,30 +41,48 @@ const createRecordingSchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     await seedIfEmpty();
+    const session = await getSession();
+    if (!session) return unauthorized();
+
     const { searchParams } = new URL(request.url);
     const sessionId = searchParams.get('sessionId');
     const patientId = searchParams.get('patientId');
 
     let recordings;
-    if (sessionId) {
-      recordings = await voiceRecordingRepository.findBySession(sessionId);
-    } else if (patientId) {
+    if (patientId) {
+      if (!(await canAccessPatient(session, patientId))) return forbidden();
       recordings = await voiceRecordingRepository.findByPatient(patientId);
+    } else if (sessionId) {
+      // Recordings carry patientId; filter to those the caller may access.
+      recordings = await filterByPatientAccess(
+        session,
+        await voiceRecordingRepository.findBySession(sessionId)
+      );
     } else {
-      recordings = await voiceRecordingRepository.findAll();
+      recordings = await filterByPatientAccess(
+        session,
+        await voiceRecordingRepository.findAll()
+      );
     }
 
     return NextResponse.json({ data: recordings });
   } catch (error) {
-    console.error('Error fetching voice recordings:', error);
+    logger.error('Error fetching voice recordings:', error);
     return NextResponse.json({ error: 'Failed to fetch voice recordings' }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await getSession();
+    if (!session) return unauthorized();
+
     const body = await request.json();
     const validatedData = createRecordingSchema.parse(body);
+
+    if (!(await canAccessPatient(session, validatedData.patientId))) {
+      return forbidden();
+    }
 
     const recording = await voiceRecordingRepository.create(validatedData);
     return NextResponse.json({ data: recording }, { status: 201 });
@@ -64,7 +90,7 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Validation error', details: error.errors }, { status: 400 });
     }
-    console.error('Error creating voice recording:', error);
+    logger.error('Error creating voice recording:', error);
     return NextResponse.json({ error: 'Failed to create voice recording' }, { status: 500 });
   }
 }

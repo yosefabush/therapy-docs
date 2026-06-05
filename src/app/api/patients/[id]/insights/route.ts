@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { patientRepository, patientInsightsRepository } from '@/lib/data/repositories';
 import { generatePatientInsights } from '@/lib/ai/patient-insights';
+import {
+  getSession,
+  canAccessPatient,
+  unauthorized,
+  forbidden,
+} from '@/lib/auth/authz';
+import { logger } from '@/lib/logger';
 import type { PatientInsights } from '@/types';
 
 /**
@@ -20,6 +27,8 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
+    const session = await getSession();
+    if (!session) return unauthorized();
 
     // Validate patient exists
     const patient = await patientRepository.findById(id);
@@ -29,6 +38,7 @@ export async function POST(
         { status: 404 }
       );
     }
+    if (!(await canAccessPatient(session, id))) return forbidden();
 
     // Generate insights
     const insights = await generatePatientInsights(id);
@@ -37,7 +47,7 @@ export async function POST(
     return NextResponse.json({ data: insights });
 
   } catch (error) {
-    console.error('Error generating patient insights:', error);
+    logger.error('Error generating patient insights:', error);
     return NextResponse.json(
       { error: 'Failed to generate insights' },
       { status: 500 }
@@ -61,6 +71,8 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    const session = await getSession();
+    if (!session) return unauthorized();
 
     // Validate patient exists
     const patient = await patientRepository.findById(id);
@@ -70,6 +82,7 @@ export async function GET(
         { status: 404 }
       );
     }
+    if (!(await canAccessPatient(session, id))) return forbidden();
 
     // Get saved insights
     const insights = await patientInsightsRepository.findByPatientId(id);
@@ -78,7 +91,7 @@ export async function GET(
     return NextResponse.json({ data: insights });
 
   } catch (error) {
-    console.error('Error fetching patient insights:', error);
+    logger.error('Error fetching patient insights:', error);
     return NextResponse.json(
       { error: 'Failed to fetch insights' },
       { status: 500 }
@@ -106,6 +119,8 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
+    const session = await getSession();
+    if (!session) return unauthorized();
     const body = await request.json();
 
     // Validate patient exists
@@ -116,6 +131,7 @@ export async function PATCH(
         { status: 404 }
       );
     }
+    if (!(await canAccessPatient(session, id))) return forbidden();
 
     // Validate required fields
     if (!body.insights) {
@@ -139,7 +155,7 @@ export async function PATCH(
     return NextResponse.json({ data: savedInsights });
 
   } catch (error) {
-    console.error('Error saving patient insights:', error);
+    logger.error('Error saving patient insights:', error);
     return NextResponse.json(
       { error: 'Failed to save insights' },
       { status: 500 }
