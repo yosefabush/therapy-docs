@@ -39,6 +39,9 @@ work required before a full production / HIPAA-compliant launch.
 - **Fail-closed secrets.** Encryption/JWT/search secrets are required from the
   environment; the app refuses insecure fallback values when
   `NODE_ENV=production`. See `.env.example`.
+- **Inactivity auto-logout.** `useIdleLogout` clears the session (storage +
+  server cookie) and redirects to login after 30 minutes of inactivity, in
+  addition to the 8-hour JWT expiry (HIPAA unattended-session requirement).
 - **Auth route hardening.** Login/signup now validate input with Zod, apply
   per-IP rate limiting, and return generic messages (no user-enumeration, no
   leaking of internal error details). Passwords require ≥ 8 characters.
@@ -77,8 +80,6 @@ These items need provisioning that cannot be done from the codebase alone:
    Secrets Manager (or equivalent) and implement versioned encryption keys.
 3. **Object storage for audio.** Move base64 audio out of the data store into
    S3/GCS with signed URLs and streaming.
-4. **Session timeout / automatic logout** after inactivity (HIPAA requirement).
-   The session JWT already expires after 8h; add client-side inactivity logout.
-5. **Distributed rate limiting** (Redis) for multi-instance deployments.
-6. **Secret hygiene.** Rotate any API keys that were previously committed and
+4. **Distributed rate limiting** (Redis) for multi-instance deployments.
+5. **Secret hygiene.** Rotate any API keys that were previously committed and
    confirm they are purged from git history.

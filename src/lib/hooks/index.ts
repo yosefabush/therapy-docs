@@ -6,5 +6,6 @@ export { useUsers, useCurrentUser, storeAuthUser, clearAuthUser, isAuthenticated
 export { useVoiceRecordings } from './use-voice-recordings';
 export { useSessionReminder } from './use-session-reminder';
 export { useAuthRedirect } from './use-auth-redirect';
+export { useIdleLogout } from './use-idle-logout';
 export { useMyPatients, useMySessions, useMyTreatmentGoals, useMyReports } from './use-my-data';
 export { useNotifications } from './use-notifications';
