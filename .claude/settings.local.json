@@ -49,7 +49,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -c (New-Object Media.SoundPlayer 'C:\\Windows\\Media\\Windows Background.wav').PlaySync()"
+            "command": "command -v powershell >/dev/null 2>&1 && powershell -c \"(New-Object Media.SoundPlayer 'C:\\Windows\\Media\\Windows Background.wav').PlaySync()\" || true"
           }
         ]
       }
@@ -59,7 +59,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -c (New-Object Media.SoundPlayer 'C:\\Windows\\Media\\Windows Logoff Sound.wav').PlaySync()"
+            "command": "command -v powershell >/dev/null 2>&1 && powershell -c \"(New-Object Media.SoundPlayer 'C:\\Windows\\Media\\Windows Logoff Sound.wav').PlaySync()\" || true"
           }
         ]
       }
