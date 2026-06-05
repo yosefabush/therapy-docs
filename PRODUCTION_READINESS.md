@@ -23,6 +23,15 @@ work required before a full production / HIPAA-compliant launch.
 - **Audit logging.** PHI access (read/create/update/delete across patients,
   sessions, reports, and recordings) is recorded via an append-only audit log
   (`src/lib/audit.ts`); the runtime file is gitignored.
+- **PostgreSQL persistence (Prisma).** When `DATABASE_URL` is set, all data —
+  including users, credentials, patients/sessions/etc. and the audit log — is
+  stored in Postgres via Prisma (`prisma/schema.prisma`, repositories in
+  `src/lib/data/repositories/prisma.repositories.ts`), selected automatically in
+  `repositories/index.ts`. Without `DATABASE_URL` it falls back to the JSON file
+  store, so local dev and the demo keep working. Schema migrations live in
+  `prisma/migrations`; `npm run db:seed` imports the bundled dataset. This makes
+  signed-up users and all data persist across deploys and instances. Docker
+  Compose (`docker-compose.yml`) runs the app + Postgres together.
 - **Concurrency-safe writes.** The JSON store serializes writes per file to
   prevent lost updates from interleaved read-modify-write requests.
 - **Password hashing (bcrypt).** Signup now stores bcrypt hashes (cost 12);
@@ -70,12 +79,10 @@ work required before a full production / HIPAA-compliant launch.
 
 These items need provisioning that cannot be done from the codebase alone:
 
-1. **Persistent database.** Data currently lives in JSON files
-   (`src/lib/data/json-store.ts`). Per-file write locks now prevent in-process
-   lost updates, but this still does not support multi-instance concurrency and
-   is unsuitable for production scale. Migrate to PostgreSQL (Prisma/Drizzle)
-   with connection pooling. Once migrated, move authorization scoping into the
-   query layer and the audit log into a tamper-evident, retained store.
+1. **Database hardening (follow-ups).** Postgres persistence is in place (see
+   above). Remaining polish: connection pooling (PgBouncer / Prisma Accelerate)
+   for serverless, promoting hot JSON `payload` fields to real columns as query
+   needs grow, and making the audit table tamper-evident/retained.
 2. **Managed secret storage & key rotation.** Move secrets to AWS KMS /
    Secrets Manager (or equivalent) and implement versioned encryption keys.
 3. **Object storage for audio.** Move base64 audio out of the data store into

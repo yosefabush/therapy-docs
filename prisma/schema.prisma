@@ -1,0 +1,116 @@
+// Prisma schema for TherapyDocs.
+//
+// Storage strategy: each entity keeps the queryable/scalar fields as real
+// columns (for indexes and filters) plus a `payload` JSON column holding the
+// full typed object. This mirrors the repository pattern exactly, so API
+// routes are unchanged, while giving real persistence, transactions and
+// row-level concurrency. Migrate individual JSON fields to columns over time
+// as query needs grow.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id
+  email     String   @unique
+  payload   Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AuthCredential {
+  id        String   @id
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Patient {
+  id                 String   @id
+  status             String
+  assignedTherapists String[]
+  payload            Json
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([status])
+}
+
+model Session {
+  id          String   @id
+  patientId   String
+  therapistId String
+  status      String
+  scheduledAt DateTime
+  payload     Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([patientId])
+  @@index([therapistId])
+  @@index([scheduledAt])
+}
+
+model TreatmentGoal {
+  id        String   @id
+  patientId String
+  payload   Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([patientId])
+}
+
+model Report {
+  id        String   @id
+  patientId String
+  payload   Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([patientId])
+}
+
+model VoiceRecording {
+  id        String   @id
+  sessionId String
+  patientId String
+  payload   Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sessionId])
+  @@index([patientId])
+}
+
+model PatientInsights {
+  id          String   @id
+  patientId   String
+  generatedAt DateTime
+  payload     Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([patientId])
+}
+
+model AuditEntry {
+  id           String   @id @default(cuid())
+  timestamp    DateTime @default(now())
+  userId       String
+  action       String
+  resourceType String
+  resourceId   String
+  ipAddress    String?
+  details      String?
+
+  @@index([userId])
+  @@index([resourceType, resourceId])
+}

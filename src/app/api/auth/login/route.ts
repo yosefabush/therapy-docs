@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { userRepository } from '@/lib/data/repositories';
-import { readJsonFile, writeJsonFile } from '@/lib/data/json-store';
+import {
+  findCredentialByEmail,
+  updateCredentialPassword,
+} from '@/lib/data/auth-credentials';
 import {
   verifyPassword,
   hashPassword,
@@ -10,12 +13,6 @@ import {
 } from '@/lib/security';
 import { attachSessionCookie } from '@/lib/auth/session';
 import { logger } from '@/lib/logger';
-
-interface AuthCredentials {
-  id: string;
-  email: string;
-  password: string;
-}
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -54,13 +51,7 @@ export async function POST(request: NextRequest) {
     const { password } = parsed.data;
 
     const user = await userRepository.findByEmail(email);
-
-    const credentials = await readJsonFile<AuthCredentials>(
-      'auth-credentials.json'
-    );
-    const userCredentials = credentials.find(
-      (c) => c.email.toLowerCase() === email
-    );
+    const userCredentials = await findCredentialByEmail(email);
 
     // Always run a comparison to keep timing roughly constant whether or not
     // the account exists, then fail with a single generic message.
@@ -73,8 +64,7 @@ export async function POST(request: NextRequest) {
         // a bcrypt hash on first successful login.
         valid = password === userCredentials.password;
         if (valid) {
-          userCredentials.password = await hashPassword(password);
-          await writeJsonFile('auth-credentials.json', credentials);
+          await updateCredentialPassword(email, await hashPassword(password));
         }
       }
     }

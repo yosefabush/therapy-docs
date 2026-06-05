@@ -1,16 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { userRepository } from '@/lib/data/repositories';
-import { readJsonFile, writeJsonFile } from '@/lib/data/json-store';
+import { createCredential } from '@/lib/data/auth-credentials';
 import { hashPassword, checkRateLimit } from '@/lib/security';
 import { attachSessionCookie } from '@/lib/auth/session';
 import { logger } from '@/lib/logger';
-
-interface AuthCredentials {
-  id: string;
-  email: string;
-  password: string;
-}
 
 const signupSchema = z.object({
   name: z.string().trim().min(2, 'שם קצר מדי'),
@@ -61,15 +55,11 @@ export async function POST(request: NextRequest) {
     });
 
     // Store a bcrypt hash of the password, never the plaintext.
-    const credentials = await readJsonFile<AuthCredentials>(
-      'auth-credentials.json'
-    );
-    credentials.push({
+    await createCredential({
       id: newUser.id,
       email,
       password: await hashPassword(password),
     });
-    await writeJsonFile('auth-credentials.json', credentials);
 
     const response = NextResponse.json({
       success: true,
