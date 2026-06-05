@@ -1,6 +1,14 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { userRepository } from '@/lib/data/repositories';
 import { readJsonFile, writeJsonFile } from '@/lib/data/json-store';
+import {
+  verifyPassword,
+  hashPassword,
+  isHashedPassword,
+  checkRateLimit,
+} from '@/lib/security';
+import { logger } from '@/lib/logger';
 
 interface AuthCredentials {
   id: string;
@@ -8,43 +16,74 @@ interface AuthCredentials {
   password: string;
 }
 
-export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const { email, password, rememberMe } = body;
+const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(1),
+  rememberMe: z.boolean().optional(),
+});
 
-    if (!email || !password) {
+// Generic message so we never reveal whether an email exists.
+const INVALID_CREDENTIALS = 'אימייל או סיסמה שגויים. אנא נסה שוב.';
+
+function clientIp(request: NextRequest): string {
+  const forwarded = request.headers.get('x-forwarded-for');
+  return forwarded?.split(',')[0]?.trim() || 'unknown';
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    // Throttle login attempts per client IP to slow credential stuffing.
+    if (!checkRateLimit(`login:${clientIp(request)}`, 10, 60_000)) {
       return NextResponse.json(
-        { error: 'נא להזין אימייל וסיסמה' },
+        { error: 'יותר מדי ניסיונות התחברות. אנא נסה שוב בעוד מספר דקות.' },
+        { status: 429 }
+      );
+    }
+
+    const parsed = loginSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'נא להזין אימייל וסיסמה תקינים' },
         { status: 400 }
       );
     }
 
-    // Find user by email
-    const user = await userRepository.findByEmail(email.toLowerCase());
+    const { rememberMe } = parsed.data;
+    const email = parsed.data.email.toLowerCase();
+    const { password } = parsed.data;
 
-    if (!user) {
-      return NextResponse.json(
-        { error: 'משתמש לא נמצא. אנא בדוק את כתובת האימייל.' },
-        { status: 401 }
-      );
+    const user = await userRepository.findByEmail(email);
+
+    const credentials = await readJsonFile<AuthCredentials>(
+      'auth-credentials.json'
+    );
+    const userCredentials = credentials.find(
+      (c) => c.email.toLowerCase() === email
+    );
+
+    // Always run a comparison to keep timing roughly constant whether or not
+    // the account exists, then fail with a single generic message.
+    let valid = false;
+    if (user && userCredentials) {
+      if (isHashedPassword(userCredentials.password)) {
+        valid = await verifyPassword(password, userCredentials.password);
+      } else {
+        // Legacy plaintext credential: verify, then transparently upgrade to
+        // a bcrypt hash on first successful login.
+        valid = password === userCredentials.password;
+        if (valid) {
+          userCredentials.password = await hashPassword(password);
+          await writeJsonFile('auth-credentials.json', credentials);
+        }
+      }
     }
 
-    // Check password from auth credentials file
-    const credentials = await readJsonFile<AuthCredentials>('auth-credentials.json');
-    const userCredentials = credentials.find(c => c.email.toLowerCase() === email.toLowerCase());
-
-    if (!userCredentials || userCredentials.password !== password) {
-      return NextResponse.json(
-        { error: 'סיסמה שגויה. אנא נסה שוב.' },
-        { status: 401 }
-      );
+    if (!user || !userCredentials || !valid) {
+      return NextResponse.json({ error: INVALID_CREDENTIALS }, { status: 401 });
     }
 
-    // Update last login
     await userRepository.update(user.id, { lastLogin: new Date() });
 
-    // Return user data with rememberMe flag
     return NextResponse.json({
       success: true,
       user: {
@@ -58,7 +97,7 @@ export async function POST(request: Request) {
       rememberMe,
     });
   } catch (error) {
-    console.error('Login error:', error);
+    logger.error('Login error:', error);
     return NextResponse.json(
       { error: 'אירעה שגיאה בהתחברות' },
       { status: 500 }

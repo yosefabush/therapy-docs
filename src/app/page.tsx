@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import Link from 'next/link';
 import { Sidebar, MobileMenuProvider } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { BottomNav } from '@/components/layout/BottomNav';
@@ -287,7 +288,7 @@ function DashboardContent() {
                   <h2 className="text-lg font-semibold text-clinical-900" style={{ fontFamily: '"David Libre", Georgia, serif' }}>
                     המטופלים שלי
                   </h2>
-                  <a href="/patients"><Button variant="ghost" size="sm">הצג הכל</Button></a>
+                  <Link href="/patients"><Button variant="ghost" size="sm">הצג הכל</Button></Link>
                 </div>
                 {myPatients.length === 0 ? (
                   <div className="text-center py-8 flex-1 flex flex-col items-center justify-center">
@@ -295,9 +296,9 @@ function DashboardContent() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
                     <p className="text-sm text-clinical-500">אין מטופלים משויכים</p>
-                    <a href="/patients">
+                    <Link href="/patients">
                       <Button variant="primary" size="sm" className="mt-3">הוסף מטופל</Button>
-                    </a>
+                    </Link>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1">

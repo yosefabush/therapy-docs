@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@deepgram/sdk';
 import { DiarizedTranscript, SpeakerUtterance } from '@/types';
+import { logger } from '@/lib/logger';
+
+// Reject oversized payloads early (base64 inflates size ~33%); ~25MB of audio.
+const MAX_AUDIO_BYTES = 35 * 1024 * 1024;
+const SUPPORTED_LANGUAGES = ['he', 'en'];
 
 // Initialize Deepgram client
 const getDeepgramClient = () => {
@@ -17,10 +22,24 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { audioData, language = 'he' } = body;
 
-    if (!audioData) {
+    if (!audioData || typeof audioData !== 'string') {
       return NextResponse.json(
         { error: 'No audio data provided' },
         { status: 400 }
+      );
+    }
+
+    if (typeof language !== 'string' || !SUPPORTED_LANGUAGES.includes(language)) {
+      return NextResponse.json(
+        { error: 'Unsupported language' },
+        { status: 400 }
+      );
+    }
+
+    if (audioData.length > MAX_AUDIO_BYTES) {
+      return NextResponse.json(
+        { error: 'Audio payload too large' },
+        { status: 413 }
       );
     }
 
@@ -58,9 +77,9 @@ export async function POST(request: NextRequest) {
     );
 
     if (error) {
-      console.error('Deepgram API error:', error);
+      logger.error('Deepgram API error:', error);
       return NextResponse.json(
-        { error: 'Failed to transcribe audio', details: error.message },
+        { error: 'Failed to transcribe audio' },
         { status: 500 }
       );
     }
@@ -76,15 +95,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Debug: log raw response structure
     const rawUtterances = result?.results?.utterances || [];
     const words = alternatives?.words || [];
-    console.log('[Deepgram Debug] Utterances count:', rawUtterances.length);
-    console.log('[Deepgram Debug] First utterance:', JSON.stringify(rawUtterances[0]));
-    console.log('[Deepgram Debug] Words count:', words.length);
-    console.log('[Deepgram Debug] First 3 words:', JSON.stringify(words.slice(0, 3)));
-    console.log('[Deepgram Debug] Unique speakers in utterances:', [...new Set(rawUtterances.map((u: any) => u.speaker))]);
-    console.log('[Deepgram Debug] Unique speakers in words:', [...new Set(words.map((w: any) => w.speaker))]);
+    // Diagnostics only (counts, not transcript content) and suppressed in prod.
+    logger.debug('[Deepgram] utterances:', rawUtterances.length, 'words:', words.length);
 
     // Build speaker utterances - prefer utterances array if it has speaker data,
     // otherwise build from word-level speaker info
@@ -106,7 +120,7 @@ export async function POST(request: NextRequest) {
       }));
     } else if (wordsSpeakers.size > 1) {
       // Words have speaker info but utterances don't - build segments from words
-      console.log('[Deepgram Debug] Building utterances from word-level speaker data');
+      logger.debug('[Deepgram] Building utterances from word-level speaker data');
       speakerSet = wordsSpeakers;
       speakerUtterances = [];
       let currentSpeaker = words[0]?.speaker ?? 0;
@@ -176,12 +190,9 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Transcription error:', error);
+    logger.error('Transcription error:', error);
     return NextResponse.json(
-      {
-        error: 'Failed to process transcription',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
+      { error: 'Failed to process transcription' },
       { status: 500 }
     );
   }

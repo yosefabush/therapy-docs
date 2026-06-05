@@ -52,13 +52,10 @@ export function Sidebar({ user, onLogout }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
-  // Try to use mobile menu context if available
-  let mobileMenuContext: MobileMenuContextType | null = null;
-  try {
-    mobileMenuContext = useContext(MobileMenuContext);
-  } catch {
-    // Context not available, that's fine for desktop-only views
-  }
+  // Mobile menu context is optional (null when rendered outside a provider,
+  // e.g. desktop-only views), so we can read it unconditionally.
+  const mobileMenuContext: MobileMenuContextType | null =
+    useContext(MobileMenuContext);
 
   const closeMobileMenu = () => {
     if (mobileMenuContext) {

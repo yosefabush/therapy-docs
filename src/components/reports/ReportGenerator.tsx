@@ -16,10 +16,12 @@ interface ReportGeneratorProps {
 
 export function ReportGenerator({ patientId, patientName, sessions, goals, onGenerate }: ReportGeneratorProps) {
   const [reportType, setReportType] = useState<ReportType>('progress_summary');
-  const [dateRange, setDateRange] = useState({
+  // Lazy initializer so the current time is read once on mount rather than on
+  // every render (keeps the render pure).
+  const [dateRange, setDateRange] = useState(() => ({
     start: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     end: new Date().toISOString().split('T')[0],
-  });
+  }));
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
