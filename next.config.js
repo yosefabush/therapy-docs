@@ -34,6 +34,9 @@ const securityHeaders = [
 ];
 
 const nextConfig = {
+  // Produce a self-contained build (.next/standalone) for slim container images
+  // and portable Node deployments. Override with NEXT_OUTPUT if needed.
+  output: process.env.NEXT_OUTPUT || 'standalone',
   reactStrictMode: true,
   poweredByHeader: false,
   experimental: {
