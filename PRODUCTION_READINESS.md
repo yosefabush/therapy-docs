@@ -6,6 +6,18 @@ work required before a full production / HIPAA-compliant launch.
 ## ✅ Completed in this pass
 
 ### Security
+- **Server-side authorization.** Login/signup now issue an httpOnly, signed
+  **JWT session cookie**; `src/proxy.ts` (Next 16's middleware convention)
+  enforces authentication on every `/api` route except the public
+  auth/health/seed/swagger endpoints. Patient routes are scoped server-side to
+  the authenticated therapist (admins see all), with assignment-based access
+  returning 401/403/404. Identity is derived from the verified session, never
+  from client-supplied parameters. Added `/api/auth/logout` and `/api/auth/me`.
+- **Audit logging.** PHI access (list/read/create/update/delete on patients) is
+  recorded via an append-only audit log (`src/lib/audit.ts`); the runtime file
+  is gitignored.
+- **Concurrency-safe writes.** The JSON store serializes writes per file to
+  prevent lost updates from interleaved read-modify-write requests.
 - **Password hashing (bcrypt).** Signup now stores bcrypt hashes (cost 12);
   login verifies with `bcrypt.compare`. Any legacy plaintext credential is
   transparently re-hashed on first successful login. The committed
@@ -49,20 +61,20 @@ work required before a full production / HIPAA-compliant launch.
 These items need provisioning that cannot be done from the codebase alone:
 
 1. **Persistent database.** Data currently lives in JSON files
-   (`src/lib/data/json-store.ts`). This does not support concurrent writes and
+   (`src/lib/data/json-store.ts`). Per-file write locks now prevent in-process
+   lost updates, but this still does not support multi-instance concurrency and
    is unsuitable for production scale. Migrate to PostgreSQL (Prisma/Drizzle)
-   with connection pooling.
-2. **Server-side authorization.** API routes do not yet enforce that the caller
-   may access the requested records (filtering happens client-side). Add auth
-   middleware that validates the session JWT and scopes every query by the
-   authenticated therapist.
-3. **Managed secret storage & key rotation.** Move secrets to AWS KMS /
+   with connection pooling. Once migrated, move authorization scoping into the
+   query layer and the audit log into a tamper-evident, retained store.
+2. **Managed secret storage & key rotation.** Move secrets to AWS KMS /
    Secrets Manager (or equivalent) and implement versioned encryption keys.
-4. **Object storage for audio.** Move base64 audio out of the data store into
+3. **Object storage for audio.** Move base64 audio out of the data store into
    S3/GCS with signed URLs and streaming.
-5. **Audit logging.** Wire the existing `AuditEntry` type into a real,
-   append-only audit trail for all PHI access (HIPAA requirement).
-6. **Session timeout / automatic logout** after inactivity (HIPAA requirement).
-7. **Distributed rate limiting** (Redis) for multi-instance deployments.
-8. **Secret hygiene.** Rotate any API keys that were previously committed and
+4. **Session timeout / automatic logout** after inactivity (HIPAA requirement).
+   The session JWT already expires after 8h; add client-side inactivity logout.
+5. **Distributed rate limiting** (Redis) for multi-instance deployments.
+6. **Secret hygiene.** Rotate any API keys that were previously committed and
    confirm they are purged from git history.
+7. **Extend authorization & auditing** to the remaining resource routes
+   (sessions, reports, goals, voice recordings) following the pattern now
+   established for patients.
