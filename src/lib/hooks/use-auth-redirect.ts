@@ -13,10 +13,12 @@ export function useAuthRedirect() {
   const { user, loading, error, logout, refetch } = useCurrentUser();
 
   useEffect(() => {
-    if (!loading && !user) {
+    // Only redirect when the user is known to be logged out. A transient
+    // failure (error set) must not bounce a logged-in user to /login.
+    if (!loading && !user && !error) {
       router.push('/login');
     }
-  }, [loading, user, router]);
+  }, [loading, user, error, router]);
 
   return { user, loading, error, logout, refetch };
 }
