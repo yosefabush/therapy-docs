@@ -2,11 +2,16 @@
 set -e
 
 if [ -n "$DATABASE_URL" ]; then
-  # Postgres backend: apply migrations. The app seeds the database from the
-  # bundled JSON dataset on first run (when the users table is empty).
+  # Postgres backend: apply migrations (fail fast on error), then seed the
+  # database from the bundled JSON dataset if the users table is empty.
   echo "[entrypoint] DATABASE_URL set — running prisma migrate deploy"
-  node node_modules/prisma/build/index.js migrate deploy \
-    || echo "[entrypoint] migrate deploy failed (continuing)"
+  node node_modules/prisma/build/index.js migrate deploy
+
+  USER_COUNT=$(node -e "const{PrismaClient}=require('@prisma/client');const p=new PrismaClient();p.user.count().then(n=>{console.log(n);return p.\$disconnect()}).catch(e=>{console.error(e);process.exit(1)})")
+  if [ "$USER_COUNT" = "0" ]; then
+    echo "[entrypoint] empty database — seeding from bundled dataset"
+    node scripts/db-import.mjs
+  fi
 else
   # JSON-file backend: seed the data directory from the bundled seed files on
   # first run. Existing files are never overwritten, so data on a persistent
