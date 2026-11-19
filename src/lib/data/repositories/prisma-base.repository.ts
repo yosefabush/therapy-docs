@@ -29,11 +29,17 @@ export abstract class PrismaRepository<
     return reviveDates(row.payload) as T;
   }
 
+  // Transform applied to the entity before it is serialized into `payload`
+  // (e.g. field-level encryption). Identity by default.
+  protected toStoredPayload(entity: T): T {
+    return entity;
+  }
+
   protected toData(entity: T): Record<string, unknown> {
     return {
       id: entity.id,
       ...this.extractScalars(entity),
-      payload: toJsonPayload(entity),
+      payload: toJsonPayload(this.toStoredPayload(entity)),
     };
   }
 
@@ -79,7 +85,7 @@ export abstract class PrismaRepository<
       where: { id },
       data: {
         ...this.extractScalars(merged),
-        payload: toJsonPayload(merged),
+        payload: toJsonPayload(this.toStoredPayload(merged)),
       },
     });
     return merged;

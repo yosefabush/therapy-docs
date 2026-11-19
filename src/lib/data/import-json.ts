@@ -6,6 +6,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { prisma } from './prisma';
 import { toJsonPayload } from './revive';
+import { encryptPatientForStorage } from './patient-crypto';
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 
@@ -46,7 +47,7 @@ export async function importJsonDataToDb(): Promise<void> {
     const data = {
       status: p.status,
       assignedTherapists: p.assignedTherapists ?? [],
-      payload: toJsonPayload(p),
+      payload: toJsonPayload(encryptPatientForStorage(p as typeof p & { idNumber: string })),
     };
     await prisma.patient.upsert({ where: { id: p.id }, create: { id: p.id, ...data }, update: data });
   }
