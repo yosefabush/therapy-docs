@@ -18,6 +18,17 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
+# ---- Prisma CLI ----
+# The runtime image only has the traced standalone node_modules, which lack the
+# Prisma CLI's transitive deps (effect, c12, ...). Install the CLI with its full
+# dependency tree, pinned to the lockfile version, so `migrate deploy` works.
+FROM node:20-alpine AS prisma-cli
+WORKDIR /cli
+COPY package-lock.json /tmp/package-lock.json
+RUN PRISMA_VERSION=$(node -p "require('/tmp/package-lock.json').packages['node_modules/prisma'].version") \
+  && npm init -y >/dev/null \
+  && npm install --omit=dev --no-audit --no-fund "prisma@${PRISMA_VERSION}"
+
 # ---- Runner ----
 FROM node:20-alpine AS runner
 WORKDIR /app
@@ -37,9 +48,9 @@ COPY --from=builder /app/public ./public
 
 # Prisma client + query engine and the migration files / CLI deps, used by the
 # entrypoint to run `prisma migrate deploy` and (optionally) seed at startup.
+COPY --from=prisma-cli /cli/node_modules ./node_modules
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/scripts ./scripts
 

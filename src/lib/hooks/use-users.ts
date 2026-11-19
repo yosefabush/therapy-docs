@@ -62,6 +62,40 @@ function getStoredUserId(): string | null {
   return null;
 }
 
+// Pending /api/auth/logout call. Stops several mounted hooks from each firing
+// logout for the same event, and lets a session lookup wait until the cookie
+// is actually cleared.
+let logoutInFlight: Promise<void> | null = null;
+
+// Re-populate the per-tab auth flag from a verified server session (e.g. a new
+// tab, where sessionStorage starts empty). Does not emit AUTH_CHANGE_EVENT so
+// every mounted useCurrentUser does not refetch in a loop.
+function restoreAuthUser(userId: string): void {
+  sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ userId, timestamp: Date.now() }));
+}
+
+// One /api/auth/me lookup shared by all hook instances on the page.
+let sessionLookup: Promise<{ userId: string | null; failed: boolean }> | null = null;
+
+function lookupServerSession(): Promise<{ userId: string | null; failed: boolean }> {
+  if (!sessionLookup) {
+    // Right after a logout, wait for the cookie to be cleared so the lookup
+    // does not resurrect the session that is being ended.
+    sessionLookup = Promise.resolve(logoutInFlight)
+      .then(() => apiClient.get<Pick<User, 'id'>>('/auth/me'))
+      .then((response) => {
+        if (response.data?.id) return { userId: response.data.id, failed: false };
+        // 401: no valid session. Anything else (aborted, network, 5xx) is a
+        // transient failure, not proof that the user is logged out.
+        return { userId: null, failed: response.status !== 401 };
+      })
+      .finally(() => {
+        sessionLookup = null;
+      });
+  }
+  return sessionLookup;
+}
+
 // Store user authentication
 export function storeAuthUser(userId: string, rememberMe: boolean): void {
   const data = JSON.stringify({ userId, timestamp: Date.now() });
@@ -84,8 +118,12 @@ export function clearAuthUser(): void {
   sessionStorage.removeItem(AUTH_STORAGE_KEY);
 
   // Also clear the server-side httpOnly session cookie (fire-and-forget).
-  if (typeof window !== 'undefined') {
-    fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+  if (typeof window !== 'undefined' && !logoutInFlight) {
+    logoutInFlight = fetch('/api/auth/logout', { method: 'POST' })
+      .then(() => {}, () => {})
+      .finally(() => {
+        logoutInFlight = null;
+      });
   }
 
   // Notify listeners that auth changed
@@ -105,33 +143,41 @@ export function useCurrentUser() {
 
   const fetchCurrentUser = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
-      const storedUserId = getStoredUserId();
+      let storedUserId = getStoredUserId();
 
       if (!storedUserId) {
-        // No user logged in
-        setUser(null);
-        setLoading(false);
-        return;
+        // No flag in this tab: ask the server whether the session cookie is
+        // still valid before treating the user as logged out.
+        const session = await lookupServerSession();
+        if (session.failed) {
+          setUser(null);
+          setError('Failed to verify session');
+          return;
+        }
+        if (!session.userId) {
+          // No user logged in
+          setUser(null);
+          return;
+        }
+        restoreAuthUser(session.userId);
+        storedUserId = session.userId;
       }
 
       // Fetch user by ID
       const response = await apiClient.get<User>(`/users/${storedUserId}`);
-      if (response.error) {
-        // User not found, clear storage
-        clearAuthUser();
-        setUser(null);
-        setError(response.error);
-      } else if (response.data) {
+      if (response.data && !response.error) {
         setUser(response.data);
-      } else {
+      } else if (response.status === 401) {
+        // The server rejected the session: really logged out.
         clearAuthUser();
         setUser(null);
+      } else {
+        // Aborted, network error, 5xx, etc. Keep the session; just report it.
+        setUser(null);
+        setError(response.error ?? 'Failed to fetch current user');
       }
-    } catch (err) {
-      setError('Failed to fetch current user');
-      clearAuthUser();
-      setUser(null);
     } finally {
       setLoading(false);
     }
