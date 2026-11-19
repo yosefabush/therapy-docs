@@ -267,7 +267,7 @@ export const getApiDocs = () => {
           post: {
             tags: ['System'],
             summary: 'Seed database',
-            description: 'Seeds the database with initial mock data. Use reset=true to reset existing data.',
+            description: 'Admin only. Seeds an empty store with the demo dataset. reset=true (development only) resets existing data.',
             parameters: [
               {
                 name: 'reset',
