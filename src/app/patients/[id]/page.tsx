@@ -12,6 +12,7 @@ import { ReportGenerator, ReportCard } from '@/components/reports/ReportGenerato
 import { therapistRoleLabels } from '@/lib/mock-data';
 import { useCurrentUser, usePatient, useSessions, useTreatmentGoals, useReports, useUsers, useVoiceRecordings } from '@/lib/hooks';
 import { RecordingsList } from '@/components/recordings';
+import { GoalsPanel } from '@/components/goals/GoalsPanel';
 import { InsightPanel } from '@/components/patients/InsightPanel';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
@@ -31,7 +32,7 @@ function PatientDetailPageContent() {
   const { user: currentUser, loading: userLoading } = useCurrentUser();
   const { patient, loading: patientLoading, error: patientError } = usePatient(patientId);
   const { sessions, loading: sessionsLoading } = useSessions({ patientId });
-  const { goals, loading: goalsLoading } = useTreatmentGoals(patientId);
+  const { goals, loading: goalsLoading, createGoal, updateGoal } = useTreatmentGoals(patientId);
   const { reports, loading: reportsLoading, createReport } = useReports(patientId);
   const { users, loading: usersLoading } = useUsers();
   const { recordings, loading: recordingsLoading, deleteRecording } = useVoiceRecordings({ patientId });
@@ -338,32 +339,12 @@ function PatientDetailPageContent() {
           )}
 
           {activeTab === 'goals' && (
-            <div className="max-w-3xl space-y-4">
-              {goals.map(goal => (
-                <Card key={goal.id}>
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h4 className="font-medium text-clinical-900">{goal.description}</h4>
-                      <p className="text-sm text-clinical-500">{goal.measurementCriteria}</p>
-                    </div>
-                    <Badge variant={goal.status === 'achieved' ? 'success' : goal.status === 'active' ? 'info' : 'sage'}>
-                      {goal.status}
-                    </Badge>
-                  </div>
-                  <ProgressBar value={goal.progress} showLabel className="mb-3" />
-                  <div className="flex items-center justify-between text-sm text-clinical-500">
-                    <span>יעד: {goal.targetDate ? new Intl.DateTimeFormat('he-IL').format(new Date(goal.targetDate)) : 'מתמשך'}</span>
-                    <Button variant="ghost" size="sm">עדכן התקדמות</Button>
-                  </div>
-                </Card>
-              ))}
-              <Button variant="secondary" className="w-full">
-                <svg className="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                הוסף מטרה חדשה
-              </Button>
-            </div>
+            <GoalsPanel
+              patientId={patientId}
+              goals={goals}
+              createGoal={createGoal}
+              updateGoal={updateGoal}
+            />
           )}
 
           {activeTab === 'reports' && (
