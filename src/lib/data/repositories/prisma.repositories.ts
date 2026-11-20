@@ -6,11 +6,19 @@ import {
   Report,
   VoiceRecording,
   PatientInsights,
+  PatientDocument,
 } from '@/types';
 import { prisma } from '../prisma';
 import { reviveDates } from '../revive';
 import { PrismaRepository, type PayloadDelegate } from './prisma-base.repository';
 import { encryptPatientForStorage, decryptPatientFromStorage } from '../patient-crypto';
+import type { NewPatientDocument, PatientDocumentStore } from './document-store';
+import {
+  encryptDocumentName,
+  decryptDocumentName,
+  encryptDocumentContent,
+  decryptDocumentContent,
+} from '../document-crypto';
 import { encryptRecordingForStorage, decryptRecordingFromStorage } from '../recording-crypto';
 
 const rid = (prefix: string) =>
@@ -65,7 +73,7 @@ class PatientPrismaRepository extends PrismaRepository<Patient> {
     return rows.map((r) => this.rowToEntity(r));
   }
   // Deleting a patient removes everything keyed to it (sessions, goals,
-  // reports, voice recordings, insights) in one transaction: either all of it
+  // reports, voice recordings, documents, insights) in one transaction: either all of it
   // goes or nothing does. There are no FK constraints, so this is done here
   // rather than by a schema cascade.
   async delete(id: string): Promise<boolean> {
@@ -75,6 +83,7 @@ class PatientPrismaRepository extends PrismaRepository<Patient> {
         prisma.treatmentGoal.deleteMany({ where: { patientId: id } }),
         prisma.report.deleteMany({ where: { patientId: id } }),
         prisma.voiceRecording.deleteMany({ where: { patientId: id } }),
+        prisma.patientDocument.deleteMany({ where: { patientId: id } }),
         prisma.patientInsights.deleteMany({ where: { patientId: id } }),
         prisma.patient.deleteMany({ where: { id } }),
       ]);
@@ -213,6 +222,82 @@ class PatientInsightsPrismaRepository extends PrismaRepository<PatientInsights> 
   }
 }
 
+// --- Patient documents ------------------------------------------------------
+// Not a PrismaRepository: the (large, encrypted) `content` column lives beside
+// the metadata payload and is selected only when a file is downloaded, so
+// listing a patient's documents never loads file bytes.
+interface DocumentMetaPayload {
+  encryptedName: string;
+  mimeType: string;
+  size: number;
+  uploadedBy: string;
+}
+
+function documentRowToMeta(row: {
+  id: string;
+  patientId: string;
+  payload: unknown;
+  createdAt: Date;
+}): PatientDocument {
+  const p = row.payload as DocumentMetaPayload;
+  return {
+    id: row.id,
+    patientId: row.patientId,
+    name: decryptDocumentName(p.encryptedName),
+    mimeType: p.mimeType,
+    size: p.size,
+    uploadedBy: p.uploadedBy,
+    createdAt: row.createdAt,
+  };
+}
+
+class PatientDocumentPrismaRepository implements PatientDocumentStore {
+  async add(input: NewPatientDocument): Promise<PatientDocument> {
+    const payload: DocumentMetaPayload = {
+      encryptedName: encryptDocumentName(input.name),
+      mimeType: input.mimeType,
+      size: input.bytes.length,
+      uploadedBy: input.uploadedBy,
+    };
+    const row = await prisma.patientDocument.create({
+      data: {
+        id: rid('document'),
+        patientId: input.patientId,
+        payload: payload as unknown as object,
+        content: encryptDocumentContent(input.bytes),
+      },
+      select: { id: true, patientId: true, payload: true, createdAt: true },
+    });
+    return documentRowToMeta(row);
+  }
+  async listByPatient(patientId: string): Promise<PatientDocument[]> {
+    const rows = await prisma.patientDocument.findMany({
+      where: { patientId },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true, patientId: true, payload: true, createdAt: true },
+    });
+    return rows.map(documentRowToMeta);
+  }
+  async findById(id: string): Promise<PatientDocument | null> {
+    const row = await prisma.patientDocument.findUnique({
+      where: { id },
+      select: { id: true, patientId: true, payload: true, createdAt: true },
+    });
+    return row ? documentRowToMeta(row) : null;
+  }
+  async readContent(id: string): Promise<Buffer | null> {
+    const row = await prisma.patientDocument.findUnique({
+      where: { id },
+      select: { content: true },
+    });
+    return row ? decryptDocumentContent(row.content) : null;
+  }
+  async delete(id: string): Promise<boolean> {
+    const result = await prisma.patientDocument.deleteMany({ where: { id } });
+    return result.count > 0;
+  }
+}
+
 export const userPrismaRepository = new UserPrismaRepository();
 export const patientPrismaRepository = new PatientPrismaRepository();
 export const sessionPrismaRepository = new SessionPrismaRepository();
@@ -220,3 +305,4 @@ export const treatmentGoalPrismaRepository = new TreatmentGoalPrismaRepository()
 export const reportPrismaRepository = new ReportPrismaRepository();
 export const voiceRecordingPrismaRepository = new VoiceRecordingPrismaRepository();
 export const patientInsightsPrismaRepository = new PatientInsightsPrismaRepository();
+export const patientDocumentPrismaRepository = new PatientDocumentPrismaRepository();

@@ -90,6 +90,20 @@ model VoiceRecording {
   @@index([patientId])
 }
 
+// Uploaded patient documents. `payload` holds the metadata (encrypted file
+// name, mime type, size, uploader); `content` holds the encrypted file bytes
+// ("enc:v1:<base64>") and is only selected on download.
+model PatientDocument {
+  id        String   @id
+  patientId String
+  payload   Json
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([patientId])
+}
+
 model PatientInsights {
   id          String   @id
   patientId   String

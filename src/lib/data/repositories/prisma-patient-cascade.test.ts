@@ -30,6 +30,7 @@ vi.mock('../prisma', () => {
           return Promise.resolve(data);
         },
       },
+      patientDocument: del('patientDocument', () => 1),
       patientInsights: del('patientInsights', () => 1),
       $transaction: async (ops: Promise<unknown>[]) => {
         calls.push('$transaction');
@@ -61,6 +62,7 @@ describe('Prisma mode: deleting a patient', () => {
       'treatmentGoal.deleteMany({"patientId":"p1"})',
       'report.deleteMany({"patientId":"p1"})',
       'voiceRecording.deleteMany({"patientId":"p1"})',
+      'patientDocument.deleteMany({"patientId":"p1"})',
       'patientInsights.deleteMany({"patientId":"p1"})',
       'patient.deleteMany({"id":"p1"})',
       '$transaction',

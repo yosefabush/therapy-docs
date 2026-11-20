@@ -30,23 +30,20 @@ function deriveKey(secret: string, salt: string): Buffer {
 //
 // Output format: base64( salt(16) | iv(12) | authTag(16) | ciphertext )
 
-export function encryptData(plaintext: string): string {
+export function encryptBytes(plaintext: Buffer): string {
   const secret = requireSecret('ENCRYPTION_KEY');
   const salt = crypto.randomBytes(16);
   const iv = crypto.randomBytes(12);
   const key = deriveKey(secret, salt.toString('hex'));
 
   const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
-  const ciphertext = Buffer.concat([
-    cipher.update(plaintext, 'utf-8'),
-    cipher.final(),
-  ]);
+  const ciphertext = Buffer.concat([cipher.update(plaintext), cipher.final()]);
   const authTag = cipher.getAuthTag();
 
   return Buffer.concat([salt, iv, authTag, ciphertext]).toString('base64');
 }
 
-export function decryptData(payload: string): string {
+export function decryptBytes(payload: string): Buffer {
   const secret = requireSecret('ENCRYPTION_KEY');
   const raw = Buffer.from(payload, 'base64');
 
@@ -59,11 +56,16 @@ export function decryptData(payload: string): string {
   const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
   decipher.setAuthTag(authTag);
 
-  const decrypted = Buffer.concat([
-    decipher.update(ciphertext),
-    decipher.final(),
-  ]);
-  return decrypted.toString('utf-8');
+  return Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+}
+
+// Text helpers: same format as the byte helpers (binary-safe, ~1.33x size).
+export function encryptData(plaintext: string): string {
+  return encryptBytes(Buffer.from(plaintext, 'utf-8'));
+}
+
+export function decryptData(payload: string): string {
+  return decryptBytes(payload).toString('utf-8');
 }
 
 // ---------------------------------------------------------------------------

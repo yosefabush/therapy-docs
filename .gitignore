@@ -51,6 +51,9 @@ test-results/
 # Runtime-generated audit log (PHI access records) — must not be committed
 data/audit-log.json
 
+# Runtime-generated uploaded patient documents (encrypted PHI) — must not be committed
+data/patient-documents.json
+
 # MCP Configuration
 .mcp.json
 # Playwright

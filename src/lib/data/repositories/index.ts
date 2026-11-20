@@ -11,6 +11,8 @@ import { treatmentGoalRepository as treatmentGoalJson } from './treatment-goal.r
 import { reportRepository as reportJson } from './report.repository';
 import { voiceRecordingRepository as voiceRecordingJson } from './voice-recording.repository';
 import { patientInsightsRepository as patientInsightsJson } from './patient-insights.repository';
+import { patientDocumentRepository as patientDocumentJson } from './patient-document.repository';
+import type { PatientDocumentStore } from './document-store';
 
 import {
   userPrismaRepository,
@@ -20,6 +22,7 @@ import {
   reportPrismaRepository,
   voiceRecordingPrismaRepository,
   patientInsightsPrismaRepository,
+  patientDocumentPrismaRepository,
 } from './prisma.repositories';
 
 export const userRepository = USE_PRISMA ? userPrismaRepository : userJson;
@@ -35,3 +38,6 @@ export const voiceRecordingRepository = USE_PRISMA
 export const patientInsightsRepository = USE_PRISMA
   ? patientInsightsPrismaRepository
   : patientInsightsJson;
+export const patientDocumentRepository: PatientDocumentStore = USE_PRISMA
+  ? patientDocumentPrismaRepository
+  : patientDocumentJson;
