@@ -1,6 +1,11 @@
 import { Patient } from '@/types';
 import { JsonRepository } from './base.repository';
 import { encryptPatientForStorage, decryptPatientFromStorage } from '../patient-crypto';
+import { sessionRepository } from './session.repository';
+import { treatmentGoalRepository } from './treatment-goal.repository';
+import { reportRepository } from './report.repository';
+import { voiceRecordingRepository } from './voice-recording.repository';
+import { patientInsightsRepository } from './patient-insights.repository';
 
 class PatientJsonRepository extends JsonRepository<Patient> {
   constructor() {
@@ -21,6 +26,20 @@ class PatientJsonRepository extends JsonRepository<Patient> {
 
   async findByStatus(status: Patient['status']): Promise<Patient[]> {
     return this.findMany(p => p.status === status);
+  }
+
+  // Deleting a patient removes everything keyed to it (sessions, goals,
+  // reports, voice recordings, insights). Children go first and the patient
+  // last, so an interrupted delete leaves the patient present and a retry
+  // finishes the job (the JSON files cannot be changed in one transaction).
+  async delete(id: string): Promise<boolean> {
+    const byPatient = (item: { patientId: string }) => item.patientId === id;
+    await sessionRepository.deleteMany(byPatient);
+    await treatmentGoalRepository.deleteMany(byPatient);
+    await reportRepository.deleteMany(byPatient);
+    await voiceRecordingRepository.deleteMany(byPatient);
+    await patientInsightsRepository.deleteMany(byPatient);
+    return super.delete(id);
   }
 
   protected generateId(): string {

@@ -7,6 +7,8 @@ import path from 'path';
 import { prisma } from './prisma';
 import { toJsonPayload } from './revive';
 import { encryptPatientForStorage } from './patient-crypto';
+import { encryptRecordingForStorage } from './recording-crypto';
+import type { VoiceRecording } from '@/types';
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 
@@ -82,7 +84,11 @@ export async function importJsonDataToDb(): Promise<void> {
     'voice-recordings.json'
   );
   for (const v of recordings) {
-    const data = { sessionId: v.sessionId, patientId: v.patientId, payload: toJsonPayload(v) };
+    const data = {
+      sessionId: v.sessionId,
+      patientId: v.patientId,
+      payload: toJsonPayload(encryptRecordingForStorage(v as unknown as VoiceRecording)),
+    };
     await prisma.voiceRecording.upsert({
       where: { id: v.id },
       create: { id: v.id, ...data },

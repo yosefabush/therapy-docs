@@ -1,9 +1,19 @@
 import { VoiceRecording } from '@/types';
 import { JsonRepository } from './base.repository';
+import { encryptRecordingForStorage, decryptRecordingFromStorage } from '../recording-crypto';
 
 class VoiceRecordingJsonRepository extends JsonRepository<VoiceRecording> {
   constructor() {
     super('voice-recordings.json');
+  }
+
+  // Audio and transcripts are encrypted at rest (see recording-crypto.ts).
+  protected fromStored(r: VoiceRecording): VoiceRecording {
+    return decryptRecordingFromStorage(r);
+  }
+
+  protected toStored(r: VoiceRecording): VoiceRecording {
+    return encryptRecordingForStorage(r);
   }
 
   async findBySession(sessionId: string): Promise<VoiceRecording[]> {

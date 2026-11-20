@@ -11,6 +11,7 @@ import { prisma } from '../prisma';
 import { reviveDates } from '../revive';
 import { PrismaRepository, type PayloadDelegate } from './prisma-base.repository';
 import { encryptPatientForStorage, decryptPatientFromStorage } from '../patient-crypto';
+import { encryptRecordingForStorage, decryptRecordingFromStorage } from '../recording-crypto';
 
 const rid = (prefix: string) =>
   `${prefix}-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
@@ -62,6 +63,25 @@ class PatientPrismaRepository extends PrismaRepository<Patient> {
   async findByStatus(status: Patient['status']): Promise<Patient[]> {
     const rows = await prisma.patient.findMany({ where: { status } });
     return rows.map((r) => this.rowToEntity(r));
+  }
+  // Deleting a patient removes everything keyed to it (sessions, goals,
+  // reports, voice recordings, insights) in one transaction: either all of it
+  // goes or nothing does. There are no FK constraints, so this is done here
+  // rather than by a schema cascade.
+  async delete(id: string): Promise<boolean> {
+    try {
+      const results = await prisma.$transaction([
+        prisma.session.deleteMany({ where: { patientId: id } }),
+        prisma.treatmentGoal.deleteMany({ where: { patientId: id } }),
+        prisma.report.deleteMany({ where: { patientId: id } }),
+        prisma.voiceRecording.deleteMany({ where: { patientId: id } }),
+        prisma.patientInsights.deleteMany({ where: { patientId: id } }),
+        prisma.patient.deleteMany({ where: { id } }),
+      ]);
+      return results[results.length - 1].count > 0;
+    } catch {
+      return false;
+    }
   }
 }
 
@@ -139,15 +159,20 @@ class VoiceRecordingPrismaRepository extends PrismaRepository<VoiceRecording> {
   protected generateId() {
     return rid('recording');
   }
+  // Audio and transcripts are encrypted at rest (see recording-crypto.ts).
+  protected rowToEntity(row: { payload: unknown }): VoiceRecording {
+    return decryptRecordingFromStorage(super.rowToEntity(row));
+  }
+  protected toStoredPayload(v: VoiceRecording): VoiceRecording {
+    return encryptRecordingForStorage(v);
+  }
   async findBySession(sessionId: string): Promise<VoiceRecording[]> {
-    return mapRows<VoiceRecording>(
-      await prisma.voiceRecording.findMany({ where: { sessionId } })
-    );
+    const rows = await prisma.voiceRecording.findMany({ where: { sessionId } });
+    return rows.map((r) => this.rowToEntity(r));
   }
   async findByPatient(patientId: string): Promise<VoiceRecording[]> {
-    return mapRows<VoiceRecording>(
-      await prisma.voiceRecording.findMany({ where: { patientId } })
-    );
+    const rows = await prisma.voiceRecording.findMany({ where: { patientId } });
+    return rows.map((r) => this.rowToEntity(r));
   }
 }
 

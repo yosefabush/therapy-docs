@@ -7,6 +7,7 @@ import { readFile } from 'fs/promises';
 import path from 'path';
 import { PrismaClient } from '@prisma/client';
 import { encryptPatient } from './lib/patient-id-crypto.mjs';
+import { encryptRecording } from './lib/recording-crypto.mjs';
 
 const prisma = new PrismaClient();
 const DATA_DIR = path.resolve('data');
@@ -59,7 +60,7 @@ async function main() {
   }
 
   for (const v of await read('voice-recordings.json')) {
-    const data = { sessionId: v.sessionId, patientId: v.patientId, payload: json(v) };
+    const data = { sessionId: v.sessionId, patientId: v.patientId, payload: json(encryptRecording(v)) };
     await prisma.voiceRecording.upsert({ where: { id: v.id }, create: { id: v.id, ...data }, update: data });
   }
 

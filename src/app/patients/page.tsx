@@ -19,7 +19,7 @@ function PatientsPageContent() {
   const [showNewPatient, setShowNewPatient] = useState(false);
 
   const { user: currentUser, loading: userLoading } = useAuthRedirect();
-  const { patients, loading: patientsLoading, error: patientsError, refetch } = useMyPatients(currentUser?.id);
+  const { patients, loading: patientsLoading, error: patientsError, refetch } = useMyPatients(currentUser?.id, currentUser?.role === 'admin');
   const { users, loading: usersLoading } = useUsers();
 
   if (userLoading || patientsLoading || usersLoading) {

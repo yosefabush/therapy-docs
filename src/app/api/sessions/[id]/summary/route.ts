@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sessionRepository } from '@/lib/data/repositories/session.repository';
+import { sessionRepository } from '@/lib/data/repositories';
 import { generateSessionSummaryAI, getAIConfig } from '@/lib/ai';
 import {
   getSession,

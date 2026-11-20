@@ -3,11 +3,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Patient, Session, TreatmentGoal, Report } from '@/types';
 import { apiClient } from '@/lib/api/client';
+import { filterMyPatients, filterMySessions, filterMyReports } from './my-data-filters';
 
 /**
  * Hook to fetch only patients assigned to a specific therapist
  */
-export function useMyPatients(therapistId: string | undefined) {
+export function useMyPatients(therapistId: string | undefined, isAdmin = false) {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -29,11 +30,8 @@ export function useMyPatients(therapistId: string | undefined) {
         setError(response.error);
         setPatients([]);
       } else {
-        // Filter to only show patients assigned to this therapist
-        const myPatients = (response.data ?? []).filter(p =>
-          p.assignedTherapists.includes(therapistId)
-        );
-        setPatients(myPatients);
+        // Therapists only see their own patients; admins see all of them.
+        setPatients(filterMyPatients(response.data ?? [], therapistId, isAdmin));
       }
     } catch (err) {
       setError('Failed to fetch patients');
@@ -41,7 +39,7 @@ export function useMyPatients(therapistId: string | undefined) {
     } finally {
       setLoading(false);
     }
-  }, [therapistId]);
+  }, [therapistId, isAdmin]);
 
   useEffect(() => {
     fetchPatients();
@@ -73,7 +71,7 @@ export function useMyPatients(therapistId: string | undefined) {
 /**
  * Hook to fetch only sessions for a specific therapist
  */
-export function useMySessions(therapistId: string | undefined) {
+export function useMySessions(therapistId: string | undefined, isAdmin = false) {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -95,9 +93,8 @@ export function useMySessions(therapistId: string | undefined) {
         setError(response.error);
         setSessions([]);
       } else {
-        // Filter to only show sessions for this therapist
-        const mySessions = (response.data ?? []).filter(s => s.therapistId === therapistId);
-        setSessions(mySessions);
+        // Therapists only see their own sessions; admins see all of them.
+        setSessions(filterMySessions(response.data ?? [], therapistId, isAdmin));
       }
     } catch (err) {
       setError('Failed to fetch sessions');
@@ -105,7 +102,7 @@ export function useMySessions(therapistId: string | undefined) {
     } finally {
       setLoading(false);
     }
-  }, [therapistId]);
+  }, [therapistId, isAdmin]);
 
   useEffect(() => {
     fetchSessions();
@@ -183,7 +180,7 @@ export function useMyTreatmentGoals(therapistId: string | undefined, patientIds:
 /**
  * Hook to fetch reports created by or for a specific therapist
  */
-export function useMyReports(therapistId: string | undefined) {
+export function useMyReports(therapistId: string | undefined, isAdmin = false) {
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -205,9 +202,8 @@ export function useMyReports(therapistId: string | undefined) {
         setError(response.error);
         setReports([]);
       } else {
-        // Filter to only show reports created by this therapist
-        const myReports = (response.data ?? []).filter(r => r.generatedBy === therapistId);
-        setReports(myReports);
+        // Therapists only see reports they generated; admins see all of them.
+        setReports(filterMyReports(response.data ?? [], therapistId, isAdmin));
       }
     } catch (err) {
       setError('Failed to fetch reports');
@@ -215,7 +211,7 @@ export function useMyReports(therapistId: string | undefined) {
     } finally {
       setLoading(false);
     }
-  }, [therapistId]);
+  }, [therapistId, isAdmin]);
 
   useEffect(() => {
     fetchReports();

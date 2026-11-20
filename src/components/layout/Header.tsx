@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui';
-import { useNotifications } from '@/lib/hooks';
+import { useNotifications, clearAuthUser } from '@/lib/hooks';
 import { SearchModal } from './SearchModal';
 import { Notification } from '@/types';
 
@@ -341,6 +341,9 @@ export function Header({ title, subtitle, actions, onSessionNotificationClick, o
                       <button
                         onClick={() => {
                           setIsProfileOpen(false);
+                          // Same logout as the sidebar: POST /api/auth/logout
+                          // (clears the httpOnly session cookie) + client state.
+                          clearAuthUser();
                           router.push('/login');
                         }}
                         className="w-full px-4 py-3 text-right text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-3"

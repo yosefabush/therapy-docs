@@ -24,8 +24,8 @@ function DashboardContent() {
   const { user: currentUser, loading: userLoading } = useAuthRedirect();
 
   // Use user-specific hooks - only fetch data for current user
-  const { patients: myPatients, loading: patientsLoading } = useMyPatients(currentUser?.id);
-  const { sessions, loading: sessionsLoading, refetch: refetchSessions } = useMySessions(currentUser?.id);
+  const { patients: myPatients, loading: patientsLoading } = useMyPatients(currentUser?.id, currentUser?.role === 'admin');
+  const { sessions, loading: sessionsLoading, refetch: refetchSessions } = useMySessions(currentUser?.id, currentUser?.role === 'admin');
 
   // Get patient IDs for treatment goals filtering
   const patientIds = useMemo(() => myPatients.map(p => p.id), [myPatients]);

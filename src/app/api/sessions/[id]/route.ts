@@ -14,7 +14,7 @@ import type { Session } from '@/types';
 // Load the session and verify the caller may access its patient.
 async function authorizeSession(
   id: string
-): Promise<{ session: Session } | { error: NextResponse }> {
+): Promise<{ session: Session; userId: string } | { error: NextResponse }> {
   const auth = await getSession();
   if (!auth) return { error: unauthorized() };
 
@@ -24,7 +24,7 @@ async function authorizeSession(
   if (!(await canAccessPatient(auth, session.patientId))) {
     return { error: forbidden() };
   }
-  return { session };
+  return { session, userId: auth.sub };
 }
 
 export async function GET(
@@ -53,6 +53,12 @@ export async function PUT(
     if ('error' in result) return result.error;
 
     const body = await request.json();
+    // Signing: the client only signals intent (signedAt present); the server
+    // stamps the time and the signer from the authenticated session.
+    if (body && typeof body === 'object' && body.signedAt) {
+      body.signedAt = new Date();
+      body.signedBy = result.userId;
+    }
     const updated = await sessionRepository.update(id, body);
 
     await recordAudit({

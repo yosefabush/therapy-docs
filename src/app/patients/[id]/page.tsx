@@ -32,7 +32,7 @@ function PatientDetailPageContent() {
   const { patient, loading: patientLoading, error: patientError } = usePatient(patientId);
   const { sessions, loading: sessionsLoading } = useSessions({ patientId });
   const { goals, loading: goalsLoading } = useTreatmentGoals(patientId);
-  const { reports, loading: reportsLoading } = useReports(patientId);
+  const { reports, loading: reportsLoading, createReport } = useReports(patientId);
   const { users, loading: usersLoading } = useUsers();
   const { recordings, loading: recordingsLoading, deleteRecording } = useVoiceRecordings({ patientId });
 
@@ -373,7 +373,10 @@ function PatientDetailPageContent() {
                 patientName={`${patient.firstName} ${patient.lastName}`}
                 sessions={sessions}
                 goals={goals}
-                onGenerate={(report) => console.log('Generated:', report)}
+                generatedBy={currentUser.id}
+                onGenerate={async (report) => {
+                  await createReport(report);
+                }}
               />
 
               {reports.length > 0 && (

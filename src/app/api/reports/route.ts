@@ -18,6 +18,7 @@ const createReportSchema = z.object({
     'referral_report', 'evaluation_report', 'treatment_summary', 'multidisciplinary_summary'
   ]),
   generatedBy: z.string(),
+  title: z.string().max(200).optional(),
   dateRange: z.object({
     start: z.string(),
     end: z.string(),
