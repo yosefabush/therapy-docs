@@ -200,6 +200,7 @@ function InsightsPageContent() {
               בחר מטופל לצפייה בתובנות
             </label>
             <select
+              aria-label="בחר מטופל לצפייה בתובנות"
               value={selectedPatientId || ''}
               onChange={(e) => setSelectedPatientId(e.target.value || null)}
               className="w-full max-w-md px-4 py-2.5 rounded-lg border border-sage-200 bg-white text-clinical-900 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent transition-colors"

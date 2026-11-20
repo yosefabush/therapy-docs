@@ -63,7 +63,8 @@ interface LegacyTabsProps {
 function LegacyTabs({ tabs, activeTab, onChange, className }: LegacyTabsProps) {
   return (
     <div className={cn('border-b border-sage-200 -mx-4 sm:mx-0', className)}>
-      <nav className="flex gap-4 sm:gap-6 overflow-x-auto scrollbar-hide px-4 sm:px-0" aria-label="Tabs">
+      {/* On phones the tabs wrap onto a second row so none are clipped off-screen. */}
+      <nav className="flex flex-wrap sm:flex-nowrap gap-x-4 sm:gap-6 sm:overflow-x-auto scrollbar-hide px-4 sm:px-0" aria-label="לשוניות">
         {tabs.map((tab) => (
           <button
             key={tab.id}

@@ -64,12 +64,13 @@ export function Sidebar({ user, onLogout }: SidebarProps) {
   };
 
   const handleLogout = () => {
-    clearAuthUser();
+    const loggedOut = clearAuthUser();
     if (onLogout) {
       onLogout();
     }
     closeMobileMenu();
-    router.push('/login');
+    // Wait for the server to end the session: /login redirects signed-in users away.
+    void loggedOut.then(() => router.push('/login'));
   };
 
   const navigation = [
@@ -277,7 +278,7 @@ export function Sidebar({ user, onLogout }: SidebarProps) {
         <button
           onClick={closeMobileMenu}
           className="absolute top-4 left-4 p-2 rounded-lg text-clinical-500 hover:bg-sage-50 hover:text-sage-700 transition-colors"
-          aria-label="Close menu"
+          aria-label="סגור תפריט"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
