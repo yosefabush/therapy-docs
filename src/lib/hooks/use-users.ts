@@ -112,8 +112,10 @@ export function storeAuthUser(userId: string, rememberMe: boolean): void {
   window.dispatchEvent(new CustomEvent(AUTH_CHANGE_EVENT, { detail: { userId } }));
 }
 
-// Clear user authentication
-export function clearAuthUser(): void {
+// Clear user authentication. Returns a promise that settles once the server has
+// cleared the cookie and revoked the token, so callers that navigate away (to
+// /login, which redirects signed-in users) can wait for it instead of racing it.
+export function clearAuthUser(): Promise<void> {
   localStorage.removeItem(AUTH_STORAGE_KEY);
   sessionStorage.removeItem(AUTH_STORAGE_KEY);
 
@@ -128,6 +130,8 @@ export function clearAuthUser(): void {
 
   // Notify listeners that auth changed
   window.dispatchEvent(new CustomEvent(AUTH_CHANGE_EVENT, { detail: { userId: null } }));
+
+  return logoutInFlight ?? Promise.resolve();
 }
 
 // Check if user is authenticated

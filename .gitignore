@@ -54,6 +54,9 @@ data/audit-log.json
 # Runtime-generated uploaded patient documents (encrypted PHI) — must not be committed
 data/patient-documents.json
 
+# Runtime-generated revoked session tokens (JSON fallback store)
+data/revoked-tokens.json
+
 # MCP Configuration
 .mcp.json
 # Playwright

@@ -7,11 +7,8 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { IS_PRODUCTION } from '@/lib/env';
-import {
-  signSessionToken,
-  verifySessionToken,
-  type SessionPayload,
-} from './jwt';
+import { signSessionToken, type SessionPayload } from './jwt';
+import { verifyActiveSession } from './active-session';
 
 export const SESSION_COOKIE = 'therapydocs_session';
 const SESSION_MAX_AGE_SECONDS = 8 * 60 * 60; // 8 hours
@@ -51,7 +48,7 @@ export async function getSession(): Promise<SessionPayload | null> {
   const store = await cookies();
   const token = store.get(SESSION_COOKIE)?.value;
   if (!token) return null;
-  return verifySessionToken(token);
+  return verifyActiveSession(token);
 }
 
 export function isAdmin(session: SessionPayload | null): boolean {

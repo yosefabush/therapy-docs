@@ -23,6 +23,8 @@ export async function signSessionToken(
   return new SignJWT(payload)
     .setProtectedHeader({ alg: JWT_ALG })
     .setIssuedAt()
+    // A unique id per token so a single session can be revoked on logout.
+    .setJti(crypto.randomUUID())
     .setExpirationTime(expiresIn)
     .sign(getJwtKey());
 }
