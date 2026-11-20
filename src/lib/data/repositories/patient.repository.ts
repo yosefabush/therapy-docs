@@ -5,6 +5,7 @@ import { sessionRepository } from './session.repository';
 import { treatmentGoalRepository } from './treatment-goal.repository';
 import { reportRepository } from './report.repository';
 import { voiceRecordingRepository } from './voice-recording.repository';
+import { patientDocumentRepository } from './patient-document.repository';
 import { patientInsightsRepository } from './patient-insights.repository';
 
 class PatientJsonRepository extends JsonRepository<Patient> {
@@ -29,7 +30,7 @@ class PatientJsonRepository extends JsonRepository<Patient> {
   }
 
   // Deleting a patient removes everything keyed to it (sessions, goals,
-  // reports, voice recordings, insights). Children go first and the patient
+  // reports, voice recordings, documents, insights). Children go first and the patient
   // last, so an interrupted delete leaves the patient present and a retry
   // finishes the job (the JSON files cannot be changed in one transaction).
   async delete(id: string): Promise<boolean> {
@@ -38,6 +39,7 @@ class PatientJsonRepository extends JsonRepository<Patient> {
     await treatmentGoalRepository.deleteMany(byPatient);
     await reportRepository.deleteMany(byPatient);
     await voiceRecordingRepository.deleteMany(byPatient);
+    await patientDocumentRepository.deleteMany(byPatient);
     await patientInsightsRepository.deleteMany(byPatient);
     return super.delete(id);
   }

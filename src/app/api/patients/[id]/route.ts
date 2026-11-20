@@ -3,6 +3,8 @@ import { patientRepository } from '@/lib/data/repositories';
 import { getSession, isAdmin, type SessionPayload } from '@/lib/auth/session';
 import { recordAudit } from '@/lib/audit';
 import { logger } from '@/lib/logger';
+import { updatePatientSchema } from '@/lib/validation/schemas';
+import { parseJsonBody } from '@/lib/validation/parse';
 import type { Patient } from '@/types';
 
 // Returns the authorized patient, or a NextResponse describing why access was
@@ -62,8 +64,29 @@ export async function PUT(
     const auth = await authorizePatientAccess(id);
     if ('error' in auth) return auth.error;
 
-    const body = await request.json();
-    const patient = await patientRepository.update(id, body);
+    const parsed = await parseJsonBody(request, updatePatientSchema);
+    if ('error' in parsed) return parsed.error;
+    const { assignedTherapists, ...changes } = parsed.data;
+
+    // Only an admin may reassign a patient. Re-sending the current list is a
+    // harmless no-op for a therapist; any real change is refused.
+    if (assignedTherapists !== undefined && !isAdmin(auth.session)) {
+      const current = [...auth.patient.assignedTherapists].sort().join('|');
+      const requested = [...assignedTherapists].sort().join('|');
+      if (current !== requested) {
+        return NextResponse.json(
+          { error: 'Only an administrator can change assigned therapists', code: 'ADMIN_ONLY' },
+          { status: 403 }
+        );
+      }
+    }
+
+    const patient = await patientRepository.update(
+      id,
+      isAdmin(auth.session) && assignedTherapists !== undefined
+        ? { ...changes, assignedTherapists }
+        : changes
+    );
 
     await recordAudit({
       userId: auth.session.sub,

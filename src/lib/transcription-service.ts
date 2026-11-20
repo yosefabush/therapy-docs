@@ -1,9 +1,39 @@
 import { DiarizedTranscript } from '@/types';
+import {
+  TRANSCRIPTION_NOT_CONFIGURED_CODE,
+  TRANSCRIPTION_NOT_CONFIGURED_MESSAGE,
+  TRANSCRIPTION_FAILED_MESSAGE,
+  TRANSCRIPTION_TOO_LARGE_MESSAGE,
+} from '@/lib/transcription-config';
 
 interface TranscriptionResult {
   success: boolean;
   data?: DiarizedTranscript;
   error?: string;
+  /** Machine-readable reason, e.g. TRANSCRIPTION_NOT_CONFIGURED. */
+  code?: string;
+}
+
+/** Map a failed /api/transcribe response to a Hebrew, user-facing message. */
+export function transcriptionErrorMessage(status: number, code?: string): string {
+  if (status === 503 || code === TRANSCRIPTION_NOT_CONFIGURED_CODE) {
+    return TRANSCRIPTION_NOT_CONFIGURED_MESSAGE;
+  }
+  if (status === 413 || code === 'AUDIO_TOO_LARGE') return TRANSCRIPTION_TOO_LARGE_MESSAGE;
+  if (status === 401) return 'פג תוקף ההתחברות. התחברו מחדש ונסו שוב.';
+  return TRANSCRIPTION_FAILED_MESSAGE;
+}
+
+/** Ask the server whether automatic transcription is configured. */
+export async function fetchTranscriptionEnabled(): Promise<boolean> {
+  try {
+    const response = await fetch('/api/transcribe/config');
+    if (!response.ok) return false;
+    const result = await response.json();
+    return result?.data?.enabled === true;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -28,12 +58,15 @@ export async function transcribeWithDiarization(
       }),
     });
 
-    const result = await response.json();
+    // The body is not JSON when a proxy rejects the request (e.g. 413 from the
+    // platform), so never let parsing mask the HTTP status.
+    const result = await response.json().catch(() => ({} as { error?: string; code?: string; data?: DiarizedTranscript }));
 
     if (!response.ok) {
       return {
         success: false,
-        error: result.error || 'Failed to transcribe audio',
+        error: transcriptionErrorMessage(response.status, result.code),
+        code: result.code,
       };
     }
 
@@ -45,7 +78,7 @@ export async function transcribeWithDiarization(
     console.error('Transcription service error:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error occurred',
+      error: TRANSCRIPTION_FAILED_MESSAGE,
     };
   }
 }

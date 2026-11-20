@@ -39,6 +39,10 @@ function seed() {
     { id: 'v1', patientId: 'p1', sessionId: 's1', encryptedAudioUrl: 'data:audio/webm;base64,AAAA' },
     { id: 'v2', patientId: 'p2', sessionId: 's3', encryptedAudioUrl: 'data:audio/webm;base64,BBBB' },
   ]);
+  files.set('patient-documents.json', [
+    { id: 'd1', patientId: 'p1', encryptedName: 'x', content: 'enc:v1:AAAA' },
+    { id: 'd2', patientId: 'p2', encryptedName: 'y', content: 'enc:v1:BBBB' },
+  ]);
   files.set('patient-insights.json', [
     { id: 'i1', patientId: 'p1', generatedAt: '2026-01-01T00:00:00Z' },
     { id: 'i2', patientId: 'p2', generatedAt: '2026-01-01T00:00:00Z' },
@@ -50,7 +54,7 @@ const ids = (file: string) => (files.get(file) as { id: string }[]).map((x) => x
 describe('JSON mode: deleting a patient cascades', () => {
   beforeEach(seed);
 
-  it('removes the patient and all its sessions, goals, reports, recordings and insights', async () => {
+  it('removes the patient and all its sessions, goals, reports, recordings, documents and insights', async () => {
     expect(await patientRepository.delete('p1')).toBe(true);
 
     expect(ids('patients.json')).toEqual(['p2']);
@@ -58,6 +62,7 @@ describe('JSON mode: deleting a patient cascades', () => {
     expect(ids('treatment-goals.json')).toEqual(['g2']);
     expect(ids('reports.json')).toEqual(['r2']);
     expect(ids('voice-recordings.json')).toEqual(['v2']);
+    expect(ids('patient-documents.json')).toEqual(['d2']);
     expect(ids('patient-insights.json')).toEqual(['i2']);
   });
 
@@ -66,6 +71,7 @@ describe('JSON mode: deleting a patient cascades', () => {
     expect(ids('patients.json')).toEqual(['p1', 'p2']);
     expect(ids('sessions.json')).toHaveLength(3);
     expect(ids('voice-recordings.json')).toHaveLength(2);
+    expect(ids('patient-documents.json')).toHaveLength(2);
   });
 
   it('deleting an unrelated session/recording never decrypts or rewrites other rows', async () => {

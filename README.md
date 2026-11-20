@@ -127,8 +127,13 @@ SEARCH_HASH_KEY=...
 # when unset, the JSON file store is used.
 DATABASE_URL=postgresql://user:pass@host:5432/therapydocs?schema=public
 
-# Optional — server-side audio transcription
+# Optional — server-side audio transcription (without it the UI hides the
+# transcription button and /api/transcribe answers 503 TRANSCRIPTION_NOT_CONFIGURED)
 DEEPGRAM_API_KEY=...
+
+# Optional — show the demo credentials on the login page in production
+# (always shown outside production; leave unset on real deployments)
+NEXT_PUBLIC_SHOW_DEMO_CREDENTIALS=false
 
 # Optional — verbose logs
 DEBUG_LOGGING=false
@@ -164,6 +169,10 @@ export DATABASE_URL=postgresql://user:pass@host:5432/therapydocs?schema=public
 npm run db:migrate   # create tables
 npm run db:seed      # load the demo dataset (optional)
 ```
+
+### Patient documents
+
+The patient page's **מסמכים** tab uploads files (PDF, PNG, JPG/JPEG, DOCX, DOC, TXT; 4 MB max each, sent as multipart so they stay under Vercel's 4.5 MB request limit). The file content and the file name are stored AES-256-GCM encrypted (`enc:v1:`, `ENCRYPTION_KEY`); only size, MIME type, patient id and uploader are plaintext. Access follows the patient record (assigned therapists and admins), every upload/view/download/delete is audit-logged, and deleting a patient deletes its documents. In Postgres mode they live in the `PatientDocument` table (migration `20261120105707_patient_documents`), so run `npm run db:migrate` after upgrading.
 
 ## 🐳 Deployment
 

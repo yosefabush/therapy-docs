@@ -12,6 +12,8 @@ import { ReportGenerator, ReportCard } from '@/components/reports/ReportGenerato
 import { therapistRoleLabels } from '@/lib/mock-data';
 import { useCurrentUser, usePatient, useSessions, useTreatmentGoals, useReports, useUsers, useVoiceRecordings } from '@/lib/hooks';
 import { RecordingsList } from '@/components/recordings';
+import { DocumentsPanel } from '@/components/documents/DocumentsPanel';
+import { GoalsPanel } from '@/components/goals/GoalsPanel';
 import { InsightPanel } from '@/components/patients/InsightPanel';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
@@ -31,7 +33,7 @@ function PatientDetailPageContent() {
   const { user: currentUser, loading: userLoading } = useCurrentUser();
   const { patient, loading: patientLoading, error: patientError } = usePatient(patientId);
   const { sessions, loading: sessionsLoading } = useSessions({ patientId });
-  const { goals, loading: goalsLoading } = useTreatmentGoals(patientId);
+  const { goals, loading: goalsLoading, createGoal, updateGoal } = useTreatmentGoals(patientId);
   const { reports, loading: reportsLoading, createReport } = useReports(patientId);
   const { users, loading: usersLoading } = useUsers();
   const { recordings, loading: recordingsLoading, deleteRecording } = useVoiceRecordings({ patientId });
@@ -338,32 +340,12 @@ function PatientDetailPageContent() {
           )}
 
           {activeTab === 'goals' && (
-            <div className="max-w-3xl space-y-4">
-              {goals.map(goal => (
-                <Card key={goal.id}>
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h4 className="font-medium text-clinical-900">{goal.description}</h4>
-                      <p className="text-sm text-clinical-500">{goal.measurementCriteria}</p>
-                    </div>
-                    <Badge variant={goal.status === 'achieved' ? 'success' : goal.status === 'active' ? 'info' : 'sage'}>
-                      {goal.status}
-                    </Badge>
-                  </div>
-                  <ProgressBar value={goal.progress} showLabel className="mb-3" />
-                  <div className="flex items-center justify-between text-sm text-clinical-500">
-                    <span>יעד: {goal.targetDate ? new Intl.DateTimeFormat('he-IL').format(new Date(goal.targetDate)) : 'מתמשך'}</span>
-                    <Button variant="ghost" size="sm">עדכן התקדמות</Button>
-                  </div>
-                </Card>
-              ))}
-              <Button variant="secondary" className="w-full">
-                <svg className="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                הוסף מטרה חדשה
-              </Button>
-            </div>
+            <GoalsPanel
+              patientId={patientId}
+              goals={goals}
+              createGoal={createGoal}
+              updateGoal={updateGoal}
+            />
           )}
 
           {activeTab === 'reports' && (
@@ -397,21 +379,7 @@ function PatientDetailPageContent() {
             </div>
           )}
 
-          {activeTab === 'documents' && (
-            <Card className="text-center py-12">
-              <svg className="w-12 h-12 mx-auto text-clinical-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <h3 className="text-lg font-medium text-clinical-900 mb-1">אין מסמכים עדיין</h3>
-              <p className="text-clinical-500 mb-4">העלה טפסי קליטה, הסכמות ומסמכים נוספים</p>
-              <Button variant="primary">
-                <svg className="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                </svg>
-                העלה מסמך
-              </Button>
-            </Card>
-          )}
+          {activeTab === 'documents' && <DocumentsPanel patientId={patientId} />}
         </div>
       </main>
 

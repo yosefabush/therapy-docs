@@ -16,6 +16,9 @@ export const unauthorized = () =>
 export const forbidden = () =>
   NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
+export const conflict = (message: string, code = 'CONFLICT') =>
+  NextResponse.json({ error: message, code }, { status: 409 });
+
 export const notFound = (message = 'Not found') =>
   NextResponse.json({ error: message }, { status: 404 });
 

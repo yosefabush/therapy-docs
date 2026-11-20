@@ -9,34 +9,15 @@ import {
   forbidden,
 } from '@/lib/auth/authz';
 import { logger } from '@/lib/logger';
-import { z } from 'zod';
+import { sessionRepository } from '@/lib/data/repositories';
+import { createRecordingSchema } from '@/lib/validation/schemas';
+import { parseJsonBody } from '@/lib/validation/parse';
+import { checkAudioDataUrl } from '@/lib/recordings/validate-audio';
+import { recordAudit } from '@/lib/audit';
 
-const speakerUtteranceSchema = z.object({
-  speaker: z.number(),
-  speakerLabel: z.string().optional(),
-  transcript: z.string(),
-  start: z.number(),
-  end: z.number(),
-  confidence: z.number(),
-});
-
-const diarizedTranscriptSchema = z.object({
-  utterances: z.array(speakerUtteranceSchema),
-  speakerCount: z.number(),
-  speakerLabels: z.record(z.string(), z.string()).optional(),
-  rawTranscript: z.string(),
-});
-
-const createRecordingSchema = z.object({
-  sessionId: z.string(),
-  patientId: z.string(),
-  duration: z.number().min(0),
-  encryptedAudioUrl: z.string(),  // Base64 audio data
-  transcriptionStatus: z.enum(['pending', 'processing', 'completed', 'failed']).default('pending'),
-  encryptedTranscript: z.string().optional(),
-  diarizedTranscript: diarizedTranscriptSchema.optional(),
-  consentObtained: z.boolean(),
-});
+// Vercel rejects bodies above 4.5 MB; refuse anything clearly larger up front
+// instead of buffering it.
+const MAX_BODY_BYTES = 4.5 * 1024 * 1024;
 
 export async function GET(request: NextRequest) {
   try {
@@ -77,19 +58,50 @@ export async function POST(request: NextRequest) {
     const session = await getSession();
     if (!session) return unauthorized();
 
-    const body = await request.json();
-    const validatedData = createRecordingSchema.parse(body);
+    const declaredLength = Number(request.headers.get('content-length') ?? 0);
+    if (declaredLength > MAX_BODY_BYTES) {
+      return NextResponse.json(
+        { error: 'ההקלטה גדולה מדי (מעל 4MB)', code: 'RECORDING_TOO_LARGE' },
+        { status: 413 }
+      );
+    }
+
+    const parsed = await parseJsonBody(request, createRecordingSchema);
+    if ('error' in parsed) return parsed.error;
+    const validatedData = parsed.data;
+
+    const audio = checkAudioDataUrl(validatedData.encryptedAudioUrl);
+    if (!audio.ok) {
+      return NextResponse.json(
+        {
+          error: audio.message,
+          code: audio.reason === 'size' ? 'RECORDING_TOO_LARGE' : 'RECORDING_BAD_TYPE',
+        },
+        { status: audio.reason === 'size' ? 413 : 400 }
+      );
+    }
 
     if (!(await canAccessPatient(session, validatedData.patientId))) {
       return forbidden();
     }
+    // The session must exist and belong to the patient the recording is for.
+    const owningSession = await sessionRepository.findById(validatedData.sessionId);
+    if (!owningSession || owningSession.patientId !== validatedData.patientId) {
+      return NextResponse.json(
+        { error: 'Session does not belong to this patient' },
+        { status: 400 }
+      );
+    }
 
     const recording = await voiceRecordingRepository.create(validatedData);
+    await recordAudit({
+      userId: session.sub,
+      action: 'create',
+      resourceType: 'voice_recording',
+      resourceId: recording.id,
+    });
     return NextResponse.json({ data: recording }, { status: 201 });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Validation error', details: error.errors }, { status: 400 });
-    }
     logger.error('Error creating voice recording:', error);
     return NextResponse.json({ error: 'Failed to create voice recording' }, { status: 500 });
   }

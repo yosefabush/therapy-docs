@@ -313,6 +313,19 @@ export interface VoiceRecording {
   createdAt: Date;
 }
 
+// Patient documents (intake forms, consents, ...). The file content and the
+// file name are AES-256-GCM encrypted at rest; this is the decrypted metadata
+// view returned to authorized callers (never includes the content).
+export interface PatientDocument {
+  id: string;
+  patientId: string;
+  name: string;
+  mimeType: string;
+  size: number; // bytes of the original file
+  uploadedBy: string;
+  createdAt: Date;
+}
+
 // Audit and Security
 export interface AuditLog {
   id: string;

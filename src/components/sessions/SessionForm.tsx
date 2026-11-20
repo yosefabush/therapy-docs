@@ -292,6 +292,9 @@ export function SessionForm({
                 setShowVoiceRecorder(false);
               } catch (error) {
                 console.error('Failed to save recording:', error);
+                // Surface the (Hebrew) reason inside the recorder instead of
+                // failing silently; VoiceRecorder shows the thrown message.
+                throw error instanceof Error ? error : new Error('שמירת ההקלטה נכשלה. נסו שוב.');
               }
             }}
             onClose={() => setShowVoiceRecorder(false)}

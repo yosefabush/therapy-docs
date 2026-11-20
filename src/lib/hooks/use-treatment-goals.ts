@@ -9,8 +9,10 @@ export function useTreatmentGoals(patientId?: string) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchGoals = useCallback(async () => {
-    setLoading(true);
+  // `silent` refetches (after a create/update) keep the current list on screen
+  // instead of flipping `loading`, which would blank the whole page.
+  const fetchGoals = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     setError(null);
 
     try {
@@ -38,21 +40,21 @@ export function useTreatmentGoals(patientId?: string) {
   const createGoal = async (data: Partial<TreatmentGoal>): Promise<TreatmentGoal> => {
     const response = await apiClient.post<TreatmentGoal>('/treatment-goals', data);
     if (response.error) throw new Error(response.error);
-    await fetchGoals();
+    await fetchGoals(true);
     return response.data!;
   };
 
   const updateGoal = async (id: string, data: Partial<TreatmentGoal>): Promise<TreatmentGoal> => {
     const response = await apiClient.put<TreatmentGoal>(`/treatment-goals/${id}`, data);
     if (response.error) throw new Error(response.error);
-    await fetchGoals();
+    await fetchGoals(true);
     return response.data!;
   };
 
   const deleteGoal = async (id: string): Promise<boolean> => {
     const response = await apiClient.delete(`/treatment-goals/${id}`);
     if (response.error) throw new Error(response.error);
-    await fetchGoals();
+    await fetchGoals(true);
     return true;
   };
 
@@ -60,7 +62,7 @@ export function useTreatmentGoals(patientId?: string) {
     goals,
     loading,
     error,
-    refetch: fetchGoals,
+    refetch: () => fetchGoals(),
     createGoal,
     updateGoal,
     deleteGoal,

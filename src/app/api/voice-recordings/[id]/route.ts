@@ -9,6 +9,8 @@ import {
 } from '@/lib/auth/authz';
 import { recordAudit } from '@/lib/audit';
 import { logger } from '@/lib/logger';
+import { updateRecordingSchema } from '@/lib/validation/schemas';
+import { parseJsonBody } from '@/lib/validation/parse';
 import type { VoiceRecording } from '@/types';
 
 async function authorizeRecording(
@@ -58,8 +60,18 @@ export async function PUT(
     const result = await authorizeRecording(id);
     if ('error' in result) return result.error;
 
-    const body = await request.json();
-    const recording = await voiceRecordingRepository.update(id, body);
+    // Only the transcript fields are editable: the audio, the owning patient and
+    // the session are immutable after creation.
+    const parsed = await parseJsonBody(request, updateRecordingSchema);
+    if ('error' in parsed) return parsed.error;
+    const recording = await voiceRecordingRepository.update(id, parsed.data);
+
+    await recordAudit({
+      userId: result.userId,
+      action: 'update',
+      resourceType: 'voice_recording',
+      resourceId: id,
+    });
 
     return NextResponse.json({ data: recording });
   } catch (error) {

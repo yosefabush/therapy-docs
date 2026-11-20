@@ -3,7 +3,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui';
 import { DiarizedTranscript } from '@/types';
-import { transcribeWithDiarization, formatDiarizedTranscript, getDefaultSpeakerLabels } from '@/lib/transcription-service';
+import { MAX_AUDIO_DATA_URL_BYTES, checkAudioDataUrl, AUDIO_TOO_LARGE_MESSAGE } from '@/lib/recordings/validate-audio';
+import { fetchTranscriptionEnabled, transcribeWithDiarization, formatDiarizedTranscript, getDefaultSpeakerLabels } from '@/lib/transcription-service';
 
 // Speech Recognition types
 interface SpeechRecognitionEvent extends Event {
@@ -36,7 +37,7 @@ interface VoiceRecorderProps {
     duration: number,
     transcript?: string,
     diarizedTranscript?: DiarizedTranscript
-  ) => void;
+  ) => void | Promise<void>;
   onClose: () => void;
 }
 
@@ -56,6 +57,22 @@ export function VoiceRecorder({ sessionId, patientId, onRecordingComplete, onClo
   const [diarizedTranscript, setDiarizedTranscript] = useState<DiarizedTranscript | null>(null);
   const [isDiarizing, setIsDiarizing] = useState(false);
   const [diarizeError, setDiarizeError] = useState<string | null>(null);
+  // null = still checking; false = not configured on the server.
+  const [transcriptionEnabled, setTranscriptionEnabled] = useState<boolean | null>(null);
+
+  // Base64 inflates the recording by ~33%; warn as soon as it is clearly too big.
+  const recordingTooLarge =
+    audioBlob !== null && Math.ceil((audioBlob.size * 4) / 3) + 64 > MAX_AUDIO_DATA_URL_BYTES;
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchTranscriptionEnabled().then((enabled) => {
+      if (!cancelled) setTranscriptionEnabled(enabled);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const [speakerLabels, setSpeakerLabels] = useState<Record<number, string>>(getDefaultSpeakerLabels());
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -305,14 +322,25 @@ export function VoiceRecorder({ sessionId, patientId, onRecordingComplete, onClo
 
     // Convert to base64
     const reader = new FileReader();
-    reader.onloadend = () => {
+    reader.onloadend = async () => {
       const base64data = reader.result as string;
-      onRecordingComplete(
-        base64data,
-        recordingTime,
-        savedTranscript || undefined,
-        diarizedTranscript || undefined
-      );
+      // Check before uploading: the request body is capped at ~4.5 MB.
+      const check = checkAudioDataUrl(base64data);
+      if (!check.ok) {
+        setError(check.message);
+        return;
+      }
+      setError(null);
+      try {
+        await onRecordingComplete(
+          base64data,
+          recordingTime,
+          savedTranscript || undefined,
+          diarizedTranscript || undefined
+        );
+      } catch (err) {
+        setError(err instanceof Error && err.message ? err.message : 'שמירת ההקלטה נכשלה. נסו שוב.');
+      }
     };
     reader.readAsDataURL(audioBlob);
   }, [recordingTime, onRecordingComplete, savedTranscript, diarizedTranscript, speakerLabels, speakerLabelConfirmed]);
@@ -379,6 +407,16 @@ export function VoiceRecorder({ sessionId, patientId, onRecordingComplete, onClo
       {error && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
           <p className="text-sm text-red-700">{error}</p>
+        </div>
+      )}
+
+      {recordingTooLarge && (
+        <div
+          role="alert"
+          data-testid="recording-too-large"
+          className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg"
+        >
+          <p className="text-sm text-amber-800">{AUDIO_TOO_LARGE_MESSAGE}</p>
         </div>
       )}
 
@@ -548,11 +586,22 @@ export function VoiceRecorder({ sessionId, patientId, onRecordingComplete, onClo
               </h4>
             </div>
 
+            {/* Not configured: explain instead of offering a button that fails */}
+            {transcriptionEnabled === false && !diarizedTranscript && (
+              <div
+                data-testid="transcription-not-configured"
+                className="text-center py-3 text-sm text-clinical-600"
+              >
+                תמלול אוטומטי עם זיהוי דוברים אינו מוגדר במערכת. ניתן להמשיך ולשמור את ההקלטה ללא תמלול.
+              </div>
+            )}
+
             {/* Diarization Button */}
-            {!diarizedTranscript && !isDiarizing && (
+            {transcriptionEnabled !== false && !diarizedTranscript && !isDiarizing && (
               <div className="text-center py-4">
                 <Button
                   variant="secondary"
+                  disabled={transcriptionEnabled !== true}
                   onClick={() => {
                     // Get audio data URL to send to Deepgram
                     const mimeType = mediaRecorderRef.current?.mimeType || 'audio/webm';
@@ -660,7 +709,7 @@ export function VoiceRecorder({ sessionId, patientId, onRecordingComplete, onClo
             <Button variant="ghost" onClick={handleReset}>
               הקלט מחדש
             </Button>
-            <Button variant="primary" onClick={handleSave}>
+            <Button variant="primary" onClick={handleSave} disabled={recordingTooLarge}>
               <svg className="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>

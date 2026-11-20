@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@deepgram/sdk';
 import { DiarizedTranscript, SpeakerUtterance } from '@/types';
 import { logger } from '@/lib/logger';
+import { getSession, unauthorized } from '@/lib/auth/authz';
+import {
+  isTranscriptionConfigured,
+  TRANSCRIPTION_NOT_CONFIGURED_CODE,
+  TRANSCRIPTION_NOT_CONFIGURED_MESSAGE,
+  TRANSCRIPTION_FAILED_MESSAGE,
+  TRANSCRIPTION_TOO_LARGE_MESSAGE,
+} from '@/lib/transcription-config';
 
 // Reject oversized payloads early (base64 inflates size ~33%); ~25MB of audio.
 const MAX_AUDIO_BYTES = 35 * 1024 * 1024;
@@ -18,6 +26,21 @@ const getDeepgramClient = () => {
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await getSession();
+    if (!auth) return unauthorized();
+
+    // No Deepgram key: answer with a clear, translatable status before reading
+    // the (large) body. 503 = the feature is unavailable, not a server fault.
+    if (!isTranscriptionConfigured()) {
+      return NextResponse.json(
+        {
+          error: TRANSCRIPTION_NOT_CONFIGURED_MESSAGE,
+          code: TRANSCRIPTION_NOT_CONFIGURED_CODE,
+        },
+        { status: 503 }
+      );
+    }
+
     // Get the audio data from request
     const body = await request.json();
     const { audioData, language = 'he' } = body;
@@ -38,16 +61,8 @@ export async function POST(request: NextRequest) {
 
     if (audioData.length > MAX_AUDIO_BYTES) {
       return NextResponse.json(
-        { error: 'Audio payload too large' },
+        { error: TRANSCRIPTION_TOO_LARGE_MESSAGE, code: 'AUDIO_TOO_LARGE' },
         { status: 413 }
-      );
-    }
-
-    // Check if API key is configured
-    if (!process.env.DEEPGRAM_API_KEY) {
-      return NextResponse.json(
-        { error: 'Deepgram API key not configured. Please add DEEPGRAM_API_KEY to your environment variables.' },
-        { status: 500 }
       );
     }
 
@@ -79,7 +94,7 @@ export async function POST(request: NextRequest) {
     if (error) {
       logger.error('Deepgram API error:', error);
       return NextResponse.json(
-        { error: 'Failed to transcribe audio' },
+        { error: TRANSCRIPTION_FAILED_MESSAGE, code: 'TRANSCRIPTION_FAILED' },
         { status: 500 }
       );
     }
@@ -90,7 +105,7 @@ export async function POST(request: NextRequest) {
 
     if (!alternatives) {
       return NextResponse.json(
-        { error: 'No transcription results' },
+        { error: TRANSCRIPTION_FAILED_MESSAGE, code: 'NO_TRANSCRIPTION_RESULTS' },
         { status: 500 }
       );
     }
@@ -192,7 +207,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     logger.error('Transcription error:', error);
     return NextResponse.json(
-      { error: 'Failed to process transcription' },
+      { error: TRANSCRIPTION_FAILED_MESSAGE, code: 'TRANSCRIPTION_FAILED' },
       { status: 500 }
     );
   }
