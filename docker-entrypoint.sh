@@ -14,6 +14,8 @@ if [ -n "$DATABASE_URL" ]; then
   fi
   # Encrypt any legacy plaintext patient ID numbers (idempotent).
   node scripts/encrypt-patient-ids.mjs
+  # Encrypt any legacy plaintext voice recordings (audio + transcripts, idempotent).
+  node scripts/encrypt-recordings.mjs
 else
   # JSON-file backend: seed the data directory from the bundled seed files on
   # first run. Existing files are never overwritten, so data on a persistent
@@ -32,6 +34,8 @@ else
   fi
   # Encrypt any legacy plaintext patient ID numbers (idempotent).
   node scripts/encrypt-patient-ids.mjs
+  # Encrypt any legacy plaintext voice recordings (audio + transcripts, idempotent).
+  node scripts/encrypt-recordings.mjs
 fi
 
 exec "$@"

@@ -11,6 +11,7 @@ import { prisma } from '../prisma';
 import { reviveDates } from '../revive';
 import { PrismaRepository, type PayloadDelegate } from './prisma-base.repository';
 import { encryptPatientForStorage, decryptPatientFromStorage } from '../patient-crypto';
+import { encryptRecordingForStorage, decryptRecordingFromStorage } from '../recording-crypto';
 
 const rid = (prefix: string) =>
   `${prefix}-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
@@ -158,15 +159,20 @@ class VoiceRecordingPrismaRepository extends PrismaRepository<VoiceRecording> {
   protected generateId() {
     return rid('recording');
   }
+  // Audio and transcripts are encrypted at rest (see recording-crypto.ts).
+  protected rowToEntity(row: { payload: unknown }): VoiceRecording {
+    return decryptRecordingFromStorage(super.rowToEntity(row));
+  }
+  protected toStoredPayload(v: VoiceRecording): VoiceRecording {
+    return encryptRecordingForStorage(v);
+  }
   async findBySession(sessionId: string): Promise<VoiceRecording[]> {
-    return mapRows<VoiceRecording>(
-      await prisma.voiceRecording.findMany({ where: { sessionId } })
-    );
+    const rows = await prisma.voiceRecording.findMany({ where: { sessionId } });
+    return rows.map((r) => this.rowToEntity(r));
   }
   async findByPatient(patientId: string): Promise<VoiceRecording[]> {
-    return mapRows<VoiceRecording>(
-      await prisma.voiceRecording.findMany({ where: { patientId } })
-    );
+    const rows = await prisma.voiceRecording.findMany({ where: { patientId } });
+    return rows.map((r) => this.rowToEntity(r));
   }
 }
 
