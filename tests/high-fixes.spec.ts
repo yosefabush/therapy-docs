@@ -194,13 +194,17 @@ test('admin sees all patients and sessions, a therapist only their own', async (
   await otherContext.close();
 });
 
-test('header logout calls /api/auth/logout and invalidates API access', async ({ page }) => {
+test('header logout calls /api/auth/logout and invalidates API access', async ({ browser }) => {
+  // Logout now really revokes the token, so use a login of its own instead of the shared state.
+  const context = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+  const page = await context.newPage();
+  await loginViaForm(page, DEMO_EMAIL, DEMO_PASSWORD);
   const logouts = trackLogouts(page);
   await page.goto('/patients');
   await dismissReminder(page);
   expect((await page.request.get('/api/patients')).status()).toBe(200);
 
-  await page.getByRole('button', { name: 'Profile menu' }).click();
+  await page.getByRole('button', { name: 'תפריט פרופיל' }).click();
   const logoutResponse = page.waitForResponse(
     (r) => r.url().includes('/api/auth/logout') && r.request().method() === 'POST'
   );
@@ -215,6 +219,7 @@ test('header logout calls /api/auth/logout and invalidates API access', async ({
   // Protected pages bounce back to the login screen.
   await page.goto('/patients');
   await page.waitForURL((url) => url.pathname === '/login');
+  await context.close();
 });
 
 test('/reports: "צור דוח" creates a report with the title and shows it', async ({ page }) => {
@@ -250,7 +255,7 @@ test('patient page: generate + "שמור דוח" persists the report', async ({ 
   await page.goto(`/patients/${patientId}`);
   await dismissReminder(page);
   await page.getByRole('button', { name: 'דוחות' }).click();
-  await page.getByRole('button', { name: 'Generate Report with AI' }).click();
+  await page.getByRole('button', { name: 'צור דוח באמצעות AI' }).click();
   await page.getByRole('button', { name: 'שמור דוח' }).click();
   await expect(page.getByRole('button', { name: 'שמור דוח' })).toHaveCount(0, { timeout: 20_000 });
 
