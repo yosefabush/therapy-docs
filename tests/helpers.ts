@@ -14,10 +14,17 @@ const ERROR_TEXTS = [
   'This page could not be found',
 ];
 
-export async function loginViaForm(page: Page): Promise<void> {
+export const ADMIN_EMAIL = 'admin@clinic.co.il';
+export const ADMIN_PASSWORD = 'admin123';
+
+export async function loginViaForm(
+  page: Page,
+  email: string = DEMO_EMAIL,
+  password: string = DEMO_PASSWORD
+): Promise<void> {
   await page.goto('/login');
-  await page.locator('input[type="email"]').fill(DEMO_EMAIL);
-  await page.locator('input[type="password"]').fill(DEMO_PASSWORD);
+  await page.locator('input[type="email"]').fill(email);
+  await page.locator('input[type="password"]').fill(password);
   await page.locator('button[type="submit"]').click();
   await page.waitForURL((url) => url.pathname === '/');
 }
