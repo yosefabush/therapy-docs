@@ -25,7 +25,13 @@ async function request<T>(url: string, init?: RequestInit): Promise<ApiResponse<
   }
 
   if (!response.ok) {
-    return { ...body, error: body.error ?? `Request failed (${response.status})`, status: response.status };
+    // The hosting platform answers 413 with a non-JSON body; give it a message
+    // the user can read instead of "Request failed (413)".
+    const fallback =
+      response.status === 413
+        ? 'הקובץ או ההקלטה גדולים מדי (מעל 4MB)'
+        : `Request failed (${response.status})`;
+    return { ...body, error: body.error ?? fallback, status: response.status };
   }
   return { ...body, status: response.status };
 }
