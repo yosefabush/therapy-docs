@@ -11,6 +11,8 @@ import { SummaryPanel } from '@/components/sessions/SummaryPanel';
 import { therapistRoleLabels, sessionTypeLabels } from '@/lib/mock-data';
 import { useSession, useCurrentUser, usePatient, useUsers } from '@/lib/hooks';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { apiClient } from '@/lib/api/client';
+import type { Session, SessionNotes, SessionType } from '@/types';
 
 function SessionDetailPageContent() {
   const params = useParams();
@@ -19,6 +21,9 @@ function SessionDetailPageContent() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [showSignModal, setShowSignModal] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [signError, setSignError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const { user: currentUser, loading: userLoading } = useCurrentUser();
   const { session, loading: sessionLoading, refetch: refetchSession } = useSession(sessionId);
@@ -26,6 +31,64 @@ function SessionDetailPageContent() {
   const { users, loading: usersLoading } = useUsers();
 
   const therapist = session ? users.find(u => u.id === session.therapistId) : null;
+
+  // Persist the SOAP notes. A draft keeps the session's current status; completing
+  // marks it completed. Success/error feedback is shown to the user either way.
+  const saveNotes = async (
+    notes: SessionNotes,
+    status: Session['status'] | undefined,
+    sessionType: SessionType | undefined,
+  ): Promise<boolean> => {
+    setSaving(true);
+    setFeedback(null);
+    const payload: Partial<Session> = { notes };
+    if (status) payload.status = status;
+    if (sessionType) payload.sessionType = sessionType;
+    const response = await apiClient.put<Session>(`/sessions/${sessionId}`, payload);
+    setSaving(false);
+    if (response.error) {
+      setFeedback({ type: 'error', message: 'שמירת הרשומות נכשלה. אנא נסה שוב.' });
+      return false;
+    }
+    await refetchSession();
+    setFeedback({
+      type: 'success',
+      message: status === 'completed' ? 'הרשומות נשמרו והמפגש סומן כהושלם' : 'הטיוטה נשמרה בהצלחה',
+    });
+    return true;
+  };
+
+  // Sign: persist the completed status plus signature (the server stamps
+  // signedAt/signedBy from the authenticated session), then go back to the list.
+  const signSession = async () => {
+    setSaving(true);
+    setSignError(null);
+    const response = await apiClient.put<Session>(`/sessions/${sessionId}`, {
+      status: 'completed',
+      signedAt: new Date().toISOString(),
+    });
+    setSaving(false);
+    if (response.error) {
+      setSignError('החתימה נכשלה. אנא נסה שוב.');
+      return;
+    }
+    setShowSignModal(false);
+    router.push('/sessions');
+  };
+
+  const feedbackBanner = feedback && (
+    <div
+      role={feedback.type === 'error' ? 'alert' : 'status'}
+      data-testid="session-feedback"
+      className={`mb-4 rounded-lg border px-4 py-3 text-sm ${
+        feedback.type === 'error'
+          ? 'bg-red-50 border-red-200 text-red-800'
+          : 'bg-green-50 border-green-200 text-green-800'
+      }`}
+    >
+      {feedback.message}
+    </div>
+  );
 
   // Show loading while fetching session or user
   if (userLoading || sessionLoading) {
@@ -110,15 +173,21 @@ function SessionDetailPageContent() {
           <div className="max-w-4xl mx-auto">
             <div className="flex items-center justify-between mb-6">
               <h1 className="text-2xl font-semibold text-clinical-900">עריכת רשומות מפגש</h1>
-              <Button variant="ghost" onClick={() => setIsEditing(false)}>ביטול</Button>
+              <Button variant="ghost" onClick={() => { setFeedback(null); setIsEditing(false); }}>ביטול</Button>
             </div>
+            {feedbackBanner}
             <SessionForm
               session={session}
               sessionId={session.id}
               patientId={session.patientId}
               therapistRole={session.therapistRole}
-              onSubmit={(notes, status) => { console.log('Saved:', notes); setIsEditing(false); }}
-              onSaveDraft={(notes) => console.log('Draft:', notes)}
+              isLoading={saving}
+              onSubmit={async (notes, status, sessionType) => {
+                if (await saveNotes(notes, status, sessionType)) setIsEditing(false);
+              }}
+              onSaveDraft={async (notes, sessionType) => {
+                await saveNotes(notes, undefined, sessionType);
+              }}
             />
           </div>
         </main>
@@ -155,7 +224,7 @@ function SessionDetailPageContent() {
             <div className="flex items-center gap-2 sm:gap-3">
               {session.status === 'completed' && !session.signedAt && (
                 <>
-                  <Button variant="secondary" size="sm" onClick={() => setIsEditing(true)}>עריכת רשומות</Button>
+                  <Button variant="secondary" size="sm" onClick={() => { setFeedback(null); setIsEditing(true); }}>עריכת רשומות</Button>
                   <Button variant="primary" size="sm" onClick={() => setShowSignModal(true)}>חתימה והשלמה</Button>
                 </>
               )}
@@ -167,6 +236,7 @@ function SessionDetailPageContent() {
         </div>
 
         <div className="p-4 sm:p-6 lg:p-8">
+          {feedbackBanner}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             <div className="lg:col-span-2 space-y-6">
               {/* AI Summary */}
@@ -338,9 +408,12 @@ function SessionDetailPageContent() {
           <p className="text-clinical-700">
             אני מאשר/ת שהמידע המתועד ברשומת מפגש זו הוא מדויק ומלא למיטב ידיעתי.
           </p>
+          {signError && (
+            <p role="alert" data-testid="sign-error" className="text-sm text-red-700">{signError}</p>
+          )}
           <div className="flex justify-end gap-3 pt-4 border-t">
             <Button variant="ghost" onClick={() => setShowSignModal(false)}>ביטול</Button>
-            <Button variant="primary" onClick={() => { setShowSignModal(false); router.push('/sessions'); }}>
+            <Button variant="primary" onClick={signSession} loading={saving}>
               חתום על התיעוד
             </Button>
           </div>

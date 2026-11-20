@@ -13,8 +13,8 @@ interface SessionFormProps {
   sessionId?: string;
   patientId?: string;
   therapistRole: TherapistRole;
-  onSubmit: (notes: SessionNotes, status: Session['status']) => void;
-  onSaveDraft: (notes: SessionNotes) => void;
+  onSubmit: (notes: SessionNotes, status: Session['status'], sessionType: SessionType) => void | Promise<void>;
+  onSaveDraft: (notes: SessionNotes, sessionType: SessionType) => void | Promise<void>;
   isLoading?: boolean;
 }
 
@@ -63,9 +63,9 @@ export function SessionForm({
     };
 
     if (asDraft) {
-      onSaveDraft(finalNotes);
+      onSaveDraft(finalNotes, sessionType);
     } else {
-      onSubmit(finalNotes, 'completed');
+      onSubmit(finalNotes, 'completed', sessionType);
     }
   };
 
