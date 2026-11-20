@@ -9,6 +9,9 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
+// Must match the server's rule in /api/auth/signup (z.string().min(8)).
+const MIN_PASSWORD_LENGTH = 8;
+
 interface FormErrors {
   name?: string;
   email?: string;
@@ -49,8 +52,8 @@ export default function SignupPage() {
     // Password validation
     if (!password) {
       newErrors.password = 'נא להזין סיסמה';
-    } else if (password.length < 6) {
-      newErrors.password = 'הסיסמה חייבת להכיל לפחות 6 תווים';
+    } else if (password.length < MIN_PASSWORD_LENGTH) {
+      newErrors.password = `הסיסמה חייבת להכיל לפחות ${MIN_PASSWORD_LENGTH} תווים`;
     } else if (!/(?=.*[a-zA-Z])(?=.*[0-9])/.test(password)) {
       newErrors.password = 'הסיסמה חייבת להכיל אותיות ומספרים';
     }
@@ -106,8 +109,8 @@ export default function SignupPage() {
     if (!password) return { level: 0, text: '', color: '' };
 
     let strength = 0;
-    if (password.length >= 6) strength++;
-    if (password.length >= 8) strength++;
+    if (password.length >= MIN_PASSWORD_LENGTH) strength++;
+    if (password.length >= 12) strength++;
     if (/[A-Z]/.test(password)) strength++;
     if (/[0-9]/.test(password)) strength++;
     if (/[^a-zA-Z0-9]/.test(password)) strength++;
@@ -236,6 +239,7 @@ export default function SignupPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? 'הסתר סיסמה' : 'הצג סיסמה'}
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-clinical-400 hover:text-clinical-600 transition-colors"
                     tabIndex={-1}
                   >
@@ -297,6 +301,7 @@ export default function SignupPage() {
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    aria-label={showConfirmPassword ? 'הסתר אימות סיסמה' : 'הצג אימות סיסמה'}
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-clinical-400 hover:text-clinical-600 transition-colors"
                     tabIndex={-1}
                   >
@@ -330,11 +335,11 @@ export default function SignupPage() {
 
               <p className="text-xs text-clinical-400 text-center">
                 בלחיצה על &quot;יצירת חשבון&quot; הנך מסכים/ה ל
-                <Link href="#" className="text-sage-600 hover:underline mx-1">
+                <Link href="/terms" className="text-sage-600 hover:underline mx-1">
                   תנאי השימוש
                 </Link>
                 ול
-                <Link href="#" className="text-sage-600 hover:underline mx-1">
+                <Link href="/privacy" className="text-sage-600 hover:underline mx-1">
                   מדיניות הפרטיות
                 </Link>
               </p>

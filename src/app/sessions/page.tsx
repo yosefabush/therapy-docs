@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { Suspense, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Sidebar, MobileMenuProvider } from '@/components/layout/Sidebar';
 import { Header, QuickActionButton } from '@/components/layout/Header';
 import { BottomNav } from '@/components/layout/BottomNav';
@@ -13,9 +14,12 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
 
 function SessionsPageContent() {
-  const [activeTab, setActiveTab] = useState('upcoming');
+  // ?tab=pending (the dashboard's "השלם עכשיו" link) opens the pending-signature tab.
+  const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') === 'pending' ? 'pending' : 'upcoming');
   const [showNewSession, setShowNewSession] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>('');
+  const [locationFilter, setLocationFilter] = useState('all');
 
   const { user: currentUser, loading: userLoading } = useAuthRedirect();
   const { patients, loading: patientsLoading } = useMyPatients(currentUser?.id, currentUser?.role === 'admin');
@@ -106,6 +110,10 @@ function SessionsPageContent() {
         break;
     }
 
+    if (locationFilter !== 'all') {
+      sessions = sessions.filter(s => s.location === locationFilter);
+    }
+
     if (selectedDate) {
       const filterDate = new Date(selectedDate);
       const filterDateStr = filterDate.toDateString();
@@ -113,7 +121,7 @@ function SessionsPageContent() {
     }
 
     return sessions;
-  }, [activeTab, selectedDate, upcomingSessions, completedSessions, pendingSignature, allSortedSessions]);
+  }, [activeTab, selectedDate, locationFilter, upcomingSessions, completedSessions, pendingSignature, allSortedSessions]);
 
   // Memoize patient names map to avoid recreation on every render
   const patientNames = useMemo(() => {
@@ -224,9 +232,13 @@ function SessionsPageContent() {
                   onChange={(e) => setSelectedDate(e.target.value)}
                   className="w-full px-4 py-2.5 rounded-lg border border-sage-200 bg-white text-clinical-900 focus:outline-none focus:ring-2 focus:ring-sage-500"
                   placeholder="סינון לפי תאריך"
+                  aria-label="סינון לפי תאריך"
                 />
               </div>
               <Select
+                aria-label="סינון לפי מיקום"
+                value={locationFilter}
+                onChange={(e) => setLocationFilter(e.target.value)}
                 options={[
                   { value: 'all', label: 'כל המיקומים' },
                   { value: 'in_person', label: 'פנים אל פנים' },
@@ -296,7 +308,9 @@ function SessionsPageContent() {
 export default function SessionsPage() {
   return (
     <MobileMenuProvider>
-      <SessionsPageContent />
+      <Suspense fallback={null}>
+        <SessionsPageContent />
+      </Suspense>
     </MobileMenuProvider>
   );
 }

@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { Sidebar, MobileMenuProvider } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { BottomNav } from '@/components/layout/BottomNav';
-import { Card, Button, Tabs } from '@/components/ui';
+import { Card, Button, Badge, Tabs } from '@/components/ui';
 import { therapistRoleLabels } from '@/lib/mock-data';
 import { useCurrentUser } from '@/lib/hooks';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
@@ -21,7 +22,7 @@ function HelpPageContent() {
   }
 
   if (error || !currentUser) {
-    return <ErrorMessage message="Failed to load user data" />;
+    return <ErrorMessage message="לא ניתן לטעון את נתוני המשתמש" />;
   }
 
   const tabs = [
@@ -62,6 +63,7 @@ function HelpPageContent() {
     {
       id: '1',
       title: 'התחלה מהירה',
+      href: '/guide',
       description: 'מדריך בסיסי להכרת המערכת',
       icon: (
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -72,6 +74,7 @@ function HelpPageContent() {
     {
       id: '2',
       title: 'ניהול מטופלים',
+      href: '/guide#patients',
       description: 'כיצד לנהל תיקי מטופלים ביעילות',
       icon: (
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -82,6 +85,7 @@ function HelpPageContent() {
     {
       id: '3',
       title: 'תיעוד מפגשים',
+      href: '/guide#documentation',
       description: 'הנחיות לתיעוד מקצועי ויעיל',
       icon: (
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -92,6 +96,7 @@ function HelpPageContent() {
     {
       id: '4',
       title: 'שימוש בתובנות AI',
+      href: '/guide#insights',
       description: 'כיצד להפיק את המרב מהניתוחים האוטומטיים',
       icon: (
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -149,15 +154,17 @@ function HelpPageContent() {
           {activeTab === 'guides' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {guides.map(guide => (
-                <Card key={guide.id} hover className="cursor-pointer text-center">
-                  <div className="flex flex-col items-center">
-                    <div className="w-12 h-12 rounded-lg bg-sage-100 flex items-center justify-center text-sage-600 mb-3">
-                      {guide.icon}
+                <Link key={guide.id} href={guide.href} data-testid="guide-link">
+                  <Card hover className="cursor-pointer text-center h-full">
+                    <div className="flex flex-col items-center">
+                      <div className="w-12 h-12 rounded-lg bg-sage-100 flex items-center justify-center text-sage-600 mb-3">
+                        {guide.icon}
+                      </div>
+                      <h3 className="font-medium text-clinical-900 mb-1">{guide.title}</h3>
+                      <p className="text-sm text-clinical-500">{guide.description}</p>
                     </div>
-                    <h3 className="font-medium text-clinical-900 mb-1">{guide.title}</h3>
-                    <p className="text-sm text-clinical-500">{guide.description}</p>
-                  </div>
-                </Card>
+                  </Card>
+                </Link>
               ))}
             </div>
           )}
@@ -165,11 +172,18 @@ function HelpPageContent() {
           {activeTab === 'contact' && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
-                <h3 className="text-lg font-semibold text-clinical-900 mb-4">שלח הודעה</h3>
-                <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-clinical-900 mb-4 flex items-center gap-2">
+                  שלח הודעה
+                  <Badge variant="sage">בקרוב</Badge>
+                </h3>
+                <p data-testid="contact-coming-soon" className="text-sm text-clinical-500 mb-4">
+                  שליחת הודעות דרך המערכת תהיה זמינה בקרוב. בינתיים ניתן לפנות אלינו בדוא&quot;ל או בטלפון.
+                </p>
+                {/* No message backend yet: the form is read-only until it exists. */}
+                <fieldset disabled className="space-y-4 opacity-70">
                   <div>
                     <label className="block text-sm font-medium text-clinical-700 mb-1.5">נושא</label>
-                    <select className="w-full px-4 py-2.5 rounded-lg border border-sage-200 bg-white focus:outline-none focus:ring-2 focus:ring-sage-500">
+                    <select aria-label="נושא" className="w-full px-4 py-2.5 rounded-lg border border-sage-200 bg-white focus:outline-none focus:ring-2 focus:ring-sage-500">
                       <option value="">בחר נושא...</option>
                       <option value="technical">בעיה טכנית</option>
                       <option value="billing">חיוב</option>
@@ -179,14 +193,14 @@ function HelpPageContent() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-clinical-700 mb-1.5">הודעה</label>
-                    <textarea
+                    <textarea aria-label="הודעה"
                       rows={4}
                       className="w-full px-4 py-2.5 rounded-lg border border-sage-200 bg-white focus:outline-none focus:ring-2 focus:ring-sage-500 resize-none"
                       placeholder="תאר את הבעיה או השאלה שלך..."
                     />
                   </div>
-                  <Button variant="primary" className="w-full">שלח הודעה</Button>
-                </div>
+                  <Button variant="primary" className="w-full">שלח הודעה (בקרוב)</Button>
+                </fieldset>
               </Card>
 
               <div className="space-y-4">

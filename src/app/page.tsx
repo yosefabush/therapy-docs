@@ -155,9 +155,11 @@ function DashboardContent() {
                 </p>
               </div>
               {pendingDocumentation > 0 && (
-                <Button variant="ghost" size="sm" className="mt-3 w-full">
-                  השלם עכשיו
-                </Button>
+                <Link href="/sessions?tab=pending" className="block">
+                  <Button variant="ghost" size="sm" className="mt-3 w-full">
+                    השלם עכשיו
+                  </Button>
+                </Link>
               )}
             </Card>
 
