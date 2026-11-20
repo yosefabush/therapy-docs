@@ -63,6 +63,25 @@ class PatientPrismaRepository extends PrismaRepository<Patient> {
     const rows = await prisma.patient.findMany({ where: { status } });
     return rows.map((r) => this.rowToEntity(r));
   }
+  // Deleting a patient removes everything keyed to it (sessions, goals,
+  // reports, voice recordings, insights) in one transaction: either all of it
+  // goes or nothing does. There are no FK constraints, so this is done here
+  // rather than by a schema cascade.
+  async delete(id: string): Promise<boolean> {
+    try {
+      const results = await prisma.$transaction([
+        prisma.session.deleteMany({ where: { patientId: id } }),
+        prisma.treatmentGoal.deleteMany({ where: { patientId: id } }),
+        prisma.report.deleteMany({ where: { patientId: id } }),
+        prisma.voiceRecording.deleteMany({ where: { patientId: id } }),
+        prisma.patientInsights.deleteMany({ where: { patientId: id } }),
+        prisma.patient.deleteMany({ where: { id } }),
+      ]);
+      return results[results.length - 1].count > 0;
+    } catch {
+      return false;
+    }
+  }
 }
 
 // --- Session --------------------------------------------------------------
