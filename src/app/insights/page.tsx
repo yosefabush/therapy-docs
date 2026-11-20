@@ -47,7 +47,7 @@ const GapIcon = () => (
 function InsightsPageContent() {
   // Auth and patients
   const { user: currentUser, loading: userLoading } = useAuthRedirect();
-  const { patients: myPatients, loading: patientsLoading } = useMyPatients(currentUser?.id);
+  const { patients: myPatients, loading: patientsLoading } = useMyPatients(currentUser?.id, currentUser?.role === 'admin');
 
   // Insights state
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);

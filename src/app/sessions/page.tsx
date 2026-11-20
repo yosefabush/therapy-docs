@@ -18,8 +18,8 @@ function SessionsPageContent() {
   const [selectedDate, setSelectedDate] = useState<string>('');
 
   const { user: currentUser, loading: userLoading } = useAuthRedirect();
-  const { patients, loading: patientsLoading } = useMyPatients(currentUser?.id);
-  const { sessions: mySessions, loading: sessionsLoading, error: sessionsError, refetch } = useMySessions(currentUser?.id);
+  const { patients, loading: patientsLoading } = useMyPatients(currentUser?.id, currentUser?.role === 'admin');
+  const { sessions: mySessions, loading: sessionsLoading, error: sessionsError, refetch } = useMySessions(currentUser?.id, currentUser?.role === 'admin');
   const { users, loading: usersLoading } = useUsers();
 
   // Memoize today's date start to avoid recalculation
