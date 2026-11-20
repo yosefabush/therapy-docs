@@ -7,6 +7,8 @@ import {
   unauthorized,
   forbidden,
 } from '@/lib/auth/authz';
+import { saveSummarySchema } from '@/lib/validation/schemas';
+import { parseJsonBody } from '@/lib/validation/parse';
 import { logger } from '@/lib/logger';
 import type { AISummary } from '@/types';
 
@@ -188,15 +190,9 @@ export async function PATCH(
     const { id } = await params;
     const auth = await getSession();
     if (!auth) return unauthorized();
-    const body: SaveSummaryRequest = await request.json();
-
-    // Validate required fields
-    if (!body.summary || !body.mode || !body.generatedAt) {
-      return NextResponse.json(
-        { error: 'Missing required fields: summary, mode, generatedAt' },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseJsonBody(request, saveSummarySchema);
+    if ('error' in parsed) return parsed.error;
+    const body = parsed.data;
 
     // Fetch session to verify it exists
     const session = await sessionRepository.findById(id);
@@ -213,10 +209,10 @@ export async function PATCH(
       content: body.summary,
       generatedAt: new Date(body.generatedAt),
       mode: body.mode,
-      model: body.model,
-      tokensUsed: body.tokensUsed,
+      model: body.model ?? undefined,
+      tokensUsed: body.tokensUsed ?? undefined,
       savedAt: new Date(),
-      // savedBy would come from auth context in real app
+      savedBy: auth.sub,
     };
 
     // Update session with aiSummary

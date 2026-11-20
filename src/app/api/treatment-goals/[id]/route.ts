@@ -7,12 +7,18 @@ import {
   forbidden,
   notFound,
 } from '@/lib/auth/authz';
+import { updateGoalSchema } from '@/lib/validation/schemas';
+import { parseJsonBody } from '@/lib/validation/parse';
+import { recordAudit } from '@/lib/audit';
 import { logger } from '@/lib/logger';
 import type { TreatmentGoal } from '@/types';
 
 async function authorizeGoal(
   id: string
-): Promise<{ goal: TreatmentGoal } | { error: NextResponse }> {
+): Promise<
+  | { goal: TreatmentGoal; auth: NonNullable<Awaited<ReturnType<typeof getSession>>> }
+  | { error: NextResponse }
+> {
   const session = await getSession();
   if (!session) return { error: unauthorized() };
 
@@ -22,7 +28,7 @@ async function authorizeGoal(
   if (!(await canAccessPatient(session, goal.patientId))) {
     return { error: forbidden() };
   }
-  return { goal };
+  return { goal, auth: session };
 }
 
 export async function GET(
@@ -50,8 +56,29 @@ export async function PUT(
     const result = await authorizeGoal(id);
     if ('error' in result) return result.error;
 
-    const body = await request.json();
-    const goal = await treatmentGoalRepository.update(id, body);
+    const parsed = await parseJsonBody(request, updateGoalSchema);
+    if ('error' in parsed) return parsed.error;
+    const { patientId, targetDate, ...rest } = parsed.data;
+
+    // A goal can only be moved onto a patient the caller may access.
+    if (patientId !== undefined && patientId !== result.goal.patientId) {
+      if (!(await canAccessPatient(result.auth, patientId))) return forbidden();
+    }
+
+    const goal = await treatmentGoalRepository.update(id, {
+      ...rest,
+      ...(patientId !== undefined ? { patientId } : {}),
+      ...(targetDate !== undefined
+        ? { targetDate: targetDate === null ? undefined : new Date(targetDate) }
+        : {}),
+    });
+
+    await recordAudit({
+      userId: result.auth.sub,
+      action: 'update',
+      resourceType: 'treatment_goal',
+      resourceId: id,
+    });
 
     return NextResponse.json({ data: goal });
   } catch (error) {

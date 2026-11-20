@@ -9,17 +9,9 @@ import {
   forbidden,
 } from '@/lib/auth/authz';
 import { logger } from '@/lib/logger';
-import { z } from 'zod';
-
-const createGoalSchema = z.object({
-  patientId: z.string(),
-  description: z.string(),
-  targetDate: z.string().optional(),
-  status: z.enum(['active', 'achieved', 'modified', 'discontinued']).default('active'),
-  progress: z.number().min(0).max(100).default(0),
-  measurementCriteria: z.string(),
-  createdBy: z.string(),
-});
+import { createGoalSchema } from '@/lib/validation/schemas';
+import { parseJsonBody } from '@/lib/validation/parse';
+import { recordAudit } from '@/lib/audit';
 
 export async function GET(request: NextRequest) {
   try {
@@ -53,8 +45,9 @@ export async function POST(request: NextRequest) {
     const session = await getSession();
     if (!session) return unauthorized();
 
-    const body = await request.json();
-    const validatedData = createGoalSchema.parse(body);
+    const parsed = await parseJsonBody(request, createGoalSchema);
+    if ('error' in parsed) return parsed.error;
+    const validatedData = parsed.data;
 
     if (!(await canAccessPatient(session, validatedData.patientId))) {
       return forbidden();
@@ -62,13 +55,18 @@ export async function POST(request: NextRequest) {
 
     const goal = await treatmentGoalRepository.create({
       ...validatedData,
+      // The author is the authenticated user, never a client-supplied value.
+      createdBy: session.sub,
       targetDate: validatedData.targetDate ? new Date(validatedData.targetDate) : undefined,
+    });
+    await recordAudit({
+      userId: session.sub,
+      action: 'create',
+      resourceType: 'treatment_goal',
+      resourceId: goal.id,
     });
     return NextResponse.json({ data: goal }, { status: 201 });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Validation error', details: error.errors }, { status: 400 });
-    }
     logger.error('Error creating goal:', error);
     return NextResponse.json({ error: 'Failed to create goal' }, { status: 500 });
   }

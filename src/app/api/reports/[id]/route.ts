@@ -6,14 +6,21 @@ import {
   unauthorized,
   forbidden,
   notFound,
+  conflict,
+  isAdmin,
 } from '@/lib/auth/authz';
+import { updateReportSchema } from '@/lib/validation/schemas';
+import { parseJsonBody } from '@/lib/validation/parse';
 import { recordAudit } from '@/lib/audit';
 import { logger } from '@/lib/logger';
 import type { Report } from '@/types';
 
 async function authorizeReport(
   id: string
-): Promise<{ report: Report; userId: string } | { error: NextResponse }> {
+): Promise<
+  | { report: Report; userId: string; admin: boolean; auth: NonNullable<Awaited<ReturnType<typeof getSession>>> }
+  | { error: NextResponse }
+> {
   const session = await getSession();
   if (!session) return { error: unauthorized() };
 
@@ -23,7 +30,7 @@ async function authorizeReport(
   if (!(await canAccessPatient(session, report.patientId))) {
     return { error: forbidden() };
   }
-  return { report, userId: session.sub };
+  return { report, userId: session.sub, admin: isAdmin(session), auth: session };
 }
 
 export async function GET(
@@ -58,8 +65,42 @@ export async function PUT(
     const result = await authorizeReport(id);
     if ('error' in result) return result.error;
 
-    const body = await request.json();
-    const report = await reportRepository.update(id, body);
+    const parsed = await parseJsonBody(request, updateReportSchema);
+    if ('error' in parsed) return parsed.error;
+    const { patientId, dateRange, status, ...rest } = parsed.data;
+    const current = result.report;
+
+    // A signed report is frozen for therapists; an admin override is audited.
+    const locked = current.status === 'signed' || Boolean(current.signedAt);
+    if (locked && !result.admin) {
+      return conflict('הדוח נחתם ולא ניתן לעריכה', 'REPORT_SIGNED');
+    }
+    if (patientId !== undefined && patientId !== current.patientId) {
+      if (!(await canAccessPatient(result.auth, patientId))) return forbidden();
+    }
+
+    const changes: Partial<Report> = {
+      ...rest,
+      ...(patientId !== undefined ? { patientId } : {}),
+      ...(status !== undefined ? { status } : {}),
+      ...(dateRange
+        ? { dateRange: { start: new Date(dateRange.start), end: new Date(dateRange.end) } }
+        : {}),
+    } as Partial<Report>;
+    // Signing is stamped by the server from the authenticated user.
+    if (status === 'signed' && !locked) {
+      changes.signedAt = new Date();
+      changes.signedBy = result.userId;
+    }
+    const report = await reportRepository.update(id, changes);
+
+    await recordAudit({
+      userId: result.userId,
+      action: 'update',
+      resourceType: 'report',
+      resourceId: id,
+      details: locked ? 'admin override of signed report' : undefined,
+    });
 
     return NextResponse.json({ data: report });
   } catch (error) {

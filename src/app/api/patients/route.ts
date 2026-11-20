@@ -4,21 +4,8 @@ import { seedIfEmpty } from '@/lib/data/seed';
 import { getSession, isAdmin } from '@/lib/auth/session';
 import { recordAudit } from '@/lib/audit';
 import { logger } from '@/lib/logger';
-import { z } from 'zod';
-
-const createPatientSchema = z.object({
-  idNumber: z.string().length(9, 'תעודת זהות חייבת להכיל 9 ספרות'),
-  encryptedData: z.string(),
-  firstName: z.string().min(1),
-  lastName: z.string().min(1),
-  dateOfBirth: z.string(),
-  gender: z.enum(['male', 'female', 'other', 'prefer_not_to_say']),
-  primaryDiagnosis: z.string().optional(),
-  referralSource: z.string().optional(),
-  insuranceProvider: z.string().optional(),
-  assignedTherapists: z.array(z.string()).min(1),
-  status: z.enum(['active', 'inactive', 'discharged']).default('active'),
-});
+import { createPatientSchema } from '@/lib/validation/schemas';
+import { parseJsonBody } from '@/lib/validation/parse';
 
 export async function GET(request: NextRequest) {
   try {
@@ -70,14 +57,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
-    const validatedData = createPatientSchema.parse(body);
+    const parsed = await parseJsonBody(request, createPatientSchema);
+    if ('error' in parsed) return parsed.error;
+    const validatedData = parsed.data;
 
-    // A non-admin must include themselves among the assigned therapists; they
-    // cannot create a record they would not be able to access.
+    // Only an admin may assign a patient to other therapists. A therapist
+    // creates a patient assigned to themselves and nobody else.
     if (
       !isAdmin(session) &&
-      !validatedData.assignedTherapists.includes(session.sub)
+      !(
+        validatedData.assignedTherapists.length === 1 &&
+        validatedData.assignedTherapists[0] === session.sub
+      )
     ) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
@@ -93,9 +84,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ data: patient }, { status: 201 });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Validation error', details: error.errors }, { status: 400 });
-    }
     logger.error('Error creating patient:', error);
     return NextResponse.json({ error: 'Failed to create patient' }, { status: 500 });
   }

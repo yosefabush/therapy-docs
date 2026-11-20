@@ -7,6 +7,8 @@ import {
   unauthorized,
   forbidden,
 } from '@/lib/auth/authz';
+import { saveInsightsSchema } from '@/lib/validation/schemas';
+import { parseJsonBody } from '@/lib/validation/parse';
 import { logger } from '@/lib/logger';
 import type { PatientInsights } from '@/types';
 
@@ -121,7 +123,9 @@ export async function PATCH(
     const { id } = await params;
     const session = await getSession();
     if (!session) return unauthorized();
-    const body = await request.json();
+    const parsed = await parseJsonBody(request, saveInsightsSchema);
+    if ('error' in parsed) return parsed.error;
+    const body = parsed.data;
 
     // Validate patient exists
     const patient = await patientRepository.findById(id);
@@ -133,21 +137,13 @@ export async function PATCH(
     }
     if (!(await canAccessPatient(session, id))) return forbidden();
 
-    // Validate required fields
-    if (!body.insights) {
-      return NextResponse.json(
-        { error: 'Missing insights in request body' },
-        { status: 400 }
-      );
-    }
-
     // Add persistence metadata
     const insightsToSave: PatientInsights = {
       ...body.insights,
       patientId: id, // Ensure patientId matches route param
       savedAt: new Date(),
-      // savedBy would come from auth in real app
-    };
+      savedBy: session.sub,
+    } as unknown as PatientInsights;
 
     // Save insights
     const savedInsights = await patientInsightsRepository.saveForPatient(insightsToSave);

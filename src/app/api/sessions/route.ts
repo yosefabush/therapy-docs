@@ -9,37 +9,9 @@ import {
   forbidden,
 } from '@/lib/auth/authz';
 import { logger } from '@/lib/logger';
-import { z } from 'zod';
-
-const createSessionSchema = z.object({
-  patientId: z.string(),
-  therapistId: z.string(),
-  therapistRole: z.enum([
-    'psychologist', 'psychiatrist', 'social_worker',
-    'occupational_therapist', 'speech_therapist', 'physical_therapist',
-    'counselor', 'art_therapist', 'music_therapist', 'family_therapist'
-  ]),
-  sessionType: z.enum([
-    'initial_assessment', 'individual_therapy', 'group_therapy',
-    'family_therapy', 'evaluation', 'follow_up',
-    'crisis_intervention', 'discharge_planning'
-  ]),
-  scheduledAt: z.string(),
-  duration: z.number().min(15).max(180).default(50),
-  status: z.enum(['scheduled', 'in_progress', 'completed', 'cancelled', 'no_show']).default('scheduled'),
-  location: z.enum(['in_person', 'telehealth', 'home_visit']).default('in_person'),
-  notes: z.object({
-    chiefComplaint: z.string().optional(),
-    subjective: z.string().default(''),
-    objective: z.string().default(''),
-    assessment: z.string().default(''),
-    plan: z.string().default(''),
-    interventionsUsed: z.array(z.string()).default([]),
-    progressTowardGoals: z.string().optional(),
-    homework: z.string().optional(),
-    nextSessionPlan: z.string().optional(),
-  }).optional(),
-});
+import { createSessionSchema } from '@/lib/validation/schemas';
+import { parseJsonBody } from '@/lib/validation/parse';
+import { recordAudit } from '@/lib/audit';
 
 export async function GET(request: NextRequest) {
   try {
@@ -74,8 +46,9 @@ export async function POST(request: NextRequest) {
     const session = await getSession();
     if (!session) return unauthorized();
 
-    const body = await request.json();
-    const validatedData = createSessionSchema.parse(body);
+    const parsed = await parseJsonBody(request, createSessionSchema);
+    if ('error' in parsed) return parsed.error;
+    const validatedData = parsed.data;
 
     // A therapist can only create sessions for themselves and for patients they
     // are assigned to.
@@ -97,11 +70,14 @@ export async function POST(request: NextRequest) {
         interventionsUsed: [],
       },
     });
+    await recordAudit({
+      userId: session.sub,
+      action: 'create',
+      resourceType: 'session',
+      resourceId: created.id,
+    });
     return NextResponse.json({ data: created }, { status: 201 });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Validation error', details: error.errors }, { status: 400 });
-    }
     logger.error('Error creating session:', error);
     return NextResponse.json({ error: 'Failed to create session' }, { status: 500 });
   }

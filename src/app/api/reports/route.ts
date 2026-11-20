@@ -9,29 +9,9 @@ import {
   forbidden,
 } from '@/lib/auth/authz';
 import { logger } from '@/lib/logger';
-import { z } from 'zod';
-
-const createReportSchema = z.object({
-  patientId: z.string(),
-  reportType: z.enum([
-    'progress_summary', 'discharge_summary', 'insurance_report',
-    'referral_report', 'evaluation_report', 'treatment_summary', 'multidisciplinary_summary'
-  ]),
-  generatedBy: z.string(),
-  title: z.string().max(200).optional(),
-  dateRange: z.object({
-    start: z.string(),
-    end: z.string(),
-  }),
-  content: z.object({
-    summary: z.string(),
-    sessionsSummary: z.array(z.any()).default([]),
-    goalsProgress: z.array(z.any()).default([]),
-    recommendations: z.string().default(''),
-    clinicalImpressions: z.string().default(''),
-  }),
-  status: z.enum(['draft', 'finalized', 'signed']).default('draft'),
-});
+import { createReportSchema } from '@/lib/validation/schemas';
+import { parseJsonBody } from '@/lib/validation/parse';
+import { recordAudit } from '@/lib/audit';
 
 export async function GET(request: NextRequest) {
   try {
@@ -65,8 +45,9 @@ export async function POST(request: NextRequest) {
     const session = await getSession();
     if (!session) return unauthorized();
 
-    const body = await request.json();
-    const validatedData = createReportSchema.parse(body);
+    const parsed = await parseJsonBody(request, createReportSchema);
+    if ('error' in parsed) return parsed.error;
+    const validatedData = parsed.data;
 
     if (!(await canAccessPatient(session, validatedData.patientId))) {
       return forbidden();
@@ -74,17 +55,22 @@ export async function POST(request: NextRequest) {
 
     const report = await reportRepository.create({
       ...validatedData,
+      // The author is always the authenticated user, never a client value.
+      generatedBy: session.sub,
       dateRange: {
         start: new Date(validatedData.dateRange.start),
         end: new Date(validatedData.dateRange.end),
       },
       generatedAt: new Date(),
     });
+    await recordAudit({
+      userId: session.sub,
+      action: 'create',
+      resourceType: 'report',
+      resourceId: report.id,
+    });
     return NextResponse.json({ data: report }, { status: 201 });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Validation error', details: error.errors }, { status: 400 });
-    }
     logger.error('Error creating report:', error);
     return NextResponse.json({ error: 'Failed to create report' }, { status: 500 });
   }
