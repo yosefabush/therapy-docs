@@ -16,11 +16,13 @@ interface NewSessionFormProps {
   therapistRole: string;
   onClose: () => void;
   onSessionAdded: () => void;
+  /** Pre-selects the patient (e.g. when opened from the patient's own page). */
+  initialPatientId?: string;
 }
 
-export function NewSessionForm({ patients, currentUserId, therapistRole, onClose, onSessionAdded }: NewSessionFormProps) {
+export function NewSessionForm({ patients, currentUserId, therapistRole, onClose, onSessionAdded, initialPatientId }: NewSessionFormProps) {
   const [formData, setFormData] = useState({
-    patientId: '',
+    patientId: initialPatientId ?? '',
     type: 'individual_therapy',
     date: '',
     time: '',

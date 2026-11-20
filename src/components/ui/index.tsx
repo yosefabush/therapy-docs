@@ -95,3 +95,4 @@ export { LoadingSpinner } from './LoadingSpinner'
 
 // Error Message
 export { ErrorMessage } from './ErrorMessage'
+export { ConfirmDialog } from './ConfirmDialog'

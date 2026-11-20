@@ -5,7 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Sidebar, MobileMenuProvider } from '@/components/layout/Sidebar';
 import { BottomNav } from '@/components/layout/BottomNav';
-import { Card, Button, Badge, Avatar, Modal } from '@/components/ui';
+import { Card, Button, Badge, Avatar, Modal, ConfirmDialog } from '@/components/ui';
+import { deleteResource } from '@/lib/api/delete-resource';
 import { SessionForm } from '@/components/sessions/SessionForm';
 import { SummaryPanel } from '@/components/sessions/SummaryPanel';
 import { therapistRoleLabels, sessionTypeLabels } from '@/lib/mock-data';
@@ -22,6 +23,9 @@ function SessionDetailPageContent() {
   const [isEditing, setIsEditing] = useState(false);
   const [showSignModal, setShowSignModal] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [signError, setSignError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
@@ -115,6 +119,21 @@ function SessionDetailPageContent() {
       </div>
     );
   }
+
+  // A signed session is locked: only an admin may delete it (the API enforces the same rule).
+  const canDelete = !session.signedAt || currentUser.role === 'admin';
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    setDeleteError(null);
+    const result = await deleteResource(`/sessions/${sessionId}`);
+    setDeleting(false);
+    if (!result.ok) {
+      setDeleteError(result.message);
+      return;
+    }
+    router.push('/sessions');
+  };
 
   const formatDateTime = (date: Date) => {
     return new Intl.DateTimeFormat('he-IL', {
@@ -230,6 +249,17 @@ function SessionDetailPageContent() {
               )}
               {session.status === 'scheduled' && (
                 <Button variant="primary" size="sm" onClick={() => setIsEditing(true)}>התחל מפגש</Button>
+              )}
+              {canDelete && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => { setDeleteError(null); setConfirmDelete(true); }}
+                  data-testid="delete-session"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  מחק מפגש
+                </Button>
               )}
             </div>
           </div>
@@ -396,6 +426,20 @@ function SessionDetailPageContent() {
           </div>
         </div>
       </main>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        title="מחיקת מפגש"
+        description={
+          session.signedAt
+            ? 'המפגש חתום. מחיקתו (הרשאת מנהל) תסיר גם את הרשומות החתומות. פעולה זו אינה הפיכה.'
+            : 'למחוק את המפגש? פעולה זו אינה הפיכה.'
+        }
+        error={deleteError}
+        loading={deleting}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmDelete(false)}
+      />
 
       {/* Sign Modal */}
       <Modal isOpen={showSignModal} onClose={() => setShowSignModal(false)} title="חתימה על רשומות מפגש" size="md">
