@@ -37,6 +37,12 @@ const nextConfig = {
   // Produce a self-contained build (.next/standalone) for slim container images
   // and portable Node deployments. Override with NEXT_OUTPUT if needed.
   output: process.env.NEXT_OUTPUT || 'standalone',
+  // Always define the demo-credentials flag at build time (defaulting to
+  // "false") so Next.js inlines it and the login-page hint is removed from a
+  // production bundle unless NEXT_PUBLIC_SHOW_DEMO_CREDENTIALS=true is set.
+  env: {
+    NEXT_PUBLIC_SHOW_DEMO_CREDENTIALS: process.env.NEXT_PUBLIC_SHOW_DEMO_CREDENTIALS || 'false',
+  },
   reactStrictMode: true,
   poweredByHeader: false,
   experimental: {

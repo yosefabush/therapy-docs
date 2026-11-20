@@ -229,12 +229,20 @@ export default function LoginPage() {
           </Link>
         </div>
 
-        {/* Demo credentials hint */}
-        <div className="mt-3 text-center">
-          <p className="text-xs text-clinical-400">
-            לצורך הדגמה: dr.sarah.cohen@clinic.co.il / password123
-          </p>
-        </div>
+        {/* Demo credentials hint: never in production unless explicitly enabled */}
+        {/* Shown outside production, or in production only when
+            NEXT_PUBLIC_SHOW_DEMO_CREDENTIALS is exactly "true". The condition
+            is written inline with literal `process.env.X` reads so Next.js
+            inlines them at build time and the minifier removes the hint (and
+            its text) from a production bundle entirely. */}
+        {(process.env.NODE_ENV !== 'production' ||
+          process.env.NEXT_PUBLIC_SHOW_DEMO_CREDENTIALS === 'true') && (
+          <div className="mt-3 text-center" data-testid="demo-credentials">
+            <p className="text-xs text-clinical-400">
+              לצורך הדגמה: dr.sarah.cohen@clinic.co.il / password123
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
