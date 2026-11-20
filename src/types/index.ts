@@ -169,6 +169,7 @@ export interface Report {
   id: string;
   patientId: string;
   reportType: ReportType;
+  title?: string;
   generatedBy: string;
   generatedAt: Date;
   dateRange: {

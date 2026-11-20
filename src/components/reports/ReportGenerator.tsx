@@ -5,16 +5,19 @@ import { Report, ReportType, Session, TreatmentGoal } from '@/types';
 import { Button, Card, Select, Badge, Textarea, Modal } from '@/components/ui';
 import { generateMultidisciplinaryReport, analyzePatternsTrends } from '@/lib/ai-features';
 import { therapistRoleLabels, sessionTypeLabels } from '@/lib/mock-data';
+import { buildReportBody, reviveSessionDates, type CreateReportBody } from '@/lib/reports/build-report';
 
 interface ReportGeneratorProps {
   patientId: string;
   patientName: string;
   sessions: Session[];
   goals: TreatmentGoal[];
-  onGenerate: (report: Partial<Report>) => void;
+  generatedBy: string;
+  // Persists the report; should reject when saving fails so the dialog can show it.
+  onGenerate: (report: CreateReportBody) => void | Promise<void>;
 }
 
-export function ReportGenerator({ patientId, patientName, sessions, goals, onGenerate }: ReportGeneratorProps) {
+export function ReportGenerator({ patientId, patientName, sessions, goals, generatedBy, onGenerate }: ReportGeneratorProps) {
   const [reportType, setReportType] = useState<ReportType>('progress_summary');
   // Lazy initializer so the current time is read once on mount rather than on
   // every render (keeps the render pure).
@@ -25,6 +28,8 @@ export function ReportGenerator({ patientId, patientName, sessions, goals, onGen
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const reportTypeOptions = [
     { value: 'progress_summary', label: 'Progress Summary' },
@@ -39,7 +44,7 @@ export function ReportGenerator({ patientId, patientName, sessions, goals, onGen
     await new Promise(resolve => setTimeout(resolve, 1500));
     
     const content = generateMultidisciplinaryReport(
-      sessions, goals, patientName,
+      reviveSessionDates(sessions), goals, patientName,
       { start: new Date(dateRange.start), end: new Date(dateRange.end) }
     );
     
@@ -48,15 +53,28 @@ export function ReportGenerator({ patientId, patientName, sessions, goals, onGen
     setIsGenerating(false);
   };
 
-  const handleSave = () => {
-    onGenerate({
-      patientId,
-      reportType,
-      generatedAt: new Date(),
-      dateRange: { start: new Date(dateRange.start), end: new Date(dateRange.end) },
-      status: 'draft',
-    });
-    setShowPreview(false);
+  const handleSave = async () => {
+    setIsSaving(true);
+    setSaveError(null);
+    try {
+      await onGenerate(
+        buildReportBody({
+          patientId,
+          patientName,
+          reportType,
+          generatedBy,
+          sessions,
+          goals,
+          dateRange: { start: new Date(dateRange.start), end: new Date(dateRange.end) },
+          summary: generatedContent ?? undefined,
+        })
+      );
+      setShowPreview(false);
+    } catch {
+      setSaveError('שמירת הדוח נכשלה. אנא נסה שוב.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const insights = analyzePatternsTrends(sessions);
@@ -131,9 +149,12 @@ export function ReportGenerator({ patientId, patientName, sessions, goals, onGen
           <div className="p-4 bg-clinical-50 rounded-lg max-h-96 overflow-y-auto">
             <pre className="text-sm text-clinical-700 whitespace-pre-wrap font-mono">{generatedContent}</pre>
           </div>
+          {saveError && (
+            <p role="alert" data-testid="save-report-error" className="text-sm text-red-700">{saveError}</p>
+          )}
           <div className="flex justify-end gap-3">
-            <Button variant="ghost" onClick={() => setShowPreview(false)}>Cancel</Button>
-            <Button variant="primary" onClick={handleSave}>Save Report</Button>
+            <Button variant="ghost" onClick={() => setShowPreview(false)}>ביטול</Button>
+            <Button variant="primary" onClick={handleSave} loading={isSaving}>שמור דוח</Button>
           </div>
         </div>
       </Modal>

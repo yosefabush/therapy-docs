@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Report } from '@/types';
 import { apiClient } from '@/lib/api/client';
+import type { CreateReportBody } from '@/lib/reports/build-report';
 
 export function useReports(patientId?: string) {
   const [reports, setReports] = useState<Report[]>([]);
@@ -35,7 +36,7 @@ export function useReports(patientId?: string) {
     fetchReports();
   }, [fetchReports]);
 
-  const createReport = async (data: Partial<Report>): Promise<Report> => {
+  const createReport = async (data: Partial<Report> | CreateReportBody): Promise<Report> => {
     const response = await apiClient.post<Report>('/reports', data);
     if (response.error) throw new Error(response.error);
     await fetchReports();

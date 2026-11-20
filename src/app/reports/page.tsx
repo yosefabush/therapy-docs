@@ -8,15 +8,70 @@ import { Card, Button, Badge, Tabs, Modal } from '@/components/ui';
 import { therapistRoleLabels } from '@/lib/mock-data';
 import { useAuthRedirect, useMyPatients, useMyReports } from '@/lib/hooks';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { apiClient } from '@/lib/api/client';
+import { buildReportBody, defaultDateRange } from '@/lib/reports/build-report';
+import type { Report, ReportType, Session, TreatmentGoal } from '@/types';
+
+function escapeHtml(value: string) {
+  return value.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
+}
 
 function ReportsPageContent() {
   const [activeTab, setActiveTab] = useState('all');
   const [showNewReport, setShowNewReport] = useState(false);
   const [viewingReport, setViewingReport] = useState<string | null>(null);
+  const [newReportType, setNewReportType] = useState<ReportType | ''>('');
+  const [newReportPatientId, setNewReportPatientId] = useState('');
+  const [newReportTitle, setNewReportTitle] = useState('');
+  const [creatingReport, setCreatingReport] = useState(false);
+  const [createReportError, setCreateReportError] = useState<string | null>(null);
 
   const { user: currentUser, loading: userLoading } = useAuthRedirect();
-  const { patients, loading: patientsLoading } = useMyPatients(currentUser?.id);
-  const { reports, loading: reportsLoading } = useMyReports(currentUser?.id);
+  const { patients, loading: patientsLoading } = useMyPatients(currentUser?.id, currentUser?.role === 'admin');
+  const { reports, loading: reportsLoading, refetch: refetchReports } = useMyReports(currentUser?.id, currentUser?.role === 'admin');
+
+  const closeNewReport = () => {
+    setShowNewReport(false);
+    setCreateReportError(null);
+  };
+
+  // Persist a new draft report for the chosen patient via POST /api/reports.
+  const handleCreateReport = async () => {
+    if (!currentUser) return;
+    const patient = patients.find((p) => p.id === newReportPatientId);
+    if (!newReportType || !patient) {
+      setCreateReportError('יש לבחור סוג דוח ומטופל');
+      return;
+    }
+    setCreatingReport(true);
+    setCreateReportError(null);
+
+    const [sessionsRes, goalsRes] = await Promise.all([
+      apiClient.get<Session[]>(`/sessions?patientId=${patient.id}`),
+      apiClient.get<TreatmentGoal[]>(`/treatment-goals?patientId=${patient.id}`),
+    ]);
+    const body = buildReportBody({
+      patientId: patient.id,
+      patientName: `${patient.firstName} ${patient.lastName}`,
+      reportType: newReportType,
+      generatedBy: currentUser.id,
+      sessions: sessionsRes.data ?? [],
+      goals: goalsRes.data ?? [],
+      dateRange: defaultDateRange(),
+      title: newReportTitle,
+    });
+    const response = await apiClient.post<Report>('/reports', body);
+    setCreatingReport(false);
+    if (response.error) {
+      setCreateReportError('יצירת הדוח נכשלה. אנא נסה שוב.');
+      return;
+    }
+    setNewReportType('');
+    setNewReportPatientId('');
+    setNewReportTitle('');
+    closeNewReport();
+    await refetchReports();
+  };
 
   if (userLoading || patientsLoading || reportsLoading) {
     return <LoadingSpinner className="h-screen" />;
@@ -67,7 +122,7 @@ function ReportsPageContent() {
           <div style="font-size: 14px; color: #6b7280; margin-bottom: 8px;">
             <strong>תאריך:</strong> ${new Intl.DateTimeFormat('he-IL', { dateStyle: 'long' }).format(new Date(reportToDownload.dateRange.start))} - ${new Intl.DateTimeFormat('he-IL', { dateStyle: 'long' }).format(new Date(reportToDownload.dateRange.end))}
           </div>
-          ${(reportToDownload as any).title ? `<div style="font-size: 14px; color: #6b7280; margin-bottom: 8px;"><strong>כותרת:</strong> ${(reportToDownload as any).title}</div>` : ''}
+          ${(reportToDownload as any).title ? `<div style="font-size: 14px; color: #6b7280; margin-bottom: 8px;"><strong>כותרת:</strong> ${escapeHtml((reportToDownload as any).title)}</div>` : ''}
         </div>
 
         ${reportToDownload.content.summary ? `
@@ -286,7 +341,7 @@ function ReportsPageContent() {
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-medium text-clinical-900 text-sm sm:text-base">{getReportTypeLabel(report.reportType)}</h3>
+                            <h3 className="font-medium text-clinical-900 text-sm sm:text-base">{report.title || getReportTypeLabel(report.reportType)}</h3>
                             {getStatusBadge(report.status)}
                           </div>
                           <p className="text-xs sm:text-sm text-clinical-500 truncate">
@@ -331,11 +386,16 @@ function ReportsPageContent() {
       </main>
 
       {/* New Report Modal */}
-      <Modal isOpen={showNewReport} onClose={() => setShowNewReport(false)} title="יצירת דוח חדש" size="lg">
+      <Modal isOpen={showNewReport} onClose={closeNewReport} title="יצירת דוח חדש" size="lg">
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-clinical-700 mb-1.5">סוג דוח</label>
-            <select className="w-full px-4 py-2.5 rounded-lg border border-sage-200 bg-white focus:outline-none focus:ring-2 focus:ring-sage-500">
+            <select
+              aria-label="סוג דוח"
+              value={newReportType}
+              onChange={(e) => setNewReportType(e.target.value as ReportType | '')}
+              className="w-full px-4 py-2.5 rounded-lg border border-sage-200 bg-white focus:outline-none focus:ring-2 focus:ring-sage-500"
+            >
               <option value="">בחר סוג דוח...</option>
               <option value="progress_summary">דוח התקדמות</option>
               <option value="treatment_summary">סיכום טיפול</option>
@@ -345,7 +405,12 @@ function ReportsPageContent() {
           </div>
           <div>
             <label className="block text-sm font-medium text-clinical-700 mb-1.5">מטופל</label>
-            <select className="w-full px-4 py-2.5 rounded-lg border border-sage-200 bg-white focus:outline-none focus:ring-2 focus:ring-sage-500">
+            <select
+              aria-label="מטופל"
+              value={newReportPatientId}
+              onChange={(e) => setNewReportPatientId(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-lg border border-sage-200 bg-white focus:outline-none focus:ring-2 focus:ring-sage-500"
+            >
               <option value="">בחר מטופל...</option>
               {patients.map(patient => (
                 <option key={patient.id} value={patient.id}>{patient.firstName} {patient.lastName}</option>
@@ -356,13 +421,20 @@ function ReportsPageContent() {
             <label className="block text-sm font-medium text-clinical-700 mb-1.5">כותרת</label>
             <input
               type="text"
+              aria-label="כותרת"
+              value={newReportTitle}
+              onChange={(e) => setNewReportTitle(e.target.value)}
+              maxLength={200}
               className="w-full px-4 py-2.5 rounded-lg border border-sage-200 bg-white focus:outline-none focus:ring-2 focus:ring-sage-500"
               placeholder="כותרת הדוח"
             />
           </div>
+          {createReportError && (
+            <p role="alert" data-testid="create-report-error" className="text-sm text-red-700">{createReportError}</p>
+          )}
           <div className="flex justify-end gap-3 pt-4 border-t border-sage-100">
-            <Button variant="ghost" onClick={() => setShowNewReport(false)}>ביטול</Button>
-            <Button variant="primary">צור דוח</Button>
+            <Button variant="ghost" onClick={closeNewReport}>ביטול</Button>
+            <Button variant="primary" onClick={handleCreateReport} loading={creatingReport}>צור דוח</Button>
           </div>
         </div>
       </Modal>
