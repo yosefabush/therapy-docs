@@ -12,6 +12,8 @@ if [ -n "$DATABASE_URL" ]; then
     echo "[entrypoint] empty database — seeding from bundled dataset"
     node scripts/db-import.mjs
   fi
+  # Encrypt any legacy plaintext patient ID numbers (idempotent).
+  node scripts/encrypt-patient-ids.mjs
 else
   # JSON-file backend: seed the data directory from the bundled seed files on
   # first run. Existing files are never overwritten, so data on a persistent
@@ -28,6 +30,8 @@ else
       fi
     done
   fi
+  # Encrypt any legacy plaintext patient ID numbers (idempotent).
+  node scripts/encrypt-patient-ids.mjs
 fi
 
 exec "$@"

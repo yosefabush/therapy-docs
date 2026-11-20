@@ -15,7 +15,8 @@
     "postinstall": "prisma generate",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
-    "db:seed": "node scripts/db-import.mjs"
+    "db:seed": "node scripts/db-import.mjs",
+    "db:encrypt-ids": "node scripts/encrypt-patient-ids.mjs"
   },
   "dependencies": {
     "@deepgram/sdk": "^4.11.3",

@@ -7,8 +7,23 @@ export abstract class JsonRepository<T extends { id: string; createdAt?: Date; u
 
   constructor(protected readonly filename: string) {}
 
+  // Hooks for field-level at-rest transforms (e.g. encryption). Identity by
+  // default; every read goes through fromStored and every write through toStored.
+  protected fromStored(item: T): T {
+    return item;
+  }
+
+  protected toStored(item: T): T {
+    return item;
+  }
+
+  private save(items: T[]): Promise<void> {
+    return writeJsonFile(this.filename, items.map((item) => this.toStored(item)));
+  }
+
   async findAll(): Promise<T[]> {
-    return readJsonFile<T>(this.filename);
+    const items = await readJsonFile<T>(this.filename);
+    return items.map((item) => this.fromStored(item));
   }
 
   async findById(id: string): Promise<T | null> {
@@ -33,7 +48,7 @@ export abstract class JsonRepository<T extends { id: string; createdAt?: Date; u
     } as T;
 
     items.push(newItem);
-    await writeJsonFile(this.filename, items);
+    await this.save(items);
     return newItem;
   }
 
@@ -50,7 +65,7 @@ export abstract class JsonRepository<T extends { id: string; createdAt?: Date; u
       updatedAt: new Date(),
     };
 
-    await writeJsonFile(this.filename, items);
+    await this.save(items);
     return items[index];
   }
 
@@ -61,7 +76,7 @@ export abstract class JsonRepository<T extends { id: string; createdAt?: Date; u
     if (index === -1) return false;
 
     items.splice(index, 1);
-    await writeJsonFile(this.filename, items);
+    await this.save(items);
     return true;
   }
 

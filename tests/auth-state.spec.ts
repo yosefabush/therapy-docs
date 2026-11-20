@@ -1,5 +1,12 @@
 import { test, expect } from '@playwright/test';
-import { loginViaForm, loginAndSettle, expectLoggedInScreen, trackLogouts } from './helpers';
+import {
+  loginViaForm,
+  loginAndSettle,
+  expectLoggedInScreen,
+  trackLogouts,
+  DEMO_EMAIL,
+  DEMO_PASSWORD,
+} from './helpers';
 
 test('navigating immediately after login keeps the session', async ({ page }) => {
   const logouts = trackLogouts(page);
@@ -65,4 +72,26 @@ test('a new tab with a valid session cookie stays logged in', async ({ page, con
   await newTab.goto('/sessions');
   await expectLoggedInScreen(newTab, '/sessions');
   expect(logouts.count()).toBe(0);
+});
+
+// Protected pages are gated server-side: the redirect happens before any page
+// HTML (or patient data) is served, not only after client JS runs.
+test('unauthenticated requests to app pages are redirected to /login by the server', async ({ request, page }) => {
+  for (const path of ['/', '/patients', '/sessions', '/reports', '/insights', '/settings', '/help']) {
+    const res = await request.get(path, { maxRedirects: 0 });
+    expect(res.status(), path).toBe(307);
+    expect(new URL(res.headers()['location'], 'http://x').pathname, path).toBe('/login');
+  }
+  await page.goto('/patients');
+  await expect(page).toHaveURL(/\/login$/);
+});
+
+test('POST /api/seed is rejected without an admin session', async ({ request }) => {
+  expect((await request.post('/api/seed')).status()).toBe(401);
+
+  const login = await request.post('/api/auth/login', {
+    data: { email: DEMO_EMAIL, password: DEMO_PASSWORD },
+  });
+  expect(login.ok()).toBe(true);
+  expect((await request.post('/api/seed')).status()).toBe(403); // therapist, not admin
 });

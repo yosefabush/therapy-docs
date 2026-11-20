@@ -1,9 +1,18 @@
 import { Patient } from '@/types';
 import { JsonRepository } from './base.repository';
+import { encryptPatientForStorage, decryptPatientFromStorage } from '../patient-crypto';
 
 class PatientJsonRepository extends JsonRepository<Patient> {
   constructor() {
     super('patients.json');
+  }
+
+  protected fromStored(p: Patient): Patient {
+    return decryptPatientFromStorage(p);
+  }
+
+  protected toStored(p: Patient): Patient {
+    return encryptPatientForStorage(p);
   }
 
   async findByTherapist(therapistId: string): Promise<Patient[]> {

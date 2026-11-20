@@ -2,6 +2,7 @@ import { writeJsonFile, fileExists } from './json-store';
 import { USE_PRISMA, prisma } from './prisma';
 import { importJsonDataToDb } from './import-json';
 import { logger } from '@/lib/logger';
+import { encryptPatientForStorage } from './patient-crypto';
 import {
   mockUsers,
   mockPatients,
@@ -30,7 +31,7 @@ export async function seedIfEmpty(): Promise<boolean> {
 
   // Seed all collections
   await writeJsonFile('users.json', mockUsers);
-  await writeJsonFile('patients.json', mockPatients);
+  await writeJsonFile('patients.json', mockPatients.map(encryptPatientForStorage));
   await writeJsonFile('sessions.json', mockSessions);
   await writeJsonFile('treatment-goals.json', mockTreatmentGoals);
   await writeJsonFile('reports.json', mockReports);
@@ -49,7 +50,7 @@ export async function resetData(): Promise<void> {
   }
 
   await writeJsonFile('users.json', mockUsers);
-  await writeJsonFile('patients.json', mockPatients);
+  await writeJsonFile('patients.json', mockPatients.map(encryptPatientForStorage));
   await writeJsonFile('sessions.json', mockSessions);
   await writeJsonFile('treatment-goals.json', mockTreatmentGoals);
   await writeJsonFile('reports.json', mockReports);

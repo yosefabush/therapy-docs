@@ -6,6 +6,7 @@
 import { readFile } from 'fs/promises';
 import path from 'path';
 import { PrismaClient } from '@prisma/client';
+import { encryptPatient } from './lib/patient-id-crypto.mjs';
 
 const prisma = new PrismaClient();
 const DATA_DIR = path.resolve('data');
@@ -32,7 +33,7 @@ async function main() {
   }
 
   for (const p of await read('patients.json')) {
-    const data = { status: p.status, assignedTherapists: p.assignedTherapists ?? [], payload: json(p) };
+    const data = { status: p.status, assignedTherapists: p.assignedTherapists ?? [], payload: json(encryptPatient(p)) };
     await prisma.patient.upsert({ where: { id: p.id }, create: { id: p.id, ...data }, update: data });
   }
 

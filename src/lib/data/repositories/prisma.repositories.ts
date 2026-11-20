@@ -10,6 +10,7 @@ import {
 import { prisma } from '../prisma';
 import { reviveDates } from '../revive';
 import { PrismaRepository, type PayloadDelegate } from './prisma-base.repository';
+import { encryptPatientForStorage, decryptPatientFromStorage } from '../patient-crypto';
 
 const rid = (prefix: string) =>
   `${prefix}-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
@@ -46,15 +47,21 @@ class PatientPrismaRepository extends PrismaRepository<Patient> {
   protected generateId() {
     return rid('patient');
   }
+  protected rowToEntity(row: { payload: unknown }): Patient {
+    return decryptPatientFromStorage(super.rowToEntity(row));
+  }
+  protected toStoredPayload(p: Patient): Patient {
+    return encryptPatientForStorage(p);
+  }
   async findByTherapist(therapistId: string): Promise<Patient[]> {
     const rows = await prisma.patient.findMany({
       where: { assignedTherapists: { has: therapistId } },
     });
-    return mapRows<Patient>(rows);
+    return rows.map((r) => this.rowToEntity(r));
   }
   async findByStatus(status: Patient['status']): Promise<Patient[]> {
     const rows = await prisma.patient.findMany({ where: { status } });
-    return mapRows<Patient>(rows);
+    return rows.map((r) => this.rowToEntity(r));
   }
 }
 
