@@ -6,7 +6,10 @@ import Link from 'next/link';
 import { Sidebar, MobileMenuProvider } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { BottomNav } from '@/components/layout/BottomNav';
-import { Card, Button, Badge, ProgressBar, Tabs, Avatar, Modal } from '@/components/ui';
+import { Card, Button, Badge, ProgressBar, Tabs, Avatar, Modal, ConfirmDialog } from '@/components/ui';
+import { NewSessionForm } from '@/components/sessions/NewSessionForm';
+import { GOAL_STATUS_LABELS } from '@/components/goals/GoalsPanel';
+import { deleteResource } from '@/lib/api/delete-resource';
 import { SessionList } from '@/components/sessions/SessionList';
 import { ReportGenerator, ReportCard } from '@/components/reports/ReportGenerator';
 import { therapistRoleLabels } from '@/lib/mock-data';
@@ -19,6 +22,12 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
 import type { PatientInsights } from '@/types';
 
+const PATIENT_STATUS_LABELS: Record<string, string> = {
+  active: 'פעיל',
+  inactive: 'לא פעיל',
+  discharged: 'שוחרר',
+};
+
 function PatientDetailPageContent() {
   const params = useParams();
   const patientId = params.id as string;
@@ -27,18 +36,48 @@ function PatientDetailPageContent() {
   const [activeTab, setActiveTab] = useState('overview');
   const [showNewSession, setShowNewSession] = useState(false);
   const [showEditPatient, setShowEditPatient] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [reportToDelete, setReportToDelete] = useState<string | null>(null);
   const [existingInsights, setExistingInsights] = useState<PatientInsights | null>(null);
   const [insightsLoading, setInsightsLoading] = useState(false);
 
   const { user: currentUser, loading: userLoading } = useCurrentUser();
   const { patient, loading: patientLoading, error: patientError } = usePatient(patientId);
-  const { sessions, loading: sessionsLoading } = useSessions({ patientId });
+  const { sessions, loading: sessionsLoading, refetch: refetchSessions } = useSessions({ patientId });
   const { goals, loading: goalsLoading, createGoal, updateGoal } = useTreatmentGoals(patientId);
-  const { reports, loading: reportsLoading, createReport } = useReports(patientId);
+  const { reports, loading: reportsLoading, createReport, deleteReport } = useReports(patientId);
   const { users, loading: usersLoading } = useUsers();
   const { recordings, loading: recordingsLoading, deleteRecording } = useVoiceRecordings({ patientId });
 
   const completedSessions = sessions.filter(s => s.status === 'completed');
+
+  const handleDeletePatient = async () => {
+    setDeleting(true);
+    setDeleteError(null);
+    const result = await deleteResource(`/patients/${patientId}`);
+    setDeleting(false);
+    if (!result.ok) {
+      setDeleteError(result.message);
+      return;
+    }
+    router.push('/patients');
+  };
+
+  const handleDeleteReport = async () => {
+    if (!reportToDelete) return;
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await deleteReport(reportToDelete);
+      setReportToDelete(null);
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'המחיקה נכשלה. אנא נסה שוב.');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   // Fetch existing insights on mount
   useEffect(() => {
@@ -68,7 +107,7 @@ function PatientDetailPageContent() {
   }
 
   if (!currentUser) {
-    return <ErrorMessage message="Failed to load user data" />;
+    return <ErrorMessage message="לא ניתן לטעון את נתוני המשתמש" />;
   }
 
   if (patientError || !patient) {
@@ -131,7 +170,7 @@ function PatientDetailPageContent() {
                       {patient.firstName} {patient.lastName}
                     </h1>
                     <Badge variant={patient.status === 'active' ? 'success' : 'sage'}>
-                      {patient.status}
+                      {PATIENT_STATUS_LABELS[patient.status]}
                     </Badge>
                   </div>
                   <p className="text-clinical-500 text-sm sm:text-base">{patient.primaryDiagnosis || 'אין אבחנה'}</p>
@@ -144,6 +183,18 @@ function PatientDetailPageContent() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
                   <span className="hidden sm:inline">עריכה</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => { setDeleteError(null); setConfirmDelete(true); }}
+                  aria-label="מחק מטופל"
+                  data-testid="delete-patient"
+                  className="flex-1 sm:flex-none text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <svg className="w-4 h-4 ml-1 sm:ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  <span className="hidden sm:inline">מחק</span>
                 </Button>
                 <Button variant="primary" onClick={() => setShowNewSession(true)} className="flex-1 sm:flex-none">
                   <svg className="w-4 h-4 ml-1 sm:ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -214,13 +265,13 @@ function PatientDetailPageContent() {
                         <div className="flex items-start justify-between mb-2">
                           <p className="text-sm font-medium text-clinical-900">{goal.description}</p>
                           <Badge variant={goal.status === 'achieved' ? 'success' : goal.status === 'active' ? 'info' : 'sage'}>
-                            {goal.status}
+                            {GOAL_STATUS_LABELS[goal.status]}
                           </Badge>
                         </div>
                         <ProgressBar value={goal.progress} showLabel className="mt-2" />
                         {goal.targetDate && (
                           <p className="text-xs text-clinical-500 mt-2">
-                            Target: {new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(goal.targetDate))}
+                            יעד: {new Intl.DateTimeFormat('he-IL', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(goal.targetDate))}
                           </p>
                         )}
                       </div>
@@ -288,11 +339,11 @@ function PatientDetailPageContent() {
                       </div>
                     ))}
                   </div>
-                  <Button variant="ghost" size="sm" className="w-full mt-4">
+                  <Button variant="ghost" size="sm" className="w-full mt-4" disabled title="בקרוב">
                     <svg className="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
-                    הוסף חבר צוות
+                    הוסף חבר צוות (בקרוב)
                   </Button>
                 </Card>
 
@@ -369,8 +420,11 @@ function PatientDetailPageContent() {
                       <ReportCard
                         key={report.id}
                         report={report}
-                        onView={() => {}}
-                        onExport={() => {}}
+                        onDelete={
+                          (report.status === 'signed' || report.signedAt) && currentUser.role !== 'admin'
+                            ? undefined
+                            : () => { setDeleteError(null); setReportToDelete(report.id); }
+                        }
                       />
                     ))}
                   </div>
@@ -384,10 +438,38 @@ function PatientDetailPageContent() {
       </main>
 
       <Modal isOpen={showNewSession} onClose={() => setShowNewSession(false)} title="תזמון מפגש" size="lg">
-        <div className="text-center py-8 text-clinical-500">
-          טופס תזמון מפגש יופיע כאן...
-        </div>
+        <NewSessionForm
+          patients={[patient]}
+          initialPatientId={patient.id}
+          currentUserId={currentUser.id}
+          therapistRole={currentUser.therapistRole!}
+          onClose={() => setShowNewSession(false)}
+          onSessionAdded={() => {
+            setShowNewSession(false);
+            refetchSessions();
+          }}
+        />
       </Modal>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        title="מחיקת מטופל"
+        description={`למחוק את ${patient.firstName} ${patient.lastName}? כל המפגשים, הדוחות, ההקלטות והמסמכים של המטופל יימחקו. פעולה זו אינה הפיכה.`}
+        error={deleteError}
+        loading={deleting}
+        onConfirm={handleDeletePatient}
+        onCancel={() => setConfirmDelete(false)}
+      />
+
+      <ConfirmDialog
+        open={reportToDelete !== null}
+        title="מחיקת דוח"
+        description="למחוק את הדוח? פעולה זו אינה הפיכה."
+        error={deleteError}
+        loading={deleting}
+        onConfirm={handleDeleteReport}
+        onCancel={() => setReportToDelete(null)}
+      />
 
       {/* Edit Patient Modal */}
       <Modal isOpen={showEditPatient} onClose={() => setShowEditPatient(false)} title="עריכת פרטי מטופל" size="lg">

@@ -12,7 +12,7 @@ export function ErrorMessage({ message, onRetry }: ErrorMessageProps) {
           onClick={onRetry}
           className="text-red-600 underline hover:text-red-800"
         >
-          Try again
+          נסה שוב
         </button>
       )}
     </div>

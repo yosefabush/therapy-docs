@@ -118,6 +118,10 @@ export async function DELETE(
     const result = await authorizeReport(id);
     if ('error' in result) return result.error;
 
+    // A signed report is frozen for therapists (same rule as editing); an admin may remove it.
+    if ((result.report.status === 'signed' || result.report.signedAt) && !result.admin) {
+      return conflict('הדוח נחתם ולא ניתן למחיקה', 'REPORT_SIGNED');
+    }
     const deleted = await reportRepository.delete(id);
 
     await recordAudit({

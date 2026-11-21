@@ -157,6 +157,7 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? 'הסתר סיסמה' : 'הצג סיסמה'}
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-clinical-400 hover:text-clinical-600 transition-colors"
                     tabIndex={-1}
                   >
@@ -187,7 +188,7 @@ export default function LoginPage() {
                   </label>
                 </div>
                 <Link
-                  href="#"
+                  href="/forgot-password"
                   className="text-sm text-sage-600 hover:text-sage-700 hover:underline transition-colors"
                 >
                   שכחת סיסמה?

@@ -189,7 +189,7 @@ export function Header({ title, subtitle, actions, onSessionNotificationClick, o
               <button
                 onClick={() => setIsSearchOpen(true)}
                 className="md:hidden p-2 rounded-lg text-clinical-500 hover:bg-sage-50 hover:text-sage-700 transition-colors"
-                aria-label="Search"
+                aria-label="חיפוש"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -200,6 +200,7 @@ export function Header({ title, subtitle, actions, onSessionNotificationClick, o
               <div className="relative" ref={notificationRef}>
                 <button
                   onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                  aria-label={unreadCount > 0 ? `התראות (${unreadCount} שלא נקראו)` : 'התראות'}
                   className="relative p-2 rounded-lg text-clinical-500 hover:bg-sage-50 hover:text-sage-700 transition-colors"
                 >
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -299,7 +300,7 @@ export function Header({ title, subtitle, actions, onSessionNotificationClick, o
                 <button
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
                   className="relative p-2 rounded-lg text-clinical-500 hover:bg-sage-50 hover:text-sage-700 transition-colors"
-                  aria-label="Profile menu"
+                  aria-label="תפריט פרופיל"
                 >
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path
@@ -343,8 +344,7 @@ export function Header({ title, subtitle, actions, onSessionNotificationClick, o
                           setIsProfileOpen(false);
                           // Same logout as the sidebar: POST /api/auth/logout
                           // (clears the httpOnly session cookie) + client state.
-                          clearAuthUser();
-                          router.push('/login');
+                          void clearAuthUser().then(() => router.push('/login'));
                         }}
                         className="w-full px-4 py-3 text-right text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-3"
                       >

@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { verifySessionToken } from '@/lib/auth/jwt';
+import { verifyActiveSession } from '@/lib/auth/active-session';
 
 const SESSION_COOKIE = 'therapydocs_session';
 
@@ -14,7 +14,18 @@ const PUBLIC_API_PREFIXES = [
 
 // App pages reachable without a session. Every other page is redirected to
 // /login server-side when there is no valid session cookie.
-const PUBLIC_PAGE_PREFIXES = ['/login', '/signup', '/guide', '/api-docs'];
+const PUBLIC_PAGE_PREFIXES = [
+  '/login',
+  '/signup',
+  '/forgot-password',
+  '/terms',
+  '/privacy',
+  '/guide',
+  '/api-docs',
+];
+
+// Pages for people who are NOT signed in: a signed-in user is sent to the dashboard.
+const GUEST_ONLY_PAGE_PREFIXES = ['/login', '/signup'];
 
 function matchesPrefix(pathname: string, prefixes: string[]): boolean {
   return prefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`));
@@ -39,12 +50,22 @@ export function isPublicPath(pathname: string): boolean {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (isPublicPath(pathname)) {
+  const guestOnly = matchesPrefix(pathname, GUEST_ONLY_PAGE_PREFIXES);
+
+  if (isPublicPath(pathname) && !guestOnly) {
     return NextResponse.next();
   }
 
   const token = request.cookies.get(SESSION_COOKIE)?.value;
-  const session = token ? await verifySessionToken(token) : null;
+  const session = token ? await verifyActiveSession(token) : null;
+
+  if (guestOnly) {
+    // Already signed in (valid, non-revoked session): /login and /signup go to the dashboard.
+    return session
+      ? NextResponse.redirect(new URL('/', request.url))
+      : NextResponse.next();
+  }
+
   if (session) {
     return NextResponse.next();
   }

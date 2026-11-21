@@ -27,8 +27,8 @@ export function useIdleLogout(timeoutMs: number = IDLE_TIMEOUT_MS): void {
       if (!isAuthenticated()) return;
       timer.current = setTimeout(() => {
         if (isAuthenticated()) {
-          clearAuthUser(); // clears storage + server session cookie
-          router.push('/login');
+          // Clears storage + the server session, then leaves for /login.
+          void clearAuthUser().then(() => router.push('/login'));
         }
       }, timeoutMs);
     };

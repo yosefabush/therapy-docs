@@ -8,7 +8,7 @@ import { Card, Button, Select, Tabs, Modal } from '@/components/ui';
 import { PatientList } from '@/components/patients/PatientList';
 import { therapistRoleLabels } from '@/lib/mock-data';
 import { Patient } from '@/types';
-import { useAuthRedirect, useMyPatients, useUsers } from '@/lib/hooks';
+import { useAuthRedirect, useMyPatients, useMySessions, useUsers } from '@/lib/hooks';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
 import { apiClient } from '@/lib/api/client';
@@ -16,11 +16,13 @@ import { apiClient } from '@/lib/api/client';
 function PatientsPageContent() {
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'recent' | 'name' | 'sessions'>('recent');
   const [showNewPatient, setShowNewPatient] = useState(false);
 
   const { user: currentUser, loading: userLoading } = useAuthRedirect();
   const { patients, loading: patientsLoading, error: patientsError, refetch } = useMyPatients(currentUser?.id, currentUser?.role === 'admin');
   const { users, loading: usersLoading } = useUsers();
+  const { sessions } = useMySessions(currentUser?.id, currentUser?.role === 'admin');
 
   if (userLoading || patientsLoading || usersLoading) {
     return <LoadingSpinner className="h-screen" />;
@@ -45,6 +47,9 @@ function PatientsPageContent() {
     { id: 'discharged', label: 'שוחררו', count: patients.filter(p => p.status === 'discharged').length },
   ];
 
+  const sessionCounts = new Map<string, number>();
+  for (const s of sessions) sessionCounts.set(s.patientId, (sessionCounts.get(s.patientId) ?? 0) + 1);
+
   const filteredPatients = patients.filter(patient => {
     const searchLower = searchQuery.toLowerCase();
     const fullName = `${patient.firstName} ${patient.lastName}`.toLowerCase();
@@ -59,6 +64,14 @@ function PatientsPageContent() {
       activeTab === 'discharged' ? patient.status === 'discharged' : true;
 
     return matchesSearch && matchesTab;
+  }).sort((a, b) => {
+    if (sortBy === 'name') {
+      return `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`, 'he');
+    }
+    if (sortBy === 'sessions') {
+      return (sessionCounts.get(b.id) ?? 0) - (sessionCounts.get(a.id) ?? 0);
+    }
+    return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
   });
 
   return (
@@ -105,6 +118,9 @@ function PatientsPageContent() {
                 </div>
               </div>
               <Select
+                aria-label="מיון מטופלים"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as 'recent' | 'name' | 'sessions')}
                 options={[
                   { value: 'recent', label: 'עודכן לאחרונה' },
                   { value: 'name', label: 'שם מטופל' },

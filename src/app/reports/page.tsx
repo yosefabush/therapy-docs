@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import { Sidebar, MobileMenuProvider } from '@/components/layout/Sidebar';
 import { Header, QuickActionButton } from '@/components/layout/Header';
 import { BottomNav } from '@/components/layout/BottomNav';
-import { Card, Button, Badge, Tabs, Modal } from '@/components/ui';
+import { Card, Button, Badge, Tabs, Modal, ConfirmDialog } from '@/components/ui';
+import { deleteResource } from '@/lib/api/delete-resource';
 import { therapistRoleLabels } from '@/lib/mock-data';
 import { useAuthRedirect, useMyPatients, useMyReports } from '@/lib/hooks';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
@@ -25,6 +26,9 @@ function ReportsPageContent() {
   const [newReportTitle, setNewReportTitle] = useState('');
   const [creatingReport, setCreatingReport] = useState(false);
   const [createReportError, setCreateReportError] = useState<string | null>(null);
+  const [reportToDelete, setReportToDelete] = useState<string | null>(null);
+  const [deletingReport, setDeletingReport] = useState(false);
+  const [deleteReportError, setDeleteReportError] = useState<string | null>(null);
 
   const { user: currentUser, loading: userLoading } = useAuthRedirect();
   const { patients, loading: patientsLoading } = useMyPatients(currentUser?.id, currentUser?.role === 'admin');
@@ -70,6 +74,21 @@ function ReportsPageContent() {
     setNewReportPatientId('');
     setNewReportTitle('');
     closeNewReport();
+    await refetchReports();
+  };
+
+  const handleDeleteReport = async () => {
+    if (!reportToDelete) return;
+    setDeletingReport(true);
+    setDeleteReportError(null);
+    const result = await deleteResource(`/reports/${reportToDelete}`);
+    setDeletingReport(false);
+    if (!result.ok) {
+      setDeleteReportError(result.message);
+      return;
+    }
+    if (viewingReport === reportToDelete) setViewingReport(null);
+    setReportToDelete(null);
     await refetchReports();
   };
 
@@ -229,12 +248,14 @@ function ReportsPageContent() {
   };
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, 'success' | 'warning' | 'sage'> = {
-      final: 'success',
+    const variants: Record<string, 'success' | 'warning' | 'info' | 'sage'> = {
+      signed: 'success',
+      finalized: 'info',
       draft: 'warning',
     };
     const labels: Record<string, string> = {
-      final: 'סופי',
+      signed: 'חתום',
+      finalized: 'סופי',
       draft: 'טיוטה',
     };
     return <Badge variant={variants[status] || 'sage'}>{labels[status] || status}</Badge>;
@@ -353,17 +374,33 @@ function ReportsPageContent() {
                         </div>
                       </div>
                       <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-                        <Button variant="ghost" size="sm" onClick={() => setViewingReport(report.id)}>
+                        <Button variant="ghost" size="sm" onClick={() => setViewingReport(report.id)} aria-label="צפייה בדוח" title="צפייה בדוח">
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                           </svg>
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => downloadReportAsPDF(report, patient)}>
+                        <Button variant="ghost" size="sm" onClick={() => downloadReportAsPDF(report, patient)} aria-label="הורדת הדוח כ-PDF" title="הורדת הדוח כ-PDF">
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                           </svg>
                         </Button>
+                        {/* A signed report is locked for therapists (the API enforces it too). */}
+                        {(!(report.status === 'signed' || report.signedAt) || currentUser.role === 'admin') && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => { setDeleteReportError(null); setReportToDelete(report.id); }}
+                            aria-label="מחק דוח"
+                            title="מחק דוח"
+                            data-testid="delete-report"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </Card>
@@ -594,6 +631,16 @@ function ReportsPageContent() {
           </div>
         )}
       </Modal>
+
+      <ConfirmDialog
+        open={reportToDelete !== null}
+        title="מחיקת דוח"
+        description="למחוק את הדוח? פעולה זו אינה הפיכה."
+        error={deleteReportError}
+        loading={deletingReport}
+        onConfirm={handleDeleteReport}
+        onCancel={() => setReportToDelete(null)}
+      />
 
       {/* Mobile Bottom Navigation */}
       <BottomNav />

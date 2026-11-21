@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Report } from '@/types';
 import { apiClient } from '@/lib/api/client';
+import { deleteResource } from '@/lib/api/delete-resource';
 import type { CreateReportBody } from '@/lib/reports/build-report';
 
 export function useReports(patientId?: string) {
@@ -50,6 +51,12 @@ export function useReports(patientId?: string) {
     return response.data!;
   };
 
+  const deleteReport = async (id: string): Promise<void> => {
+    const result = await deleteResource(`/reports/${id}`);
+    if (!result.ok) throw new Error(result.message);
+    await fetchReports();
+  };
+
   return {
     reports,
     loading,
@@ -57,5 +64,6 @@ export function useReports(patientId?: string) {
     refetch: fetchReports,
     createReport,
     updateReport,
+    deleteReport,
   };
 }

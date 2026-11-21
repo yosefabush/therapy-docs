@@ -128,3 +128,14 @@ model AuditEntry {
   @@index([userId])
   @@index([resourceType, resourceId])
 }
+
+// Session tokens (JWT ids) invalidated by logout. A token whose jti is listed
+// here is rejected even though its signature is still valid. Rows are only
+// needed until the token would have expired anyway and are purged then.
+model RevokedToken {
+  jti       String   @id
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([expiresAt])
+}

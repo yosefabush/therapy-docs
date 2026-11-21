@@ -8,6 +8,7 @@ export const DEMO_NAME = 'שרה כהן';
 // Text that the app renders when a screen fails to load.
 const ERROR_TEXTS = [
   'Failed to load user data',
+  'לא ניתן לטעון את נתוני המשתמש',
   'המפגש לא נמצא',
   'Application error',
   'Unhandled Runtime Error',
